@@ -1,0 +1,72 @@
+node_modules
+.turbo
+.next
+dist
+dist-local
+dist-ssr
+.cache
+server/dist
+public/dist
+**/dist
+**/build
+!apps/zodance-fe/dist
+.vercel
+.eslintcache
+
+# Local env files
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/*.code-snippets
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Use the PNPM
+package-lock.json
+yarn.lock
+.pnpm-debug.log
+
+# Others
+.stylelintcache
+# Sentry Config File
+.env.sentry-build-plugin
+patches/tmp/**
+stats.html
+
+# Types
+# types/components.d.ts
+# types/auto-imports.d.ts
+# types/.eslintrc-auto-import.json
+# /test-results/
+# /playwright-report/
+# /blob-report/
+/playwright/.cache/
+
+playwright/.auth
+
+# 小程序
+project.private.config.json
+
+# Cursor
+.cursor/mcp.json
+.cursor/.env
+
+.env
+secrets/
