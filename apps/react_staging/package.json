@@ -1,0 +1,37 @@
+{
+  "name": "react_staging",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --open --port 3000 --host",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@ant-design/v5-patch-for-react-19": "catalog:ant-design",
+    "@reduxjs/toolkit": "catalog:react19",
+    "antd": "catalog:ant-design",
+    "axios": "catalog:",
+    "react": "catalog:react19",
+    "react-dom": "catalog:react19",
+    "react-redux": "catalog:react19"
+  },
+  "devDependencies": {
+    "@eslint/js": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:react19",
+    "@types/react-dom": "catalog:react19",
+    "@vitejs/plugin-react": "catalog:react19",
+    "eslint": "catalog:",
+    "eslint-plugin-react-hooks": "catalog:",
+    "eslint-plugin-react-refresh": "catalog:",
+    "globals": "catalog:",
+    "react-router-dom": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:",
+    "unocss": "catalog:",
+    "vite": "catalog:"
+  }
+}
