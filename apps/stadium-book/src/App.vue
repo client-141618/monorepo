@@ -2,6 +2,7 @@
 import HelloWorld from './components/HelloWorld.vue'
 import { request } from '@cyz/utils'
 import { onMounted } from 'vue'
+import { Button } from '@client/components'
 
 function getCheckCode() {
     return request({
@@ -25,6 +26,7 @@ onMounted(() => {
     </a>
   </div>
   <HelloWorld msg="Vite + Vue" />
+  <Button />
 </template>
 
 <style scoped>

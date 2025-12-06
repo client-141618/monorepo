@@ -1,17 +1,15 @@
 {
-  "name": "stadium-book",
+  "name": "@client/components",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "type": "module",
+  "main": "index.ts",
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@cyz/utils": "workspace:*",
-    "@client/components": "workspace:*",
-    "vite-plugin-vue-devtools": "catalog:",
     "vue": "catalog:"
   },
   "devDependencies": {
