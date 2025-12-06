@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ant-design/icons": "catalog:ant-design",
     "@ant-design/v5-patch-for-react-19": "catalog:ant-design",
+    "@cyz/utils": "workspace:*",
     "@reduxjs/toolkit": "catalog:react19",
     "antd": "catalog:ant-design",
     "axios": "catalog:",
