@@ -1,41 +1,47 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import type { RouteRecordRaw } from 'vue-router'
+import type { RouteRecordRaw } from "vue-router"
+import { computed } from "vue"
+import { useRoute, useRouter } from "vue-router"
 
 const route = useRoute()
 const router = useRouter()
 
 // 递归获取所有应该显示的路由（包括嵌套路由）
-const getDisplayableRoutes = (routes: RouteRecordRaw[], basePath = ''): RouteRecordRaw[] => {
+const getDisplayableRoutes = (
+  routes: RouteRecordRaw[],
+  basePath = "",
+): RouteRecordRaw[] => {
   const result: RouteRecordRaw[] = []
-  
+
   routes.forEach((routeItem) => {
     // 跳过隐藏的路由
     if (routeItem.meta?.hidden) {
       return
     }
-    
+
     // 如果有子路由，递归处理
     if (routeItem.children && routeItem.children.length > 0) {
-      const childRoutes = getDisplayableRoutes(routeItem.children, routeItem.path)
+      const childRoutes = getDisplayableRoutes(
+        routeItem.children,
+        routeItem.path,
+      )
       result.push(...childRoutes)
     } else if (routeItem.meta?.title) {
       // 没有子路由且有 title 的路由，添加到结果中
       // 处理路径：如果是相对路径，需要拼接 basePath
-      const fullPath = routeItem.path.startsWith('/') 
-        ? routeItem.path 
-        : basePath 
-          ? `${basePath}/${routeItem.path}`.replace(/\/+/g, '/')
+      const fullPath = routeItem.path.startsWith("/")
+        ? routeItem.path
+        : basePath
+          ? `${basePath}/${routeItem.path}`.replace(/\/+/g, "/")
           : `/${routeItem.path}`
-      
+
       result.push({
         ...routeItem,
         path: fullPath,
       })
     }
   })
-  
+
   return result
 }
 
@@ -86,7 +92,7 @@ const handleMenuClick = (path: string) => {
 </template>
 
 <style lang="scss" scoped>
-.side-menu-container {
+  .side-menu-container {
   height: 100%;
   background-color: #fff;
 

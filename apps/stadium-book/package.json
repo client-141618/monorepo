@@ -1,8 +1,8 @@
 {
   "name": "stadium-book",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
@@ -11,7 +11,7 @@
   "dependencies": {
     "@client/components": "workspace:*",
     "@cyz/utils": "workspace:*",
-    "@element-plus/icons-vue": "^2.3.2",
+    "@element-plus/icons-vue": "catalog:",
     "element-plus": "catalog:",
     "vite-plugin-vue-devtools": "catalog:",
     "vue": "catalog:",
@@ -19,11 +19,15 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@unocss/eslint-plugin": "^66.5.10",
     "@vitejs/plugin-vue": "catalog:",
     "@vue/tsconfig": "catalog:",
-    "sass": "^1.94.2",
-    "sass-loader": "^16.0.6",
+    "eslint": "catalog:",
+    "eslint-plugin-vue": "catalog:",
+    "sass": "catalog:",
+    "sass-loader": "catalog:",
     "typescript": "catalog:",
+    "unocss": "catalog:",
     "unplugin-auto-import": "catalog:",
     "unplugin-vue-components": "catalog:",
     "vite": "catalog:",

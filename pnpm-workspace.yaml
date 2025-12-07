@@ -6,27 +6,37 @@ packages:
   - utils/**
 
 catalog:
+  '@antfu/eslint-config': ^4.0.0
+  '@element-plus/icons-vue': ^2.3.2
+  '@eslint-community/eslint-plugin-eslint-comments': ^4.0.0
   '@eslint/js': ^9.39.1
   '@types/node': ^24.10.1
+  '@typescript-eslint/parser': ^8.48.1
   '@vitejs/plugin-vue': ^6.0.2
   '@vue/tsconfig': ^0.8.1
   axios: ^1.13.2
   element-plus: ^2.12.0
   eslint: ^9.39.1
+  eslint-plugin-import: ^2.31.0
   eslint-plugin-react-hooks: ^5.2.0
   eslint-plugin-react-refresh: ^0.4.24
+  eslint-plugin-unused-imports: ^4.1.4
+  eslint-plugin-vue: ^10.6.2
   globals: ^16.5.0
+  prettier: ^3.5.3
   react-router-dom: ^7.10.1
+  sass: ^1.94.2
+  sass-loader: ^16.0.6
   typescript: ^5.9.3
   typescript-eslint: ^8.48.1
   unocss: ^66.5.10
+  unplugin-auto-import: ^20.3.0
+  unplugin-vue-components: ^30.0.0
   vite: ^7.2.6
   vite-plugin-vue-devtools: ^8.0.5
   vue: ^3.5.25
   vue-router: ^4.6.3
   vue-tsc: ^3.1.6
-  unplugin-auto-import: ^20.3.0
-  unplugin-vue-components: ^30.0.0
 
 catalogs:
   ant-design:
