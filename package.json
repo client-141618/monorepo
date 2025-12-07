@@ -17,6 +17,8 @@
   },
   "devDependencies": {
     "@antfu/eslint-config": "catalog:",
+    "@commitlint/cli": "catalog:devTools",
+    "@commitlint/config-conventional": "catalog:devTools",
     "@eslint-community/eslint-plugin-eslint-comments": "catalog:",
     "@types/node": "catalog:",
     "@typescript-eslint/parser": "catalog:",
