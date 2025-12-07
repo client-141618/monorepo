@@ -44,6 +44,8 @@ catalogs:
     antd: ^5.29.1
 
   devTools:
+    '@commitlint/cli': ^20.2.0
+    '@commitlint/config-conventional': ^20.2.0
     husky: ^9.1.7
     lint-staged: ^16.2.7
     prettier: ^3.5.3
