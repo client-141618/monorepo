@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// import { RouterView } from 'vue-router'
-import Home from '@/views/Home/Home.vue'
-
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
-  <!-- <router-view /> -->
-   <Home/>
+  <router-view />
 </template>

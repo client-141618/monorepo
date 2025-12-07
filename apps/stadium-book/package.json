@@ -11,6 +11,7 @@
   "dependencies": {
     "@client/components": "workspace:*",
     "@cyz/utils": "workspace:*",
+    "@element-plus/icons-vue": "^2.3.2",
     "element-plus": "catalog:",
     "vite-plugin-vue-devtools": "catalog:",
     "vue": "catalog:",
@@ -20,6 +21,8 @@
     "@types/node": "catalog:",
     "@vitejs/plugin-vue": "catalog:",
     "@vue/tsconfig": "catalog:",
+    "sass": "^1.94.2",
+    "sass-loader": "^16.0.6",
     "typescript": "catalog:",
     "unplugin-auto-import": "catalog:",
     "unplugin-vue-components": "catalog:",
