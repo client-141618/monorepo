@@ -304,7 +304,7 @@ export default {
   ...userConfig,
   rules: {
     ...userConfig.rules,
-    'fix-aliyun-rule': [1, 'always'],
+    // 'fix-aliyun-rule': [1, 'always'],
     // 'references-empty': [2, 'never'],
     // 'header-max-length': [2, 'always', 100],
     // 'scope-case': [2, 'always', 'lower-case']
