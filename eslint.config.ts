@@ -67,6 +67,7 @@ const antfuConfig = antfu(
       // '**/*.wxml',
       "**/iconfont",
       // ...globs
+      "**/*.md",
     ],
   },
   {
