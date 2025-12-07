@@ -29,9 +29,8 @@
     "typescript-eslint": "catalog:"
   },
   "lint-staged": {
-    "src/**/*.{js,vue}": [
-      "eslint --fix",
-      "git add"
+    "*.{js,vue,ts,tsx,scss,css,json}": [
+      "eslint --fix"
     ]
   }
 }
