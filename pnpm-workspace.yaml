@@ -46,6 +46,7 @@ catalogs:
   devTools:
     '@commitlint/cli': ^20.2.0
     '@commitlint/config-conventional': ^20.2.0
+    commitlint-plugin-function-rules: ^4.1.1
     husky: ^9.1.7
     lint-staged: ^16.2.7
     prettier: ^3.5.3
