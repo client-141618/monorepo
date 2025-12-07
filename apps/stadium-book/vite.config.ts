@@ -1,11 +1,12 @@
-import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue'
-import vueDevTools from 'vite-plugin-vue-devtools'
-import { resolve } from 'path'
+import { defineConfig } from "vite"
+import vue from "@vitejs/plugin-vue"
+import vueDevTools from "vite-plugin-vue-devtools"
+import { resolve } from "path"
+import UnoCSS from "unocss/vite"
 // element-plus 自动引入
-import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
-import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import AutoImport from "unplugin-auto-import/vite"
+import Components from "unplugin-vue-components/vite"
+import { ElementPlusResolver } from "unplugin-vue-components/resolvers"
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,7 +14,7 @@ export default defineConfig({
     vue(),
     vueDevTools({
       componentInspector: true,
-      launchEditor: 'cursor',
+      launchEditor: "cursor",
     }),
     AutoImport({
       resolvers: [ElementPlusResolver()],
@@ -21,13 +22,14 @@ export default defineConfig({
     Components({
       resolvers: [ElementPlusResolver()],
     }),
+    UnoCSS(),
   ],
   server: {
     port: 3344,
     open: true,
     proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:8080',
+      "/api": {
+        target: "http://127.0.0.1:8080",
         changeOrigin: true,
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
@@ -35,7 +37,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": resolve(__dirname, "./src")
-    }
-  }
+      "@": resolve(__dirname, "./src"),
+    },
+  },
 })

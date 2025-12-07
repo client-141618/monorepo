@@ -1,0 +1,27 @@
+{
+  "recommendations": [
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "antfu.unocss",
+    "vitest.explorer",
+    "streetsidesoftware.code-spell-checker",
+    "joshbolduc.commitlint",
+    "vunguyentuan.vscode-css-variables",
+    "mikestead.dotenv",
+    "tobermory.es6-string-html",
+    "usernamehw.errorlens",
+    "lokalise.i18n-ally",
+    "antfu.iconify",
+    "yzhang.markdown-all-in-one",
+    "christian-kohler.path-intellisense",
+    "antfu.pnpm-catalog-lens",
+    "yoavbls.pretty-ts-errors",
+    "stylelint.vscode-stylelint",
+    "gruntfuggly.todo-tree",
+    "vue.volar",
+    "stagewise.stagewise-vscode",
+    "Tencent-Cloud.tencent-cloud-toolkit-extension",
+    "cloudstudio.tencent-cloud-toolkit",
+    "alibabacloud-openapi.alibaba-cloud-developer-toolkit"
+  ]
+}

@@ -1,10 +1,11 @@
-import axios from 'axios'
 import type {
   AxiosError,
   AxiosInstance,
   AxiosRequestConfig,
   InternalAxiosRequestConfig,
-} from 'axios'
+} from "axios"
+import axios from "axios"
+
 
 interface ApiResponse<T = unknown> {
   code?: number
@@ -17,10 +18,10 @@ interface ApiResponse<T = unknown> {
 export type RequestConfig<D = unknown> = AxiosRequestConfig<D>
 
 const service: AxiosInstance = axios.create({
-  baseURL: '/',
+  baseURL: "/",
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 })
 
@@ -37,7 +38,7 @@ service.interceptors.request.use(
 
     return config
   },
-  (error: AxiosError) => Promise.reject(error)
+  (error: AxiosError) => Promise.reject(error),
 )
 
 service.interceptors.response.use(
@@ -50,14 +51,14 @@ service.interceptors.response.use(
       responseData.message ??
       error.response?.statusText ??
       error.message ??
-      '网络错误，请稍后重试'
+      "网络错误，请稍后重试"
 
     return Promise.reject(new Error(message))
-  }
+  },
 )
 
 const request = <T = unknown, D = unknown>(
-  config: RequestConfig<D>
+  config: RequestConfig<D>,
 ): Promise<ApiResponse<T>> => {
   return service.request<ApiResponse<T>, ApiResponse<T>, D>(config)
 }
