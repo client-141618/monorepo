@@ -3,8 +3,10 @@ import type { FormInstance, TabsPaneContext } from 'element-plus'
 import { DArrowRight, Lock, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { login } from '@/api/base'
 
+const router = useRouter()
 const activeName = ref<string>('login')
 const formRef = ref<FormInstance>()
 const form = ref({
@@ -51,8 +53,10 @@ const handleLogin = () => {
       const res = await login(form.value)
       if (res.code === 200) {
         ElMessage.success('登录成功')
+        localStorage.setItem('userInfo', JSON.stringify(res.data))
+        router.push('/')
       } else {
-        ElMessage.error(res.message || '登录失败')
+        ElMessage.error(res.msg || '登录失败')
       }
     }
   },

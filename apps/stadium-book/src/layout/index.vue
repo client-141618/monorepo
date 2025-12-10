@@ -1,5 +1,12 @@
 <script setup lang="ts">
-  import SideMenu from "@/components/SideMenu/SideMenu.vue"
+import { useRouter } from "vue-router"
+import SideMenu from "@/components/SideMenu/SideMenu.vue"
+
+const router = useRouter()
+const userInfo = localStorage.getItem('userInfo')
+if (!userInfo) {
+  router.push('/login')
+}
 </script>
 
 <template>
@@ -20,10 +27,10 @@
 
 <style lang="scss" scoped>
   .common-layout {
-    height: 100vh;
+  height: 100vh;
 
-    :deep(.el-container) {
-      height: 100%;
-    }
+  :deep(.el-container) {
+    height: 100%;
   }
+}
 </style>
