@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { FormInstance, TabsPaneContext } from 'element-plus'
-import { DArrowRight, Lock, User } from '@element-plus/icons-vue'
+import { DArrowRight, Lock, Phone, User } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { login } from '@/api/base'
+import { login, register } from '@/api/base'
 
 const router = useRouter()
 const activeName = ref<string>('login')
@@ -14,7 +14,20 @@ const form = ref({
   password: '',
   code: '',
 })
+const registerFormRef = ref<FormInstance>()
+const registerForm = ref({
+  username: '',
+  phone: '',
+  password: '',
+  repeatPassword: '',
+  age: '',
+  email: '',
+})
 const rules = ref({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 10, message: '用户名长度为3-10位', trigger: 'blur' },
+  ],
   phone: [
     { required: true, message: '请输入手机号', trigger: 'blur' },
     { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' },
@@ -37,10 +50,26 @@ const rules = ref({
       trigger: 'blur',
     },
   ],
+  repeatPassword: [
+    { required: true, message: '请输入确认密码', trigger: 'blur' },
+    { validator: (_rule: any, value: string, callback: any) => {
+      if (value !== registerForm.value.password) {
+        callback(new Error('两次密码不一致'))
+        return
+      }
+      callback()
+    }, trigger: 'blur' },
+  ],
 })
 
 const handleClick = (tab: TabsPaneContext) => {
   activeName.value = tab.props.name as string
+
+  if (tab.props.name === 'login') {
+    formRef.value?.clearValidate()
+  } else if (tab.props.name === 'register') {
+    registerFormRef.value?.clearValidate()
+  }
 }
 
 const goRegister = () => {
@@ -62,6 +91,24 @@ const handleLogin = () => {
   },
   )
 }
+
+const handleRegister = async () => {
+  registerFormRef.value?.validate(async (valid: boolean) => {
+    if (valid) {
+      const res = await register(registerForm.value)
+      if (res.code === 200) {
+        ElMessage.success('注册成功')
+        const phone = registerForm.value.phone
+        registerFormRef.value?.resetFields()
+        activeName.value = 'login'
+        form.value.phone = phone
+        formRef.value?.clearValidate()
+      } else {
+        ElMessage.error(res.msg || '注册失败')
+      }
+    }
+  })
+}
 </script>
 
 <template>
@@ -73,9 +120,9 @@ const handleLogin = () => {
             <span mb-6px mt-8px text-2xl font-bold>账号密码登录</span>
             <el-form :model="form" w-full :rules="rules" ref="formRef">
               <el-form-item prop="phone">
-                <el-input :prefix-icon="User" v-model="form.phone" placeholder="请输入手机号" maxlength="11" />
+                <el-input :prefix-icon="Phone" v-model="form.phone" placeholder="请输入手机号" maxlength="11" />
               </el-form-item>
-              <el-form-item prop="password">
+              <el-form-item>
                 <el-input
                   type="password"
                   :prefix-icon="Lock"
@@ -91,7 +138,39 @@ const handleLogin = () => {
             </div>
           </div>
         </el-tab-pane>
-        <el-tab-pane label="注册" name="register">Config</el-tab-pane>
+        <el-tab-pane label="注册" name="register">
+          <div min-h-300px w-full flex flex-col items-center justify-center p-12px>
+            <span mb-6px mt-8px text-2xl font-bold>欢迎注册</span>
+            <el-form :model="registerForm" w-full :rules="rules" ref="registerFormRef">
+              <el-form-item prop="username">
+                <el-input :prefix-icon="User" v-model="registerForm.username" placeholder="请输入用户名" />
+              </el-form-item>
+              <el-form-item prop="phone" required>
+                <el-input :prefix-icon="Phone" v-model="registerForm.phone" placeholder="请输入手机号" maxlength="11" />
+              </el-form-item>
+              <el-form-item prop="password" required>
+                <el-input
+                  type="password"
+                  :prefix-icon="Lock"
+                  v-model="registerForm.password"
+                  placeholder="请输入密码"
+                  show-password
+                />
+              </el-form-item>
+              <el-form-item prop="repeatPassword" required>
+                <el-input
+                  type="password"
+                  :prefix-icon="Lock"
+                  v-model="registerForm.repeatPassword"
+                  placeholder="确认密码"
+                  show-password
+                  @paste.prevent="() => { return false }"
+                />
+              </el-form-item>
+            </el-form>
+            <el-button mt-a w-full type="primary" @click="handleRegister">注册</el-button>
+          </div>
+        </el-tab-pane>
       </el-tabs>
     </div>
   </div>
