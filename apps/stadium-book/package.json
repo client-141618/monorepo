@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "@client/components": "workspace:*",
-    "@cyz/utils": "workspace:*",
     "@element-plus/icons-vue": "catalog:",
+    "axios": "catalog:",
     "element-plus": "catalog:",
     "vite-plugin-vue-devtools": "catalog:",
     "vue": "catalog:",

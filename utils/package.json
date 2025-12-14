@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "element-plus": "catalog:",
     "typescript": "catalog:"
   }
 }

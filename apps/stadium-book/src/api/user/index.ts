@@ -1,4 +1,4 @@
-import { request } from '@cyz/utils'
+import { request } from '@/utils/request'
 
 const PREFIX = '/api'
 
