@@ -5,9 +5,9 @@ import {
   createWebHistory,
 } from "vue-router"
 import { constantRoutes } from "./routes"
-import home from "./routes/modules/home"
+import { appRouter } from "./routes/app.ts"
 
-const modulesRoutes: RouteRecordRaw[] = [...home].sort((a, b) => {
+const modulesRoutes: RouteRecordRaw[] = [...appRouter].sort((a, b) => {
   const orderA = (a.meta?.order as number) ?? 0
   const orderB = (b.meta?.order as number) ?? 0
   return orderA - orderB

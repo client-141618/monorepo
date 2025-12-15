@@ -1,29 +1,29 @@
 import type { RouteRecordRaw } from "vue-router"
+import { House } from "@element-plus/icons-vue"
 
-// 首页模块路由
-// 如果后续需要扩展更多首页相关的子路由，可以在这里添加
+const Layout = () => import("@/layout/index.vue")
+const Home = () => import("@/views/Home/Home.vue")
+
 const home: RouteRecordRaw[] = [
-  // 示例：如果需要添加首页的子路由，可以这样写
-  // {
-  //   path: "/home",
-  //   component: Layout,
-  //   redirect: "/home/index",
-  //   children: [
-  //     {
-  //       path: "index",
-  //       component: Home,
-  //       name: "Home",
-  //       meta: {
-  //         title: "首页",
-  //         showTag: true,
-  //         keepAlive: true,
-  //       },
-  //     },
-  //   ],
-  //   meta: {
-  //     order: 1,
-  //   },
-  // },
+  {
+    path: "/",
+    component: Layout,
+    redirect: "/home",
+    children: [
+      {
+        path: "home",
+        component: Home,
+        name: "Home",
+        meta: {
+          title: "首页",
+          icon: House,
+        },
+      },
+    ],
+    meta: {
+      order: 0,
+    },
+  },
 ]
 
 export default home

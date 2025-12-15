@@ -2,3 +2,8 @@
 export enum HomeRoute {
   Home = "Home",
 }
+
+export enum SettingRoute {
+  Setting = "Setting",
+  My = "My",
+}

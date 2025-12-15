@@ -6,57 +6,53 @@ import { useRoute, useRouter } from "vue-router"
 const route = useRoute()
 const router = useRouter()
 
-// 递归获取所有应该显示的路由（包括嵌套路由）
-const getDisplayableRoutes = (
-  routes: RouteRecordRaw[],
+const joinPath = (base: string, path: string) => {
+  if (path.startsWith("/")) return path
+  if (!base) return `/${path}`
+  return `${base}/${path}`.replace(/\/+/g, "/")
+}
+
+const normalizeRoutes = (
+  routes: readonly RouteRecordRaw[],
   basePath = "",
 ): RouteRecordRaw[] => {
   const result: RouteRecordRaw[] = []
 
-  routes.forEach((routeItem) => {
-    // 跳过隐藏的路由
-    if (routeItem.meta?.hidden) {
-      return
-    }
+  routes
+    .filter((item) => !item.meta?.hidden)
+    .forEach((item) => {
+      const fullPath = joinPath(basePath, item.path)
+      const children = item.children
+        ? normalizeRoutes(item.children, fullPath)
+        : undefined
 
-    // 如果有子路由，递归处理
-    if (routeItem.children && routeItem.children.length > 0) {
-      const childRoutes = getDisplayableRoutes(
-        routeItem.children,
-        routeItem.path,
-      )
-      result.push(...childRoutes)
-    } else if (routeItem.meta?.title) {
-      // 没有子路由且有 title 的路由，添加到结果中
-      // 处理路径：如果是相对路径，需要拼接 basePath
-      const fullPath = routeItem.path.startsWith("/")
-        ? routeItem.path
-        : basePath
-          ? `${basePath}/${routeItem.path}`.replace(/\/+/g, "/")
-          : `/${routeItem.path}`
+      const hasTitle = Boolean(item.meta?.title)
+      const hasChildren = Boolean(children && children.length)
 
-      result.push({
-        ...routeItem,
-        path: fullPath,
-      })
-    }
-  })
+      if (hasTitle || !hasChildren) {
+        // 有标题或没有子节点，直接收录
+        result.push({
+          ...item,
+          path: fullPath,
+          children,
+        } as RouteRecordRaw)
+      } else if (hasChildren) {
+        // 没有标题但有子节点，直接提升子节点（避免空父级显示）
+        result.push(...(children as RouteRecordRaw[]))
+      }
+    })
 
   return result
 }
 
-// 获取所有应该显示的路由
-const menuRoutes = computed(() => {
-  const allRoutes = router.getRoutes()
-  return getDisplayableRoutes(allRoutes)
-})
+const menuRoutes = computed<RouteRecordRaw[]>(() =>
+  normalizeRoutes(router.options.routes),
+)
 
-// 当前激活的菜单
 const activeMenu = computed(() => {
   return route.path
 })
 
-// 处理菜单点击
 const handleMenuClick = (path: string) => {
   router.push(path)
 }
@@ -69,14 +65,60 @@ const handleMenuClick = (path: string) => {
         :default-active="activeMenu"
         :collapse="false"
         background-color="transparent"
-        text-color="#bfcbd9"
-        active-text-color="#409EFF"
+        text-color="#000000"
+        active-text-color="#000000"
         :unique-opened="true"
         :collapse-transition="false"
         mode="vertical"
       >
         <template v-for="routeItem in menuRoutes" :key="routeItem.path">
+          <el-sub-menu
+            v-if="routeItem.children && routeItem.children.length"
+            :index="routeItem.path"
+          >
+            <template #title>
+              <el-icon v-if="routeItem.meta?.icon">
+                <component :is="routeItem.meta.icon" />
+              </el-icon>
+              <span>{{ routeItem.meta?.title }}</span>
+            </template>
+            <template v-for="child in routeItem.children" :key="child.path">
+              <el-sub-menu
+                v-if="child.children && child.children.length"
+                :index="child.path"
+              >
+                <template #title>
+                  <el-icon v-if="child.meta?.icon">
+                    <component :is="child.meta.icon" />
+                  </el-icon>
+                  <span>{{ child.meta?.title }}</span>
+                </template>
+                <el-menu-item
+                  v-for="grand in child.children"
+                  :key="grand.path"
+                  :index="grand.path"
+                  @click="handleMenuClick(grand.path)"
+                >
+                  <el-icon v-if="grand.meta?.icon">
+                    <component :is="grand.meta.icon" />
+                  </el-icon>
+                  <span>{{ grand.meta?.title }}</span>
+                </el-menu-item>
+              </el-sub-menu>
+              <el-menu-item
+                v-else
+                :index="child.path"
+                @click="handleMenuClick(child.path)"
+              >
+                <el-icon v-if="child.meta?.icon">
+                  <component :is="child.meta.icon" />
+                </el-icon>
+                <span>{{ child.meta?.title }}</span>
+              </el-menu-item>
+            </template>
+          </el-sub-menu>
           <el-menu-item
+            v-else
             :index="routeItem.path"
             @click="handleMenuClick(routeItem.path)"
           >
@@ -107,7 +149,8 @@ const handleMenuClick = (path: string) => {
     border: none;
   }
 
-  :deep(.el-menu-item) {
+  :deep(.el-menu-item),
+  :deep(.el-sub-menu__title) {
     height: 56px;
     line-height: 56px;
     background: transparent !important;
