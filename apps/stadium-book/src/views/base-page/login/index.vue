@@ -20,8 +20,6 @@ const registerForm = ref({
   phone: '',
   password: '',
   repeatPassword: '',
-  age: '',
-  email: '',
 })
 const rules = ref({
   username: [

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useRouter } from "vue-router"
+import Header from "@/components/Header/Header.vue"
 import SideMenu from "@/components/SideMenu/SideMenu.vue"
 
 const router = useRouter()
@@ -12,7 +13,12 @@ if (!userInfo) {
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header style="height: 60px; background-color: #fff">Header</el-header>
+      <el-header
+        style="height: 60px;
+        background-color: #fff;"
+      >
+        <Header />
+      </el-header>
       <el-container>
         <el-aside width="200px">
           <SideMenu />
@@ -26,7 +32,7 @@ if (!userInfo) {
 </template>
 
 <style lang="scss" scoped>
-  .common-layout {
+.common-layout {
   height: 100vh;
 
   :deep(.el-container) {
