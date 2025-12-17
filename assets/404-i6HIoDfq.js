@@ -1,0 +1,1 @@
+import{_ as r}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as s,o as t,a as o}from"./index-B2DhCDA5.js";const a={},c={class:"error-page"};function n(_,e){return t(),s("div",c,[...e[0]||(e[0]=[o("h1",null,"404",-1),o("p",null,"页面未找到",-1)])])}const p=r(a,[["render",n],["__scopeId","data-v-9bad8032"]]);export{p as default};

@@ -1,0 +1,1 @@
+import{d as s,F as n,u as c,c as u,o as p}from"./index-B2DhCDA5.js";const d=s({__name:"index",setup(_){const t=n(),o=c(),{params:r,query:a}=t,{path:e}=r;return o.replace({path:"/"+(Array.isArray(e)?e.join("/"):e),query:a}),(i,l)=>(p(),u("div",null,"123"))}});export{d as default};

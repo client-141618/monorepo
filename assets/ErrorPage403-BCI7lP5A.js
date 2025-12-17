@@ -1,0 +1,1 @@
+import{_ as o}from"./_plugin-vue_export-helper-DlAUqK2U.js";import{c as a,o as s,a as r}from"./index-B2DhCDA5.js";const t={},c={class:"error-page"};function n(_,e){return s(),a("div",c,[...e[0]||(e[0]=[r("h1",null,"403",-1),r("p",null,"没有权限访问此页面",-1)])])}const p=o(t,[["render",n],["__scopeId","data-v-7d73acbd"]]);export{p as default};
