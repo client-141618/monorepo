@@ -13,6 +13,7 @@
     "@element-plus/icons-vue": "catalog:",
     "axios": "catalog:",
     "element-plus": "catalog:",
+    "pinia": "catalog:",
     "vite-plugin-vue-devtools": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"

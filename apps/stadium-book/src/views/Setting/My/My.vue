@@ -3,10 +3,13 @@ import type { UploadProps } from "element-plus"
 import type { UserInfo } from "@/api/user/types"
 import { Message, Phone, Plus, User } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
-import { computed, onMounted, ref } from "vue"
-import { getCurrentUser, updateUserInfo } from "@/api/user"
+import { storeToRefs } from "pinia"
+import { computed, ref } from "vue"
+import { useUserStore } from "@/store/user"
 
-const userInfo = ref<UserInfo>()
+const userStore = useUserStore()
+const { userInfo } = storeToRefs(userStore)
+
 const dialogVisible = ref(false)
 const editForm = ref<Partial<UserInfo>>({})
 const imageUrl = ref<string>("")
@@ -16,17 +19,6 @@ const headers = computed(() => {
   return {
     token: storedUser?.token || "",
   }
-})
-
-const getUserInfo = async () => {
-  const res = await getCurrentUser()
-  if (res.code === 200) {
-    userInfo.value = res.data as UserInfo
-  }
-}
-
-onMounted(() => {
-  getUserInfo()
 })
 
 const handleEdit = () => {
@@ -72,11 +64,11 @@ const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
 
 const handleSave = async () => {
   try {
-    const res = await updateUserInfo(editForm.value)
+    const res = await userStore.updateUserInfo(editForm.value as UserInfo)
     if (res.code === 200) {
       ElMessage.success("保存成功")
       handleClose()
-      getUserInfo()
+      await userStore.getUserInfo()
     } else {
       ElMessage.error(res.msg || "保存失败")
     }
@@ -97,7 +89,7 @@ const handleSave = async () => {
           />
         </el-avatar>
         <div flex flex-col gap-10px>
-          <span text-20px font-bold>{{ userInfo?.username }}</span>
+          <span text-20px font-bold>{{ userInfo?.username || "--" }}</span>
           <div flex flex-col gap-6px>
             <div> <User size="12px" /> {{ userInfo?.age || "--" }} </div>
             <div> <Message size="12px" /> {{ userInfo?.email || "--" }} </div>

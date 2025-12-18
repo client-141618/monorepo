@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import type { UserInfo } from "@/api/user/types"
 import { ArrowDown } from "@element-plus/icons-vue"
-import { onMounted, ref } from "vue"
+import { storeToRefs } from "pinia"
+import { onMounted } from "vue"
 import { useRouter } from "vue-router"
-import { getCurrentUser } from "@/api/user"
+import { useUserStore } from "@/store/user"
 
+const userStore = useUserStore()
 const router = useRouter()
-const userInfo = ref<UserInfo>()
+const { userInfo } = storeToRefs(userStore)
+
 const errorHandle = () => {
   return true
 }
@@ -16,19 +18,8 @@ const handleLogout = () => {
   router.push("/login")
 }
 
-const getUserInfo = async () => {
-  try {
-    const res = await getCurrentUser()
-    if (res.code === 200) {
-      userInfo.value = res.data as UserInfo
-    }
-  } catch (e) {
-    console.error(e)
-  }
-}
-
 onMounted(() => {
-  getUserInfo()
+  userStore.getUserInfo()
 })
 </script>
 
