@@ -3,13 +3,20 @@ import type { UploadProps } from "element-plus"
 import type { UserInfo } from "@/api/user/types"
 import { Message, Phone, Plus, User } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
-import { onMounted, ref } from "vue"
-import { getCurrentUser } from "@/api/user"
+import { computed, onMounted, ref } from "vue"
+import { getCurrentUser, updateUserInfo } from "@/api/user"
 
 const userInfo = ref<UserInfo>()
 const dialogVisible = ref(false)
 const editForm = ref<Partial<UserInfo>>({})
 const imageUrl = ref<string>("")
+
+const headers = computed(() => {
+  const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
+  return {
+    token: storedUser?.token || "",
+  }
+})
 
 const getUserInfo = async () => {
   const res = await getCurrentUser()
@@ -25,6 +32,7 @@ onMounted(() => {
 const handleEdit = () => {
   if (userInfo.value) {
     editForm.value = {
+      userId: userInfo.value.userId,
       username: userInfo.value.username,
       phone: userInfo.value.phone,
       email: userInfo.value.email,
@@ -40,21 +48,42 @@ const handleClose = () => {
 }
 
 const handleAvatarSuccess: UploadProps["onSuccess"] = (
-  _response,
+  response,
   uploadFile,
 ) => {
   imageUrl.value = URL.createObjectURL(uploadFile.raw!)
+  if (response.code === 200) {
+    editForm.value.avatar = response.data
+  } else {
+    ElMessage.error(response.msg || "上传失败")
+  }
 }
 
 const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
   if (rawFile.type !== "image/jpeg") {
-    ElMessage.error("Avatar picture must be JPG format!")
+    ElMessage.error("图片必须是 JPG 格式!")
     return false
   } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error("Avatar picture size can not exceed 2MB!")
+    ElMessage.error("图片大小不能超过 2MB!")
     return false
   }
   return true
+}
+
+const handleSave = async () => {
+  try {
+    const res = await updateUserInfo(editForm.value)
+    if (res.code === 200) {
+      ElMessage.success("保存成功")
+      handleClose()
+      getUserInfo()
+    } else {
+      ElMessage.error(res.msg || "保存失败")
+    }
+  } catch (error) {
+    ElMessage.error("保存失败")
+    console.error(error)
+  }
 }
 </script>
 
@@ -62,7 +91,11 @@ const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
   <div p-10px>
     <el-card shadow="hover" style="border-radius: 10px">
       <div flex gap-20px>
-        <el-avatar :size="100" :src="userInfo?.avatar" />
+        <el-avatar :size="100" :src="userInfo?.avatar" @error="() => { return true }">
+          <img
+            src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
+          />
+        </el-avatar>
         <div flex flex-col gap-10px>
           <span text-20px font-bold>{{ userInfo?.username }}</span>
           <div flex flex-col gap-6px>
@@ -116,7 +149,9 @@ const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
         </el-row>
         <el-form-item label="头像：">
           <el-upload
-            action="https://run.mocky.io/v3/9d059bf9-4660-45f2-925d-ce80ad6c4d15"
+            class="avatar-uploader"
+            action="/api/file/upload"
+            :headers="headers"
             :show-file-list="false"
             :on-success="handleAvatarSuccess"
             :before-upload="beforeAvatarUpload"
@@ -126,6 +161,41 @@ const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
           </el-upload>
         </el-form-item>
       </el-form>
+      <template #footer>
+        <el-button @click="handleClose">取消</el-button>
+        <el-button type="primary" @click="handleSave">保存</el-button>
+      </template>
     </el-dialog>
   </div>
 </template>
+
+<style scoped lang="scss">
+.avatar-uploader .avatar {
+  width: 128px;
+  height: 128px;
+  display: block;
+}
+</style>
+
+<style lang="scss">
+.avatar-uploader .el-upload {
+  border: 1px dashed var(--el-border-color);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: var(--el-transition-duration-fast);
+}
+
+.avatar-uploader .el-upload:hover {
+  border-color: var(--el-color-primary);
+}
+
+.el-icon.avatar-uploader-icon {
+  font-size: 28px;
+  color: #8c939d;
+  width: 128px;
+  height: 128px;
+  text-align: center;
+}
+</style>
