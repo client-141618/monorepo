@@ -28,9 +28,9 @@ const service: AxiosInstance = axios.create({
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     config.headers = config.headers ?? {}
-    const user = JSON.parse(localStorage.getItem('userInfo') || '{}')
+    const user = JSON.parse(localStorage.getItem("userInfo") || "{}")
     if (user) {
-      config.headers['token'] = user.token
+      config.headers["token"] = user.token
     }
     // if (typeof window !== 'undefined') {
     //   const token = window.localStorage.getItem('token')

@@ -1,6 +1,6 @@
-import { request } from '@/utils/request'
+import { request } from "@/utils/request"
 
-const PREFIX = '/api'
+const PREFIX = "/api"
 
 /**
  * 获取用户列表

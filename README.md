@@ -1,6 +1,6 @@
 ## Monorepo 项目
-一个基于 pnpm workspace 的单仓库项目管理，包含多个前端应用和共享包。
----
+
+## 一个基于 pnpm workspace 的单仓库项目管理，包含多个前端应用和共享包。
 
 ## 📁 目录结构
 
@@ -25,6 +25,7 @@ monorepo/
 ### 1. react_staging
 
 **技术栈：**
+
 - **框架**: React 19 + TypeScript
 - **构建工具**: Vite
 - **状态管理**: Redux Toolkit
@@ -34,6 +35,7 @@ monorepo/
 - **HTTP 客户端**: Axios
 
 **运行命令：**
+
 ```bash
 cd apps/react_staging
 pnpm dev        # 开发模式（端口 3000）
@@ -44,6 +46,7 @@ pnpm preview    # 预览构建结果
 ### 2. stadium-book
 
 **技术栈：**
+
 - **框架**: Vue 3 + TypeScript
 - **构建工具**: Vite
 - **路由**: Vue Router 4
@@ -53,6 +56,7 @@ pnpm preview    # 预览构建结果
 - **自动导入**: unplugin-auto-import + unplugin-vue-components
 
 **运行命令：**
+
 ```bash
 cd apps/stadium-book
 pnpm dev        # 开发模式（端口 3344）
@@ -86,6 +90,7 @@ pnpm preview    # 预览构建结果
 - **类型检查**: TypeScript
 
 **根目录命令：**
+
 ```bash
 pnpm lint              # 检查代码规范
 pnpm lint:fix          # 自动修复代码规范问题

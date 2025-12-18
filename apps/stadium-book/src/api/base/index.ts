@@ -1,9 +1,9 @@
-import type { RegisterParams } from './types'
-import { request } from '@/utils/request'
+import type { RegisterParams } from "./types"
+import { request } from "@/utils/request"
 
-const PREFIX = '/api'
+const PREFIX = "/api"
 
-export function login(data: { phone: string, password: string }) {
+export function login(data: { phone: string; password: string }) {
   return request({
     url: `${PREFIX}/user/login`,
     method: "POST",

@@ -4,19 +4,16 @@ import Header from "@/components/Header/Header.vue"
 import SideMenu from "@/components/SideMenu/SideMenu.vue"
 
 const router = useRouter()
-const userInfo = localStorage.getItem('userInfo')
+const userInfo = localStorage.getItem("userInfo")
 if (!userInfo) {
-  router.push('/login')
+  router.push("/login")
 }
 </script>
 
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header
-        style="height: 60px;
-        background-color: #fff;"
-      >
+      <el-header style="height: 60px; background-color: #fff">
         <Header />
       </el-header>
       <el-container>
@@ -24,7 +21,9 @@ if (!userInfo) {
           <SideMenu />
         </el-aside>
         <el-main style="background-color: #f6f6f6">
-          <router-view />
+          <div h-full rounded-10px bg-white p-10px>
+            <router-view />
+          </div>
         </el-main>
       </el-container>
     </el-container>
@@ -32,7 +31,7 @@ if (!userInfo) {
 </template>
 
 <style lang="scss" scoped>
-.common-layout {
+  .common-layout {
   height: 100vh;
 
   :deep(.el-container) {

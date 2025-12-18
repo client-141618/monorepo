@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { getUserList } from '@/api/user'
+import { getUserList } from "@/api/user"
 
 const demo = () => {
-  getUserList().then(res => {
+  getUserList().then((res) => {
     console.log(res)
   })
 }
@@ -17,7 +17,7 @@ const demo = () => {
 </template>
 
 <style lang="scss" scoped>
-.home-container {
+  .home-container {
   padding: 20px;
 }
 </style>

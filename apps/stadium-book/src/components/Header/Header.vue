@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { UserInfo } from '@/api/user/types'
-import { ArrowDown } from '@element-plus/icons-vue'
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { getCurrentUser } from '@/api/user'
+import type { UserInfo } from "@/api/user/types"
+import { ArrowDown } from "@element-plus/icons-vue"
+import { onMounted, ref } from "vue"
+import { useRouter } from "vue-router"
+import { getCurrentUser } from "@/api/user"
 
 const router = useRouter()
 const userInfo = ref<UserInfo>()
@@ -12,8 +12,8 @@ const errorHandle = () => {
 }
 
 const handleLogout = () => {
-  localStorage.removeItem('userInfo')
-  router.push('/login')
+  localStorage.removeItem("userInfo")
+  router.push("/login")
 }
 
 const getUserInfo = async () => {
@@ -38,7 +38,7 @@ onMounted(() => {
     <div class="right">
       <el-dropdown>
         <div class="user-dropdown-trigger">
-          <span class="username">{{ userInfo?.username || '默认用户' }}</span>
+          <span class="username">{{ userInfo?.username || "默认用户" }}</span>
           <el-icon class="dropdown-icon">
             <arrow-down />
           </el-icon>
@@ -52,19 +52,17 @@ onMounted(() => {
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      <el-avatar
-        :size="40"
-        :src="userInfo?.avatar"
-        @error="errorHandle"
-      >
-        <img src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
+      <el-avatar :size="40" :src="userInfo?.avatar" @error="errorHandle">
+        <img
+          src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
+        />
       </el-avatar>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.header-container {
+  .header-container {
   .right {
     display: flex;
     align-items: center;

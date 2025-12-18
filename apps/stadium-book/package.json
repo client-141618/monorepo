@@ -24,6 +24,7 @@
     "@vue/tsconfig": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-vue": "catalog:",
+    "gh-pages": "catalog:",
     "sass": "catalog:",
     "sass-loader": "catalog:",
     "typescript": "catalog:",

@@ -22,6 +22,8 @@ catalog:
   eslint-plugin-react-refresh: ^0.4.24
   eslint-plugin-unused-imports: ^4.1.4
   eslint-plugin-vue: ^10.6.2
+  gh-pages: ^6.3.0
+
   globals: ^16.5.0
   react-router-dom: ^7.10.1
   sass: ^1.94.2
@@ -36,7 +38,6 @@ catalog:
   vue: ^3.5.25
   vue-router: ^4.6.3
   vue-tsc: ^3.1.6
-
 catalogs:
   ant-design:
     '@ant-design/icons': ^6.1.0

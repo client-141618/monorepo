@@ -1,10 +1,10 @@
-import { execSync } from 'node:child_process'
-import { readdirSync, readFileSync, statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { execSync } from "node:child_process"
+import { readdirSync, readFileSync, statSync } from "node:fs"
+import { join, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 
 const __filename = fileURLToPath(import.meta.url)
-const __dirname = resolve(__filename, '..')
+const __dirname = resolve(__filename, "..")
 
 /**
  * 获取 monorepo 中的所有包
@@ -15,12 +15,7 @@ function getPackagesSync() {
   const rootDir = __dirname
 
   // 根据 pnpm-workspace.yaml 定义的包路径
-  const packagePatterns = [
-    'apps/*',
-    'packages/*',
-    'components/**',
-    'utils/**',
-  ]
+  const packagePatterns = ["apps/*", "packages/*", "components/**", "utils/**"]
 
   /**
    * 检查目录是否存在
@@ -28,8 +23,7 @@ function getPackagesSync() {
   function existsSync(path) {
     try {
       return statSync(path).isDirectory()
-    }
-    catch {
+    } catch {
       return false
     }
   }
@@ -38,12 +32,11 @@ function getPackagesSync() {
    * 读取 package.json
    */
   function readPackageJson(dir) {
-    const packageJsonPath = join(dir, 'package.json')
+    const packageJsonPath = join(dir, "package.json")
     try {
-      const content = readFileSync(packageJsonPath, 'utf-8')
+      const content = readFileSync(packageJsonPath, "utf-8")
       return JSON.parse(content)
-    }
-    catch {
+    } catch {
       return null
     }
   }
@@ -53,17 +46,16 @@ function getPackagesSync() {
    */
   function scanDirectory(pattern) {
     // 处理通配符模式
-    if (pattern.includes('**')) {
+    if (pattern.includes("**")) {
       // 递归扫描
-      const baseDir = pattern.replace('/**', '').replace('**', '')
+      const baseDir = pattern.replace("/**", "").replace("**", "")
       const fullPath = join(rootDir, baseDir)
       if (existsSync(fullPath)) {
         scanRecursive(fullPath)
       }
-    }
-    else if (pattern.includes('*')) {
+    } else if (pattern.includes("*")) {
       // 单层通配符
-      const baseDir = pattern.replace('/*', '').replace('*', '')
+      const baseDir = pattern.replace("/*", "").replace("*", "")
       const fullPath = join(rootDir, baseDir)
       if (existsSync(fullPath)) {
         const entries = readdirSync(fullPath, { withFileTypes: true })
@@ -80,8 +72,7 @@ function getPackagesSync() {
           }
         }
       }
-    }
-    else {
+    } else {
       // 直接路径
       const fullPath = join(rootDir, pattern)
       if (existsSync(fullPath)) {
@@ -114,7 +105,7 @@ function getPackagesSync() {
       const entries = readdirSync(dir, { withFileTypes: true })
       for (const entry of entries) {
         // 跳过 node_modules 和 test 目录
-        if (entry.name === 'node_modules' || entry.name === 'test') {
+        if (entry.name === "node_modules" || entry.name === "test") {
           continue
         }
 
@@ -122,8 +113,7 @@ function getPackagesSync() {
           scanRecursive(join(dir, entry.name))
         }
       }
-    }
-    catch {
+    } catch {
       // 忽略无法访问的目录
     }
   }
@@ -139,44 +129,41 @@ function getPackagesSync() {
 const { packages } = getPackagesSync()
 
 const allowedScopes = [
-  ...packages.map(pkg => pkg.packageJson.name),
-  'project',
-  'style',
-  'lint',
-  'ci',
-  'dev',
-  'deploy',
-  'other',
+  ...packages.map((pkg) => pkg.packageJson.name),
+  "project",
+  "style",
+  "lint",
+  "ci",
+  "dev",
+  "deploy",
+  "other",
 ]
 
 // precomputed scope
-const scopeComplete = execSync('git status --porcelain || true')
+const scopeComplete = execSync("git status --porcelain || true")
   .toString()
   .trim()
-  .split('\n')
-  .find(r => ~r.indexOf('M  src'))
-  ?.replace(/\//g, '%%')
+  .split("\n")
+  .find((r) => ~r.indexOf("M  src"))
+  ?.replace(/\//g, "%%")
   ?.match(/src%%(\w|-)*/)?.[1]
-  ?.replace(/s$/, '')
+  ?.replace(/s$/, "")
 
 const userConfig = {
-  extends: ['@commitlint/config-conventional'],
+  extends: ["@commitlint/config-conventional"],
   plugins: [
-    'commitlint-plugin-function-rules',
+    "commitlint-plugin-function-rules",
     {
       rules: {
-        'fix-aliyun-rule': ({ type, subject }) => {
-          const issuePrefixe = 'RUSR-'
-          if (type === 'fix') {
+        "fix-aliyun-rule": ({ type, subject }) => {
+          const issuePrefixe = "RUSR-"
+          if (type === "fix") {
             return [
               subject?.includes(issuePrefixe),
               `必须包含云效的 bug 地址; eg. https://devops.aliyun.com/projex/bug/RUSR-1180`,
             ]
-          }
-          else {
-            return [
-              true,
-            ]
+          } else {
+            return [true]
           }
         },
       },
@@ -185,21 +172,21 @@ const userConfig = {
   prompt: {
     /** @use `pnpm commit :f` */
     alias: {
-      b: 'build: bump dependencies',
-      c: 'chore: update config',
-      f: 'docs: fix typos',
-      r: 'docs: update README',
-      s: 'style: update code format',
+      b: "build: bump dependencies",
+      c: "chore: update config",
+      f: "docs: fix typos",
+      r: "docs: update README",
+      s: "style: update code format",
     },
     allowCustomIssuePrefixs: false,
     // scopes: [...scopes, 'mock'],
     allowEmptyIssuePrefixs: false,
-    customScopesAlign: scopeComplete ? 'bottom' : 'top',
+    customScopesAlign: scopeComplete ? "bottom" : "top",
     defaultScope: scopeComplete,
     // English
     typesAppend: [
-      { name: 'workflow: workflow improvements', value: 'workflow' },
-      { name: 'types:    type definition file changes', value: 'types' },
+      { name: "workflow: workflow improvements", value: "workflow" },
+      { name: "types:    type definition file changes", value: "types" },
     ],
 
     // 中英文对照版
@@ -241,7 +228,7 @@ const userConfig = {
      * ^^^^^^^^^^^^^^ empty line.
      * - Something here
      */
-    'body-leading-blank': [2, 'always'],
+    "body-leading-blank": [2, "always"],
     /**
      * type[scope]: [function] description
      *
@@ -249,53 +236,53 @@ const userConfig = {
      *
      * ^^^^^^^^^^^^^^
      */
-    'footer-leading-blank': [1, 'always'],
+    "footer-leading-blank": [1, "always"],
     /**
      * type[scope]: [function] description
      *      ^^^^^
      */
-    'function-rules/scope-enum': [
+    "function-rules/scope-enum": [
       2, // level: error
-      'always',
+      "always",
       (parsed) => {
         if (!parsed.scope || allowedScopes.includes(parsed.scope)) {
           return [true]
         }
 
-        return [false, `scope must be one of ${allowedScopes.join(', ')}`]
+        return [false, `scope must be one of ${allowedScopes.join(", ")}`]
       },
     ],
     /**
      * type[scope]: [function] description [No more than 108 characters]
      *      ^^^^^
      */
-    'header-max-length': [2, 'always', 108],
+    "header-max-length": [2, "always", 108],
 
-    'scope-enum': [0],
-    'subject-case': [0],
-    'subject-empty': [2, 'never'],
-    'type-empty': [2, 'never'],
+    "scope-enum": [0],
+    "subject-case": [0],
+    "subject-empty": [2, "never"],
+    "type-empty": [2, "never"],
     /**
      * type[scope]: [function] description
      * ^^^^
      */
-    'type-enum': [
+    "type-enum": [
       2,
-      'always',
+      "always",
       [
-        'feat',
-        'fix',
-        'perf',
-        'style',
-        'docs',
-        'test',
-        'refactor',
-        'build',
-        'ci',
-        'chore',
-        'revert',
-        'types',
-        'release',
+        "feat",
+        "fix",
+        "perf",
+        "style",
+        "docs",
+        "test",
+        "refactor",
+        "build",
+        "ci",
+        "chore",
+        "revert",
+        "types",
+        "release",
       ],
     ],
   },
@@ -309,9 +296,7 @@ export default {
     // 'header-max-length': [2, 'always', 100],
     // 'scope-case': [2, 'always', 'lower-case']
   },
-  plugins: [
-    ...userConfig.plugins,
-  ],
+  plugins: [...userConfig.plugins],
   parserPreset: {
     parserOpts: {
       // Validate for issue/ticket numbers

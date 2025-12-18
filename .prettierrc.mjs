@@ -8,5 +8,5 @@ export default {
   /** Tab 键的空格数 */
   tabWidth: 2,
   vueIndentScriptAndStyle: true,
-  htmlWhitespaceSensitivity: "strict",
+  htmlWhitespaceSensitivity: 'strict',
 }
