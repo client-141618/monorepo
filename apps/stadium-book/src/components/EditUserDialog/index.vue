@@ -7,24 +7,12 @@ import { storeToRefs } from "pinia"
 import { computed, ref, watch } from "vue"
 import { useUserStore } from "@/store/user"
 
-const props = defineProps<{
-  modelValue: boolean
-}>()
-
-const emit = defineEmits<{
-  "update:modelValue": [value: boolean]
-}>()
-
+const dialogVisible = defineModel<boolean>("modelValue")
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
 const editForm = ref<Partial<UserInfo>>({})
 const editFormRef = ref<FormInstance>()
 const imageUrl = ref<string>(userInfo.value?.avatar || "")
-
-const dialogVisible = computed({
-  get: () => props.modelValue,
-  set: (value) => emit("update:modelValue", value),
-})
 
 const headers = computed(() => {
   const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
@@ -87,7 +75,7 @@ const handleClose = () => {
 }
 
 watch(
-  () => props.modelValue,
+  () => dialogVisible.value,
   (visible) => {
     if (visible && userInfo.value) {
       editForm.value = {

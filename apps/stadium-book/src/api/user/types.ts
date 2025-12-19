@@ -9,3 +9,8 @@ export interface UserInfo {
   createTime?: string
   updateTime?: string
 }
+
+export interface UpdatePasswordParams {
+  password: string
+  newPassword: string
+}

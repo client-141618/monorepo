@@ -2,6 +2,7 @@
 import { Message, Phone, User } from "@element-plus/icons-vue"
 import { storeToRefs } from "pinia"
 import { ref } from "vue"
+import EditPassword from "@/components/EditPassword/index.vue"
 import EditUserDialog from "@/components/EditUserDialog/index.vue"
 import { useUserStore } from "@/store/user"
 
@@ -9,9 +10,14 @@ const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
 
 const dialogVisible = ref(false)
+const editPasswordVisible = ref(false)
 
 const handleEdit = () => {
   dialogVisible.value = true
+}
+
+const handleEditPassword = () => {
+  editPasswordVisible.value = true
 }
 </script>
 
@@ -33,9 +39,11 @@ const handleEdit = () => {
           </div>
         </div>
         <el-button ml-auto type="primary" @click="handleEdit">编辑</el-button>
+        <el-button ml-auto type="primary" @click="handleEditPassword">修改密码</el-button>
       </div>
     </el-card>
 
     <EditUserDialog v-model="dialogVisible" />
+    <EditPassword v-model="editPasswordVisible" />
   </div>
 </template>
