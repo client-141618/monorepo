@@ -31,9 +31,15 @@ catalogs:
     '@types/node':
       specifier: ^24.10.1
       version: 24.10.1
+    '@types/nprogress':
+      specifier: ^0.2.3
+      version: 0.2.3
     '@typescript-eslint/parser':
       specifier: ^8.48.1
       version: 8.48.1
+    '@unocss/eslint-plugin':
+      specifier: ^66.5.10
+      version: 66.5.10
     '@vitejs/plugin-vue':
       specifier: ^6.0.2
       version: 6.0.2
@@ -128,6 +134,9 @@ catalogs:
     lint-staged:
       specifier: ^16.2.7
       version: 16.2.7
+    nprogress:
+      specifier: 0.2.0
+      version: 0.2.0
     prettier:
       specifier: ^3.5.3
       version: 3.7.4
@@ -310,8 +319,11 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.10.1
+      '@types/nprogress':
+        specifier: 'catalog:'
+        version: 0.2.3
       '@unocss/eslint-plugin':
-        specifier: ^66.5.10
+        specifier: 'catalog:'
         version: 66.5.10(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       '@vitejs/plugin-vue':
         specifier: 'catalog:'
@@ -328,6 +340,9 @@ importers:
       gh-pages:
         specifier: 'catalog:'
         version: 6.3.0
+      nprogress:
+        specifier: catalog:devTools
+        version: 0.2.0
       sass:
         specifier: 'catalog:'
         version: 1.94.2
@@ -1415,6 +1430,9 @@ packages:
 
   '@types/node@24.10.1':
     resolution: {integrity: sha512-GNWcUTRBgIRJD5zj+Tq0fKOJ5XZajIiBroOF0yvj2bSU1WvNdYS/dn9UxwsujGW4JX06dnHyjV2y9rRaybH0iQ==}
+
+  '@types/nprogress@0.2.3':
+    resolution: {integrity: sha512-k7kRA033QNtC+gLc4VPlfnue58CM1iQLgn1IMAU8VPHGOj7oIHPp9UlhedEnD/Gl8evoCjwkZjlBORtZ3JByUA==}
 
   '@types/react-dom@19.2.3':
     resolution: {integrity: sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ==}
@@ -3353,6 +3371,9 @@ packages:
 
   normalize-wheel-es@1.2.0:
     resolution: {integrity: sha512-Wj7+EJQ8mSuXr2iWfnujrimU35R2W4FAErEyTmJoJ7ucwTn2hOUSsRehMb5RSYkxXGTM7Y9QpvPmp++w5ftoJw==}
+
+  nprogress@0.2.0:
+    resolution: {integrity: sha512-I19aIingLgR1fmhftnbWWO3dXc0hSxqHQHQb3H8m+K3TnEn/iSeTZZOyvKXWqQESMwuUVnatlCnZdLBZZt2VSA==}
 
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
@@ -5547,6 +5568,8 @@ snapshots:
   '@types/node@24.10.1':
     dependencies:
       undici-types: 7.16.0
+
+  '@types/nprogress@0.2.3': {}
 
   '@types/react-dom@19.2.3(@types/react@19.2.7)':
     dependencies:
@@ -7989,6 +8012,8 @@ snapshots:
   normalize-path@3.0.0: {}
 
   normalize-wheel-es@1.2.0: {}
+
+  nprogress@0.2.0: {}
 
   nth-check@2.1.1:
     dependencies:

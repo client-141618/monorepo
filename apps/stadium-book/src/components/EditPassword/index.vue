@@ -108,13 +108,19 @@ const handleSave = () => {
           v-model="form.confirmPassword"
           placeholder="请确认新密码"
           show-password
+          @paste.prevent="
+            () => {
+              return false
+            }
+          "
+          @keydown.enter="handleSave"
         />
       </el-form-item>
     </el-form>
 
     <template #footer>
       <el-button @click="handleCancel">取消</el-button>
-      <el-button type="primary" @click="handleSave" :loading="loading">保存</el-button>
+      <el-button type="primary" @click="handleSave" :loading="loading">确认</el-button>
     </template>
   </el-dialog>
 </template>

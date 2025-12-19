@@ -11,7 +11,9 @@ catalog:
   '@eslint-community/eslint-plugin-eslint-comments': ^4.0.0
   '@eslint/js': ^9.39.1
   '@types/node': ^24.10.1
+  '@types/nprogress': ^0.2.3
   '@typescript-eslint/parser': ^8.48.1
+  '@unocss/eslint-plugin': ^66.5.10
   '@vitejs/plugin-vue': ^6.0.2
   '@vue/tsconfig': ^0.8.1
   axios: ^1.13.2
@@ -38,20 +40,20 @@ catalog:
   vue: ^3.5.25
   vue-router: ^4.6.3
   vue-tsc: ^3.1.6
+
 catalogs:
   ant-design:
     '@ant-design/icons': ^6.1.0
     '@ant-design/v5-patch-for-react-19': ^1.0.3
     antd: ^5.29.1
-
   devTools:
     '@commitlint/cli': ^20.2.0
     '@commitlint/config-conventional': ^20.2.0
     commitlint-plugin-function-rules: ^4.1.1
     husky: ^9.1.7
     lint-staged: ^16.2.7
+    nprogress: 0.2.0
     prettier: ^3.5.3
-
   react19:
     '@reduxjs/toolkit': ^2.11.0
     '@types/react': ^19.2.7
