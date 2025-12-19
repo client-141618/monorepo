@@ -18,6 +18,10 @@ const handleLogout = () => {
   router.push("/login")
 }
 
+const handleEditProfile = () => {
+  router.push("/setting/my")
+}
+
 onMounted(() => {
   userStore.getUserInfo()
 })
@@ -37,7 +41,7 @@ onMounted(() => {
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item>我的预定</el-dropdown-item>
-            <el-dropdown-item>编辑资料</el-dropdown-item>
+            <el-dropdown-item @click="handleEditProfile">编辑资料</el-dropdown-item>
             <el-dropdown-item>修改密码</el-dropdown-item>
             <el-dropdown-item divided style="color: red" @click="handleLogout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
