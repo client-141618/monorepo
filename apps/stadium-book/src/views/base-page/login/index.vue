@@ -5,6 +5,7 @@ import { ElMessage } from "element-plus"
 import { ref } from "vue"
 import { useRouter } from "vue-router"
 import { login, register, sendSmsCode } from "@/api/base"
+import { useSmsCodeCooldown } from "@/utils/useSmsCodeCooldown"
 
 const router = useRouter()
 const activeName = ref<string>("login")
@@ -122,7 +123,11 @@ const handleRegister = async () => {
   })
 }
 
+const { isCooldown, buttonText: sendCodeButtonText, startCooldown } =
+  useSmsCodeCooldown()
+
 const sendCode = async () => {
+  if (isCooldown.value) return
   if (!registerForm.value.phone || !/^1[3-9]\d{9}$/.test(registerForm.value.phone)) {
     ElMessage.error("请输入正确的手机号")
     return
@@ -130,6 +135,7 @@ const sendCode = async () => {
   const res = await sendSmsCode(registerForm.value.phone)
   if (res.code === 200) {
     ElMessage.success("发送验证码成功")
+    startCooldown()
   } else {
     ElMessage.error(res.msg || "发送验证码失败")
   }
@@ -251,7 +257,9 @@ const sendCode = async () => {
                     maxlength="6"
                     @keydown.enter="handleRegister"
                   />
-                  <el-button type="primary" @click="sendCode">发送验证码</el-button>
+                  <el-button type="primary" :disabled="isCooldown" @click="sendCode">
+                    {{ sendCodeButtonText }}
+                  </el-button>
                 </div>
               </el-form-item>
             </el-form>
