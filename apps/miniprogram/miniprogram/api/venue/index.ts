@@ -4,7 +4,7 @@ export interface Venue {
   id: number
   name: string
   image?: string
-  type: number
+  type: string | number
   description?: string
   location?: string
   pricePerHour: number
@@ -18,6 +18,13 @@ export interface Venue {
 export function getVenueListApi() {
   return request<Venue[]>({
     url: "/api/venue/list",
+    method: "GET",
+  })
+}
+
+export function getVenueListByTypeApi(type: string) {
+  return request<Venue[]>({
+    url: `/api/venue/type/${type}`,
     method: "GET",
   })
 }

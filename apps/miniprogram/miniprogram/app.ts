@@ -1,18 +1,21 @@
+import { ensureLogin } from "./api/auth/index"
+
 // app.ts
 App<IAppOption>({
   globalData: {},
-  onLaunch() {
-    // 展示本地存储能力
-    const logs = wx.getStorageSync('logs') || []
+  async onLaunch() {
+    const logs = wx.getStorageSync("logs") || []
     logs.unshift(Date.now())
-    wx.setStorageSync('logs', logs)
+    wx.setStorageSync("logs", logs)
 
-    // 登录
-    wx.login({
-      success: res => {
-        console.log(res.code)
-        // 发送 res.code 到后台换取 openId, sessionKey, unionId
-      },
-    })
+    try {
+      await ensureLogin()
+    } catch (error) {
+      console.error("miniapp login failed:", error)
+      wx.showToast({
+        title: "登录失败，请稍后重试",
+        icon: "none",
+      })
+    }
   },
 })

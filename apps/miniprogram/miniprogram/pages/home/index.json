@@ -1,5 +1,10 @@
 {
-  "navigationStyle": "custom",
+  "navigationStyle": "default",
+  "navigationBarTitleText": "场馆预约",
+  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f7fb",
+  "backgroundTextStyle": "dark",
   "usingComponents": {
     "app-tabbar": "/components/app-tabbar/index",
     "van-tabs": "@vant/weapp/tabs/index",

@@ -1,4 +1,5 @@
-import { getVenueListApi, type Venue } from "../../api/venue/index"
+import type { Venue } from "../../api/venue/index"
+import { getVenueListApi, getVenueListByTypeApi } from "../../api/venue/index"
 import { VENUE_TYPE_OPTIONS } from "../../constants/venue"
 
 type TabValue = "all" | string
@@ -11,23 +12,28 @@ interface DisplayVenue extends Venue {
 Page({
   data: {
     loading: false,
+    refresherTriggered: false,
     activeType: "all" as TabValue,
     typeOptions: VENUE_TYPE_OPTIONS,
-    list: [] as Venue[],
     displayList: [] as DisplayVenue[],
   },
 
   onLoad() {
-    this.fetchVenueList()
+    this.onRefresherRefresh()
   },
 
-  async fetchVenueList() {
+  onRefresherRefresh() {
+    this.setData({ refresherTriggered: true })
+    this.fetchVenueList(this.data.activeType, true)
+  },
+
+  async fetchVenueList(type: TabValue = "all", fromPullDown = false) {
     this.setData({ loading: true })
     try {
-      const res = await getVenueListApi()
+      const res =
+        type === "all" ? await getVenueListApi() : await getVenueListByTypeApi(String(type))
       const validList = (res.data || []).filter((item) => item.status === 1)
-      this.setData({ list: validList })
-      this.updateDisplayList()
+      this.updateDisplayList(validList)
     } catch (error) {
       console.error("load venue list failed:", error)
       wx.showToast({
@@ -35,23 +41,24 @@ Page({
         icon: "none",
       })
     } finally {
+      if (fromPullDown) {
+        this.setData({ refresherTriggered: false })
+      }
       this.setData({ loading: false })
     }
   },
 
   onTypeChange(event: WechatMiniprogram.CustomEvent<{ name: string | number }>) {
-    this.setData({ activeType: String(event.detail.name) }, () => this.updateDisplayList())
+    const activeType = String(event.detail.name)
+    this.setData({ activeType })
+    this.fetchVenueList(activeType)
   },
 
-  updateDisplayList() {
-    const { list, activeType } = this.data
-    const filtered =
-      activeType === "all"
-        ? list
-        : list.filter((item) => String(item.type) === activeType)
-
-    const displayList: DisplayVenue[] = filtered.map((item) => {
-      const remaining = Math.max(0, item.remaining ?? 0)
+  updateDisplayList(list: Venue[]) {
+    const displayList: DisplayVenue[] = list.map((item) => {
+      const remainingValue =
+        item.remaining === undefined || item.remaining === null ? 0 : item.remaining
+      const remaining = Math.max(0, remainingValue)
       const total = Math.max(0, item.total || 0)
       const progress = total > 0 ? Math.min(100, (remaining / total) * 100) : 0
       return {

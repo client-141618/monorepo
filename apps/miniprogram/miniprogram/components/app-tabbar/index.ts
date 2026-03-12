@@ -17,7 +17,8 @@ Component({
       const { name } = event.detail
       const targetPath = TAB_PATH[name]
       const pages = getCurrentPages()
-      const currentPath = pages[pages.length - 1]?.route
+      const currentPage = pages[pages.length - 1]
+      const currentPath = currentPage ? currentPage.route : ""
       if (!targetPath || targetPath === `/${currentPath}`) {
         return
       }

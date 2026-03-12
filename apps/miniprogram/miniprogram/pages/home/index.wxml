@@ -1,26 +1,34 @@
 <view class="page">
-  <scroll-view class="content" scroll-y enable-flex>
-    <view class="banner">
-      <view class="banner-mask">
-        <view class="banner-title">场地预约</view>
-        <view class="banner-subtitle">便捷预订，实时余量</view>
-      </view>
-    </view>
+  <view class="banner">
+    <image
+      class="banner-image"
+      mode="aspectFill"
+      src="https://dummyimage.com/1200x500/1f2430/ffffff&text=Banner"
+    />
+  </view>
 
-    <view class="card">
-      <van-tabs
-        active="{{activeType}}"
-        bind:change="onTypeChange"
-        color="#ffd400"
-        line-width="36"
-      >
-        <van-tab title="全部" name="all"></van-tab>
-        <block wx:for="{{typeOptions}}" wx:key="value">
-          <van-tab title="{{item.label}}" name="{{item.value}}"></van-tab>
-        </block>
-      </van-tabs>
-    </view>
+  <view class="card">
+    <van-tabs
+      active="{{activeType}}"
+      bind:change="onTypeChange"
+      color="#ffd400"
+      line-width="36"
+    >
+      <van-tab title="全部" name="all"></van-tab>
+      <block wx:for="{{typeOptions}}" wx:key="value">
+        <van-tab title="{{item.label}}" name="{{item.value}}"></van-tab>
+      </block>
+    </van-tabs>
+  </view>
 
+  <scroll-view
+    class="content"
+    scroll-y
+    enable-flex
+    refresher-enabled
+    refresher-triggered="{{refresherTriggered}}"
+    bindrefresherrefresh="onRefresherRefresh"
+  >
     <view class="venue-list">
       <block wx:if="{{displayList.length}}">
         <block wx:for="{{displayList}}" wx:key="id">
