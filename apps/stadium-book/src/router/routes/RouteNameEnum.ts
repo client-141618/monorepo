@@ -7,3 +7,7 @@ export enum SettingRoute {
   Setting = "Setting",
   My = "My",
 }
+
+export enum VenueRoute {
+  Venue = "Venue",
+}

@@ -15,7 +15,7 @@ const setting: RouteRecordRaw[] = [
       icon: Setting,
       showTag: true,
       keepAlive: true,
-      order: 1,
+      order: 2,
     },
     children: [
       {
