@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="content">
+    <van-empty description="订单页面开发中" />
+  </view>
+  <app-tabbar active="order" />
+</view>

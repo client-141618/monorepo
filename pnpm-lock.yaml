@@ -222,6 +222,16 @@ importers:
         specifier: 'catalog:'
         version: 8.50.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
 
+  apps/miniprogram:
+    dependencies:
+      '@vant/weapp':
+        specifier: ^1.11.7
+        version: 1.11.7
+    devDependencies:
+      miniprogram-api-typings:
+        specifier: ^2.8.3-1
+        version: 2.12.0
+
   apps/react_staging:
     dependencies:
       '@ant-design/icons':
@@ -1726,6 +1736,9 @@ packages:
     resolution: {integrity: sha512-GegFDmcWe0V2CR/uN1f+iQuDh2R1vA6EAwSvl1nyL+6ue0/zLyF9yhdVnypIVlJnS6RK/xaLPOP6vWJnqRGhZg==}
     peerDependencies:
       vite: ^2.9.0 || ^3.0.0-0 || ^4.0.0 || ^5.0.0-0 || ^6.0.0-0 || ^7.0.0-0
+
+  '@vant/weapp@1.11.7':
+    resolution: {integrity: sha512-Rwn9BBnb4kHSV4XmvBicwtd42J+amEUfnFDcXJsGNPNX4a9c/DoT6YLsm4X1wB2+sQbdiQsbFBLAvGRBxCkD8g==}
 
   '@vitejs/plugin-react@5.1.1':
     resolution: {integrity: sha512-WQfkSw0QbQ5aJ2CHYw23ZGkqnRwqKHD/KYsMeTkZzPT4Jcf0DcBxBtwMJxnu6E7oxw5+JC6ZAiePgh28uJ1HBA==}
@@ -3468,6 +3481,9 @@ packages:
 
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
+
+  miniprogram-api-typings@2.12.0:
+    resolution: {integrity: sha512-ibvbqeslVFur0IAvTxLMvsbtvVcMo6gwvOnj0YZHV7aeDLu091VQRrETT2QuiG9P6aZWRcxeNGJChRKVPCp9VQ==}
 
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
@@ -6173,6 +6189,8 @@ snapshots:
       unplugin-utils: 0.3.1
       vite: 7.2.6(@types/node@24.10.1)(jiti@2.6.1)(sass@1.94.2)(yaml@2.8.2)
 
+  '@vant/weapp@1.11.7': {}
+
   '@vitejs/plugin-react@5.1.1(vite@7.2.6(@types/node@24.10.1)(jiti@2.6.1)(sass@1.94.2)(yaml@2.8.2))':
     dependencies:
       '@babel/core': 7.28.5
@@ -8381,6 +8399,8 @@ snapshots:
       brace-expansion: 2.0.2
 
   minimist@1.2.8: {}
+
+  miniprogram-api-typings@2.12.0: {}
 
   mitt@3.0.1: {}
 

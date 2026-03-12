@@ -1,0 +1,59 @@
+<view class="page">
+  <scroll-view class="content" scroll-y enable-flex>
+    <view class="banner">
+      <view class="banner-mask">
+        <view class="banner-title">场地预约</view>
+        <view class="banner-subtitle">便捷预订，实时余量</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <van-tabs
+        active="{{activeType}}"
+        bind:change="onTypeChange"
+        color="#ffd400"
+        line-width="36"
+      >
+        <van-tab title="全部" name="all"></van-tab>
+        <block wx:for="{{typeOptions}}" wx:key="value">
+          <van-tab title="{{item.label}}" name="{{item.value}}"></van-tab>
+        </block>
+      </van-tabs>
+    </view>
+
+    <view class="venue-list">
+      <block wx:if="{{displayList.length}}">
+        <block wx:for="{{displayList}}" wx:key="id">
+          <view class="venue-item">
+            <view class="cover-wrap">
+              <image
+                wx:if="{{item.image}}"
+                class="cover"
+                mode="aspectFill"
+                src="{{item.image}}"
+              />
+              <view wx:else class="cover-placeholder">图片占位</view>
+              <view class="price">¥{{item.pricePerHour}}/小时</view>
+            </view>
+            <view class="meta">
+              <view class="name">{{item.name}}</view>
+              <view class="location">{{item.location || "场馆地址待补充"}}</view>
+            </view>
+            <view class="stock">
+              <view class="stock-text">余量 {{item.remaining}} / {{item.total}}</view>
+              <van-progress
+                percentage="{{item.progress}}"
+                stroke-width="8"
+                track-color="#ebedf0"
+                color="#07c160"
+              />
+            </view>
+          </view>
+        </block>
+      </block>
+      <van-empty wx:else description="暂无可预约场地" />
+    </view>
+  </scroll-view>
+
+  <app-tabbar active="home" />
+</view>

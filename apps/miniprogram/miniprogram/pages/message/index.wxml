@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="content">
+    <van-empty description="消息页面开发中" />
+  </view>
+  <app-tabbar active="message" />
+</view>

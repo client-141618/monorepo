@@ -1,0 +1,7 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "app-tabbar": "/components/app-tabbar/index",
+    "van-empty": "@vant/weapp/empty/index"
+  }
+}
