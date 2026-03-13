@@ -14,11 +14,11 @@ export function getVenueListApi() {
 }
 
 /**
- * 根据场地类型编码获取场地列表
+ * 根据场地类型 ID 获取场地列表
  */
-export function getVenueListByTypeApi(type: Venue["type"] | string) {
+export function getVenueListByTypeApi(typeId: Venue["typeId"]) {
   return request<Venue[]>({
-    url: `${PREFIX}/type/${type}`,
+    url: `${PREFIX}/type/${typeId}`,
     method: "GET",
   })
 }

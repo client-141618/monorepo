@@ -6,6 +6,7 @@ export enum HomeRoute {
 export enum SettingRoute {
   Setting = "Setting",
   My = "My",
+  VenueType = "VenueType",
 }
 
 export enum VenueRoute {

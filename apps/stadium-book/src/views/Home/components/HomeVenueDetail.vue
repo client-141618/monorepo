@@ -4,7 +4,6 @@ import { ArrowLeft } from "@element-plus/icons-vue"
 import { computed, ref, watch } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { getVenueByIdApi } from "@/api/venue"
-import { VENUE_TYPE_OPTIONS } from "@/constants/venue"
 
 const route = useRoute()
 const router = useRouter()
@@ -13,14 +12,6 @@ const DEFAULT_VENUE_IMAGE = "/default.jpg"
 const detailLoading = ref(false)
 const hasLoadedOnce = ref(false)
 const venueDetail = ref<Venue | null>(null)
-
-const venueTypeLabelByValue = computed(() => {
-  const map = new Map<number, string>()
-  for (const opt of VENUE_TYPE_OPTIONS) {
-    map.set(opt.value, opt.label)
-  }
-  return map
-})
 
 const venueId = computed(() => Number(route.params.id))
 
@@ -36,8 +27,8 @@ const priceLabel = computed(() => {
 })
 
 const venueTypeLabel = computed(() => {
-  const type = Number(venueDetail.value?.type)
-  return venueTypeLabelByValue.value.get(type) || "--"
+  if (!venueDetail.value) return "--"
+  return venueDetail.value.typeName || `类型ID: ${venueDetail.value.typeId}`
 })
 
 const openHours = computed(() => {

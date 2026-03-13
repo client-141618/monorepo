@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { FormInstance, FormRules, UploadProps } from "element-plus"
+import type { VenueType } from "@/api/venue-type/type"
 import type { Venue } from "@/api/venue/type"
 import { Plus } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { computed, reactive, ref, watch } from "vue"
 import { addVenueApi, updateVenueApi } from "@/api/venue"
-import { VENUE_TYPE_OPTIONS } from "@/constants/venue"
+import { getVenueTypeListApi } from "@/api/venue-type"
 
 const props = defineProps<{
   visible: boolean
@@ -27,11 +28,13 @@ type VenueForm = Omit<Venue, "id" | "createTime" | "updateTime" | "totalSeats">
 type VenueSubmitPayload = Omit<Venue, "createTime" | "updateTime" | "totalSeats">
 
 const formRef = ref<FormInstance>()
+const venueTypeOptions = ref<VenueType[]>([])
+const venueTypeLoading = ref(false)
 
 const form = reactive<VenueForm>({
   name: "",
   image: "",
-  type: undefined as unknown as number,
+  typeId: undefined as unknown as number,
   description: "",
   location: "",
   pricePerHour: 0,
@@ -47,7 +50,7 @@ const imageUrl = ref<string>("")
 
 const rules: FormRules<VenueForm> = {
   name: [{ required: true, message: "请输入场馆名称", trigger: "blur" }],
-  type: [{ required: true, message: "请选择场馆类型", trigger: "change" }],
+  typeId: [{ required: true, message: "请选择场馆类型", trigger: "change" }],
   pricePerHour: [
     { required: true, message: "请输入每小时价格", trigger: "change" },
   ],
@@ -61,7 +64,7 @@ const rules: FormRules<VenueForm> = {
 const resetForm = () => {
   form.name = ""
   form.image = ""
-  form.type = undefined as unknown as number
+  form.typeId = undefined as unknown as number
   form.description = ""
   form.location = ""
   form.pricePerHour = 0
@@ -77,7 +80,7 @@ const resetForm = () => {
 const setFormByVenue = (venue: Venue) => {
   form.name = venue.name ?? ""
   form.image = venue.image ?? ""
-  form.type = venue.type
+  form.typeId = venue.typeId
   form.description = venue.description ?? ""
   form.location = venue.location ?? ""
   form.pricePerHour = Number((Number(venue.pricePerHour) / 100).toFixed(2))
@@ -120,6 +123,16 @@ const handleConfirm = async () => {
   emit("success")
 }
 
+const getVenueTypeOptions = async () => {
+  try {
+    venueTypeLoading.value = true
+    const res = await getVenueTypeListApi()
+    venueTypeOptions.value = res.data
+  } finally {
+    venueTypeLoading.value = false
+  }
+}
+
 const headers = computed(() => {
   const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
   return {
@@ -160,8 +173,9 @@ const beforeCoverUpload: UploadProps["beforeUpload"] = (rawFile) => {
 
 watch(
   () => props.visible,
-  (visible) => {
+  async (visible) => {
     if (!visible) return
+    await getVenueTypeOptions()
     formRef.value?.clearValidate()
     if (isEditMode.value && props.editData) {
       setFormByVenue(props.editData)
@@ -208,13 +222,17 @@ watch(
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="场馆类型" prop="type">
-                <el-select v-model="form.type" placeholder="请选择场馆类型">
+              <el-form-item label="场馆类型" prop="typeId">
+                <el-select
+                  v-model="form.typeId"
+                  :loading="venueTypeLoading"
+                  placeholder="请选择场馆类型"
+                >
                   <el-option
-                    v-for="opt in VENUE_TYPE_OPTIONS"
-                    :key="opt.value"
-                    :label="opt.label"
-                    :value="opt.value"
+                    v-for="opt in venueTypeOptions"
+                    :key="opt.id"
+                    :label="opt.name"
+                    :value="opt.id"
                   />
                 </el-select>
               </el-form-item>

@@ -2,7 +2,8 @@ export interface Venue {
   id: number
   name: string
   image?: string
-  type: number
+  typeId: number
+  typeName?: string
   description?: string
   location?: string
   pricePerHour: number

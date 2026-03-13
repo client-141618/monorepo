@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { Venue } from "@/api/venue/type"
 import { computed } from "vue"
-import { VENUE_TYPE_OPTIONS } from "@/constants/venue"
 
 const props = defineProps<{
   venue: Venue
@@ -13,21 +12,13 @@ const emit = defineEmits<{
 
 const DEFAULT_VENUE_IMAGE = "/default.jpg"
 
-const venueTypeLabelByValue = computed(() => {
-  const map = new Map<number, string>()
-  for (const opt of VENUE_TYPE_OPTIONS) {
-    map.set(opt.value, opt.label)
-  }
-  return map
-})
-
 const imageSrc = computed(() => {
   const src = props.venue.image?.trim()
   return src || DEFAULT_VENUE_IMAGE
 })
 
 const venueTypeLabel = computed(() => {
-  return venueTypeLabelByValue.value.get(Number(props.venue.type)) || "未知类型"
+  return props.venue.typeName || `类型ID: ${props.venue.typeId}`
 })
 
 const priceLabel = computed(() => {

@@ -1,23 +1,44 @@
 <script setup lang="ts">
+import type { VenueType } from "@/api/venue-type/type"
 import type { Venue } from "@/api/venue/type"
-import type { VenueTypeValue } from "@/constants/venue"
 import { Refresh } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import { getVenueListApi, getVenueListByTypeApi } from "@/api/venue"
-import { VENUE_TYPE_OPTIONS } from "@/constants/venue"
+import { getVenueTypeListApi } from "@/api/venue-type"
 import HomeVenueCard from "./HomeVenueCard.vue"
 
 const router = useRouter()
 const venueList = ref<Venue[]>([])
 const tableLoading = ref(false)
+const typeLoading = ref(false)
 const hasLoadedOnce = ref(false)
 const loadFailed = ref(false)
-const activeType = ref<"all" | VenueTypeValue>("all")
+const activeType = ref<"all" | number>("all")
+const venueTypeOptions = ref<VenueType[]>([])
 
 const hasData = computed(() => venueList.value.length > 0)
-const typeOptions = computed(() => [{ label: "全部", value: "all" as const }, ...VENUE_TYPE_OPTIONS])
+const typeOptions = computed(() => [
+  { label: "全部", value: "all" as const },
+  ...venueTypeOptions.value.map((item) => ({ label: item.name, value: item.id })),
+])
+
+const getVenueTypeList = async () => {
+  try {
+    typeLoading.value = true
+    const res = await getVenueTypeListApi()
+    venueTypeOptions.value = res.data
+    if (
+      activeType.value !== "all" &&
+      !venueTypeOptions.value.some((item) => item.id === activeType.value)
+    ) {
+      activeType.value = "all"
+    }
+  } finally {
+    typeLoading.value = false
+  }
+}
 
 const getVenueList = async () => {
   try {
@@ -26,7 +47,7 @@ const getVenueList = async () => {
     const res =
       activeType.value === "all"
         ? await getVenueListApi()
-        : await getVenueListByTypeApi(String(activeType.value))
+        : await getVenueListByTypeApi(activeType.value)
     venueList.value = res.data
   } catch (error) {
     loadFailed.value = true
@@ -47,7 +68,7 @@ const handleTypeChange = () => {
 }
 
 onMounted(() => {
-  getVenueList()
+  Promise.all([getVenueTypeList(), getVenueList()])
 })
 </script>
 
@@ -59,7 +80,7 @@ onMounted(() => {
     </div>
     <div class="home-venue-grid__filter">
       <span class="home-venue-grid__filter-label">场馆类型</span>
-      <el-radio-group v-model="activeType" @change="handleTypeChange">
+      <el-radio-group v-model="activeType" :disabled="typeLoading" @change="handleTypeChange">
         <el-radio-button v-for="item in typeOptions" :key="item.value" :value="item.value">
           {{ item.label }}
         </el-radio-button>

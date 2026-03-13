@@ -12,7 +12,6 @@ import {
   getVenueListApi,
   updateVenueStatusApi,
 } from "@/api/venue"
-import { VENUE_TYPE_OPTIONS } from "@/constants/venue"
 import AddVenue from "./AddVenue.vue"
 
 const venueList = ref<Venue[]>([])
@@ -40,15 +39,9 @@ const getVenueImageSrc = (image?: string) => {
   return src ?? DEFAULT_VENUE_IMAGE
 }
 
-const venueTypeLabelByValue = computed(() => {
-  const map = new Map<number, string>()
-  for (const opt of VENUE_TYPE_OPTIONS) map.set(opt.value, opt.label)
-  return map
-})
-
-const formatVenueType = (value: unknown) => {
-  const key = Number(value)
-  return venueTypeLabelByValue.value.get(key) ?? String(value ?? "")
+const formatVenueType = (row: Venue) => {
+  if (row.typeName) return row.typeName
+  return row.typeId ? `类型ID: ${row.typeId}` : "--"
 }
 
 const formatPriceYuanPerHour = (value: unknown) => {
@@ -332,7 +325,7 @@ onMounted(() => {
         <el-table-column prop="name" label="名称" min-width="160" />
         <el-table-column label="场馆类型" min-width="120">
           <template #default="{ row }">
-            {{ formatVenueType(row.type) }}
+            {{ formatVenueType(row) }}
           </template>
         </el-table-column>
         <el-table-column label="元/h" min-width="120">
