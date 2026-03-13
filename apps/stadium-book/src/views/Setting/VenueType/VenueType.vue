@@ -1,0 +1,196 @@
+<script setup lang="ts">
+import type { FormInstance, FormRules } from "element-plus"
+import type { VenueType } from "@/api/venue-type/type"
+import { ElMessage, ElMessageBox } from "element-plus"
+import { computed, onMounted, reactive, ref } from "vue"
+import {
+  addVenueTypeApi,
+  deleteVenueTypeApi,
+  getVenueTypeListApi,
+  updateVenueTypeApi,
+} from "@/api/venue-type"
+
+type DialogMode = "create" | "edit"
+
+const tableLoading = ref(false)
+const dialogVisible = ref(false)
+const submitLoading = ref(false)
+const dialogMode = ref<DialogMode>("create")
+const currentEditId = ref<number | null>(null)
+const venueTypeList = ref<VenueType[]>([])
+const formRef = ref<FormInstance>()
+
+const form = reactive({
+  name: "",
+})
+
+const rules: FormRules<typeof form> = {
+  name: [{ required: true, message: "请输入类型名称", trigger: "blur" }],
+}
+
+const dialogTitle = computed(() =>
+  dialogMode.value === "create" ? "新增场地类型" : "编辑场地类型",
+)
+
+const formatDateTime = (value?: string) => {
+  if (!value) return "--"
+
+  return value
+    .replace("T", " ")
+    .replace("Z", "")
+    .replace(/\.\d+$/, "")
+}
+
+const getVenueTypeList = async () => {
+  try {
+    tableLoading.value = true
+    const res = await getVenueTypeListApi()
+    venueTypeList.value = res.data
+  } finally {
+    tableLoading.value = false
+  }
+}
+
+const resetForm = () => {
+  form.name = ""
+  currentEditId.value = null
+}
+
+const openCreateDialog = () => {
+  dialogMode.value = "create"
+  resetForm()
+  dialogVisible.value = true
+}
+
+const openEditDialog = (row: VenueType) => {
+  dialogMode.value = "edit"
+  currentEditId.value = row.id
+  form.name = row.name
+  dialogVisible.value = true
+}
+
+const handleDialogClosed = () => {
+  formRef.value?.clearValidate()
+  resetForm()
+}
+
+const handleSubmit = async () => {
+  if (!formRef.value) return
+
+  const isValid = await formRef.value.validate()
+  if (!isValid) return
+
+  submitLoading.value = true
+  try {
+    const name = form.name.trim()
+    if (dialogMode.value === "create") {
+      await addVenueTypeApi({ name })
+      ElMessage.success("新增成功")
+    } else if (currentEditId.value !== null) {
+      await updateVenueTypeApi({ id: currentEditId.value, name })
+      ElMessage.success("更新成功")
+    }
+    dialogVisible.value = false
+    await getVenueTypeList()
+  } finally {
+    submitLoading.value = false
+  }
+}
+
+const handleDelete = async (row: VenueType) => {
+  try {
+    await ElMessageBox.confirm(
+      `确认删除类型「${row.name}」？`,
+      "提示",
+      {
+        type: "warning",
+        confirmButtonText: "删除",
+        cancelButtonText: "取消",
+        confirmButtonClass: "el-button--danger",
+      },
+    )
+  } catch (_err) {
+    return
+  }
+
+  await deleteVenueTypeApi(row.id)
+  ElMessage.success("删除成功")
+  await getVenueTypeList()
+}
+
+onMounted(() => {
+  getVenueTypeList()
+})
+</script>
+
+<template>
+  <div class="venue-type-page">
+    <div class="venue-type-page__header">
+      <div class="venue-type-page__title">场地类型设置</div>
+      <div class="venue-type-page__actions">
+        <el-button @click="getVenueTypeList">刷新</el-button>
+        <el-button type="primary" @click="openCreateDialog">新增类型</el-button>
+      </div>
+    </div>
+
+    <el-card shadow="never">
+      <el-table v-loading="tableLoading" :data="venueTypeList" stripe>
+        <el-table-column prop="id" label="ID" width="120" />
+        <el-table-column prop="name" label="类型名称" min-width="220" />
+        <el-table-column label="更新时间" min-width="180">
+          <template #default="{ row }">
+            {{ formatDateTime(row.updateTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="180" fixed="right">
+          <template #default="{ row }">
+            <el-button type="primary" link @click="openEditDialog(row)">编辑</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
+
+    <el-dialog
+      v-model="dialogVisible"
+      :title="dialogTitle"
+      width="460px"
+      :close-on-click-modal="false"
+      @closed="handleDialogClosed"
+    >
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="88px">
+        <el-form-item label="类型名称" prop="name">
+          <el-input v-model="form.name" maxlength="20" show-word-limit placeholder="请输入场地类型名称" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.venue-type-page {
+  padding: 16px;
+}
+
+.venue-type-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.venue-type-page__title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.venue-type-page__actions {
+  display: flex;
+  gap: 8px;
+}
+</style>

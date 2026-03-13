@@ -6,30 +6,32 @@ packages:
   - utils/**
 
 catalog:
-  '@antfu/eslint-config': ^4.0.0
+  '@antfu/eslint-config': ^4.19.0
   '@element-plus/icons-vue': ^2.3.2
-  '@eslint-community/eslint-plugin-eslint-comments': ^4.0.0
+  '@eslint-community/eslint-plugin-eslint-comments': ^4.5.0
   '@eslint/js': ^9.39.1
-  '@types/node': ^24.10.1
-  '@typescript-eslint/parser': ^8.48.1
+  '@types/node': ^24.10.4
+  '@types/nprogress': ^0.2.3
+  '@typescript-eslint/parser': ^8.50.0
+  '@unocss/eslint-plugin': ^66.5.10
   '@vitejs/plugin-vue': ^6.0.2
   '@vue/tsconfig': ^0.8.1
   axios: ^1.13.2
   element-plus: ^2.12.0
-  eslint: ^9.39.1
-  eslint-plugin-import: ^2.31.0
+  eslint: ^9.39.2
+  eslint-plugin-import: ^2.32.0
   eslint-plugin-react-hooks: ^5.2.0
   eslint-plugin-react-refresh: ^0.4.24
-  eslint-plugin-unused-imports: ^4.1.4
+  eslint-plugin-unused-imports: ^4.3.0
   eslint-plugin-vue: ^10.6.2
   gh-pages: ^6.3.0
-  pinia: ^3.0.4
   globals: ^16.5.0
+  pinia: ^3.0.4
   react-router-dom: ^7.10.1
   sass: ^1.94.2
   sass-loader: ^16.0.6
   typescript: ^5.9.3
-  typescript-eslint: ^8.48.1
+  typescript-eslint: ^8.50.0
   unocss: ^66.5.10
   unplugin-auto-import: ^20.3.0
   unplugin-vue-components: ^30.0.0
@@ -38,20 +40,22 @@ catalog:
   vue: ^3.5.25
   vue-router: ^4.6.3
   vue-tsc: ^3.1.6
+
 catalogs:
   ant-design:
     '@ant-design/icons': ^6.1.0
     '@ant-design/v5-patch-for-react-19': ^1.0.3
     antd: ^5.29.1
-
   devTools:
     '@commitlint/cli': ^20.2.0
     '@commitlint/config-conventional': ^20.2.0
-    commitlint-plugin-function-rules: ^4.1.1
+    '@tsconfig/node24': ^24.0.3
+    commitlint-plugin-function-rules: ^4.2.0
     husky: ^9.1.7
     lint-staged: ^16.2.7
-    prettier: ^3.5.3
-
+    npm-run-all2: ^8.0.4
+    nprogress: 0.2.0
+    prettier: ^3.7.4
   react19:
     '@reduxjs/toolkit': ^2.11.0
     '@types/react': ^19.2.7

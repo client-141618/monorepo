@@ -1,81 +1,23 @@
 <script setup lang="ts">
-import type { UploadProps } from "element-plus"
-import type { UserInfo } from "@/api/user/types"
-import { Message, Phone, Plus, User } from "@element-plus/icons-vue"
-import { ElMessage } from "element-plus"
+import { Message, Phone, User } from "@element-plus/icons-vue"
 import { storeToRefs } from "pinia"
-import { computed, ref } from "vue"
+import { ref } from "vue"
+import EditPassword from "@/components/EditPassword/index.vue"
+import EditUserDialog from "@/components/EditUserDialog/index.vue"
 import { useUserStore } from "@/store/user"
 
 const userStore = useUserStore()
 const { userInfo } = storeToRefs(userStore)
 
 const dialogVisible = ref(false)
-const editForm = ref<Partial<UserInfo>>({})
-const imageUrl = ref<string>("")
-
-const headers = computed(() => {
-  const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
-  return {
-    token: storedUser?.token || "",
-  }
-})
+const editPasswordVisible = ref(false)
 
 const handleEdit = () => {
-  if (userInfo.value) {
-    editForm.value = {
-      userId: userInfo.value.userId,
-      username: userInfo.value.username,
-      phone: userInfo.value.phone,
-      email: userInfo.value.email,
-      age: userInfo.value.age,
-      avatar: userInfo.value.avatar,
-    }
-  }
   dialogVisible.value = true
 }
 
-const handleClose = () => {
-  dialogVisible.value = false
-}
-
-const handleAvatarSuccess: UploadProps["onSuccess"] = (
-  response,
-  uploadFile,
-) => {
-  imageUrl.value = URL.createObjectURL(uploadFile.raw!)
-  if (response.code === 200) {
-    editForm.value.avatar = response.data
-  } else {
-    ElMessage.error(response.msg || "上传失败")
-  }
-}
-
-const beforeAvatarUpload: UploadProps["beforeUpload"] = (rawFile) => {
-  if (rawFile.type !== "image/jpeg") {
-    ElMessage.error("图片必须是 JPG 格式!")
-    return false
-  } else if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error("图片大小不能超过 2MB!")
-    return false
-  }
-  return true
-}
-
-const handleSave = async () => {
-  try {
-    const res = await userStore.updateUserInfo(editForm.value as UserInfo)
-    if (res.code === 200) {
-      ElMessage.success("保存成功")
-      handleClose()
-      await userStore.getUserInfo()
-    } else {
-      ElMessage.error(res.msg || "保存失败")
-    }
-  } catch (error) {
-    ElMessage.error("保存失败")
-    console.error(error)
-  }
+const handleEditPassword = () => {
+  editPasswordVisible.value = true
 }
 </script>
 
@@ -97,97 +39,11 @@ const handleSave = async () => {
           </div>
         </div>
         <el-button ml-auto type="primary" @click="handleEdit">编辑</el-button>
+        <el-button ml-auto type="primary" @click="handleEditPassword">修改密码</el-button>
       </div>
     </el-card>
 
-    <el-dialog
-      v-model="dialogVisible"
-      title="编辑信息"
-      width="40%"
-      @close="handleClose"
-    >
-      <el-form :model="editForm" label-width="80px">
-        <el-row :gutter="24">
-          <el-col :span="12">
-            <el-form-item label="用户名：">
-              <el-input v-model="editForm.username" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="手机号：">
-              <el-input v-model="editForm.phone" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :span="12">
-            <el-form-item label="邮箱：">
-              <el-input v-model="editForm.email" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="年龄：">
-              <el-input-number
-                v-model="editForm.age"
-                :min="0"
-                :max="100"
-                :step="1"
-                :controls="false"
-                step-strictly
-                :align="'left'"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="头像：">
-          <el-upload
-            class="avatar-uploader"
-            action="/api/file/upload"
-            :headers="headers"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload"
-          >
-            <img v-if="imageUrl" :src="imageUrl" class="avatar" />
-            <el-icon v-else class="avatar-uploader-icon"><Plus /></el-icon>
-          </el-upload>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="handleSave">保存</el-button>
-      </template>
-    </el-dialog>
+    <EditUserDialog v-model="dialogVisible" />
+    <EditPassword v-model="editPasswordVisible" />
   </div>
 </template>
-
-<style scoped lang="scss">
-.avatar-uploader .avatar {
-  width: 128px;
-  height: 128px;
-  display: block;
-}
-</style>
-
-<style lang="scss">
-.avatar-uploader .el-upload {
-  border: 1px dashed var(--el-border-color);
-  border-radius: 6px;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: var(--el-transition-duration-fast);
-}
-
-.avatar-uploader .el-upload:hover {
-  border-color: var(--el-color-primary);
-}
-
-.el-icon.avatar-uploader-icon {
-  font-size: 28px;
-  color: #8c939d;
-  width: 128px;
-  height: 128px;
-  text-align: center;
-}
-</style>

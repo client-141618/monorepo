@@ -1,4 +1,4 @@
-import type { UserInfo } from "./types"
+import type { UpdatePasswordParams, UserInfo } from "./types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api"
@@ -40,6 +40,17 @@ export function uploadImage(data: FormData) {
 export function updateUserInfo(data: UserInfo) {
   return request({
     url: `${PREFIX}/user/update`,
+    method: "POST",
+    data,
+  })
+}
+
+/**
+ * 更改密码
+ */
+export function updatePassword(data: UpdatePasswordParams) {
+  return request({
+    url: `${PREFIX}/user/edit_password`,
     method: "POST",
     data,
   })

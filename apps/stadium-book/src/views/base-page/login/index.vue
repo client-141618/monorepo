@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { FormInstance, TabsPaneContext } from "element-plus"
-import { DArrowRight, Lock, Phone, User } from "@element-plus/icons-vue"
+import { DArrowRight, Lock, Phone } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { ref } from "vue"
 import { useRouter } from "vue-router"
-import { login, register } from "@/api/base"
+import { login, register, sendSmsCode } from "@/api/base"
+import { useSmsCodeCooldown } from "@/utils/useSmsCodeCooldown"
 
 const router = useRouter()
 const activeName = ref<string>("login")
@@ -16,10 +17,11 @@ const form = ref({
 })
 const registerFormRef = ref<FormInstance>()
 const registerForm = ref({
-  username: "",
+  username: "默认用户",
   phone: "",
   password: "",
   repeatPassword: "",
+  smsCode: "",
 })
 const rules = ref({
   username: [
@@ -68,6 +70,10 @@ const rules = ref({
       trigger: "blur",
     },
   ],
+  smsCode: [
+    { required: true, message: "请输入验证码", trigger: "blur" },
+    { min: 6, max: 6, message: "验证码长度为6位", trigger: "blur" },
+  ],
 })
 
 const handleClick = (tab: TabsPaneContext) => {
@@ -115,6 +121,24 @@ const handleRegister = async () => {
       }
     }
   })
+}
+
+const { isCooldown, buttonText: sendCodeButtonText, startCooldown } =
+  useSmsCodeCooldown()
+
+const sendCode = async () => {
+  if (isCooldown.value) return
+  if (!registerForm.value.phone || !/^1[3-9]\d{9}$/.test(registerForm.value.phone)) {
+    ElMessage.error("请输入正确的手机号")
+    return
+  }
+  const res = await sendSmsCode(registerForm.value.phone)
+  if (res.code === 200) {
+    ElMessage.success("发送验证码成功")
+    startCooldown()
+  } else {
+    ElMessage.error(res.msg || "发送验证码失败")
+  }
 }
 </script>
 
@@ -186,13 +210,13 @@ const handleRegister = async () => {
               :rules="rules"
               ref="registerFormRef"
             >
-              <el-form-item prop="username">
+              <!-- <el-form-item prop="username">
                 <el-input
                   :prefix-icon="User"
                   v-model="registerForm.username"
                   placeholder="请输入用户名"
                 />
-              </el-form-item>
+              </el-form-item> -->
               <el-form-item prop="phone" required>
                 <el-input
                   :prefix-icon="Phone"
@@ -222,8 +246,21 @@ const handleRegister = async () => {
                       return false
                     }
                   "
-                  @keydown.enter="handleRegister"
                 />
+              </el-form-item>
+              <el-form-item prop="smsCode" required>
+                <div w-full flex items-center justify-between gap-8px>
+                  <el-input
+                    :prefix-icon="Lock"
+                    v-model="registerForm.smsCode"
+                    placeholder="请输入验证码"
+                    maxlength="6"
+                    @keydown.enter="handleRegister"
+                  />
+                  <el-button type="primary" :disabled="isCooldown" @click="sendCode">
+                    {{ sendCodeButtonText }}
+                  </el-button>
+                </div>
               </el-form-item>
             </el-form>
             <el-button mt-a w-full type="primary" @click="handleRegister">注册</el-button>

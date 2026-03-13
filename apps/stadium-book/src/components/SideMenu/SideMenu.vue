@@ -50,7 +50,7 @@ const menuRoutes = computed<RouteRecordRaw[]>(() =>
 )
 
 const activeMenu = computed(() => {
-  return route.path
+  return (route.meta?.activeMenu as string) || route.path
 })
 
 const handleMenuClick = (path: string) => {

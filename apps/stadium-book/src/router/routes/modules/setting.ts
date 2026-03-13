@@ -1,9 +1,10 @@
 import type { RouteRecordRaw } from "vue-router"
-import { Setting, User } from "@element-plus/icons-vue"
+import { Operation, Setting, User } from "@element-plus/icons-vue"
 import { SettingRoute } from "../RouteNameEnum"
 
 const Layout = () => import("@/layout/index.vue")
 const My = () => import("@/views/Setting/My/My.vue")
+const VenueType = () => import("@/views/Setting/VenueType/VenueType.vue")
 
 const setting: RouteRecordRaw[] = [
   {
@@ -15,7 +16,7 @@ const setting: RouteRecordRaw[] = [
       icon: Setting,
       showTag: true,
       keepAlive: true,
-      order: 1,
+      order: 2,
     },
     children: [
       {
@@ -25,6 +26,15 @@ const setting: RouteRecordRaw[] = [
         meta: {
           title: "个人信息",
           icon: User,
+        },
+      },
+      {
+        path: "venue-type",
+        component: VenueType,
+        name: SettingRoute.VenueType,
+        meta: {
+          title: "场地类型设置",
+          icon: Operation,
         },
       },
     ],

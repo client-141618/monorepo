@@ -19,9 +19,20 @@ export function refreshToken(data: { refreshToken: string }) {
   })
 }
 
+/**
+ * 发送短信验证码
+ */
+export function sendSmsCode(phone: string) {
+  return request({
+    url: `${PREFIX}/user/send_sms_code`,
+    method: "POST",
+    data: { phone },
+  })
+}
+
 export function register(data: RegisterParams) {
   return request({
-    url: `${PREFIX}/user/add`,
+    url: `${PREFIX}/user/register`,
     method: "POST",
     data,
   })
