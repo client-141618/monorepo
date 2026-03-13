@@ -14,6 +14,26 @@ export function getVenueListApi() {
 }
 
 /**
+ * 根据场地类型编码获取场地列表
+ */
+export function getVenueListByTypeApi(type: Venue["type"] | string) {
+  return request<Venue[]>({
+    url: `${PREFIX}/type/${type}`,
+    method: "GET",
+  })
+}
+
+/**
+ * 根据 id 获取场馆信息
+ */
+export function getVenueByIdApi(id: Venue["id"]) {
+  return request<Venue>({
+    url: `${PREFIX}/${id}`,
+    method: "GET",
+  })
+}
+
+/**
  * 新增场馆
  */
 export function addVenueApi(data: Venue) {

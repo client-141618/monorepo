@@ -3,6 +3,8 @@ import { House } from "@element-plus/icons-vue"
 
 const Layout = () => import("@/layout/index.vue")
 const Home = () => import("@/views/Home/Home.vue")
+const HomeVenueGrid = () => import("@/views/Home/components/HomeVenueGrid.vue")
+const HomeVenueDetail = () => import("@/views/Home/components/HomeVenueDetail.vue")
 
 const home: RouteRecordRaw[] = [
   {
@@ -13,11 +15,26 @@ const home: RouteRecordRaw[] = [
       {
         path: "home",
         component: Home,
-        name: "Home",
-        meta: {
-          title: "首页",
-          icon: House,
-        },
+        children: [
+          {
+            path: "",
+            component: HomeVenueGrid,
+            name: "Home",
+            meta: {
+              title: "首页",
+              icon: House,
+            },
+          },
+          {
+            path: "venue/:id",
+            component: HomeVenueDetail,
+            name: "HomeVenueDetail",
+            meta: {
+              hidden: true,
+              activeMenu: "/home",
+            },
+          },
+        ],
       },
     ],
     meta: {

@@ -9,8 +9,10 @@ export interface Venue {
   openTime: string
   closeTime: string
   total: number
-  remaining?: number
+  unitCapacity: number
+  slotMinutes: number
   status: number
+  totalSeats?: number
   createTime?: string
   updateTime?: string
 }

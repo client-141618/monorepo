@@ -15,8 +15,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+#app {
+  height: 100%;
+}
+
 body {
   line-height: 1.5;
+  overflow: hidden;
 }
 
 /* 移除列表样式 */
