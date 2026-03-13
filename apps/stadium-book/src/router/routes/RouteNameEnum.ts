@@ -11,4 +11,8 @@ export enum SettingRoute {
 
 export enum VenueRoute {
   Venue = "Venue",
+  NotificationList = "NotificationList",
+  NotificationCreate = "NotificationCreate",
+  NotificationEdit = "NotificationEdit",
+  NotificationDetail = "NotificationDetail",
 }

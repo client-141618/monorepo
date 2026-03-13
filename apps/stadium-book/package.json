@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "@client/components": "workspace:*",
     "@element-plus/icons-vue": "catalog:",
     "axios": "catalog:",
+    "dompurify": "^3.3.0",
     "element-plus": "catalog:",
     "pinia": "catalog:",
     "vite-plugin-vue-devtools": "catalog:",

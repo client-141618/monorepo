@@ -13,8 +13,14 @@ Component({
     },
   },
   methods: {
-    onChange(event: WechatMiniprogram.CustomEvent<{ name: string }>) {
-      const { name } = event.detail
+    onChange(
+      event: WechatMiniprogram.CustomEvent<string | number | { name?: string }>,
+    ) {
+      const detail = event.detail
+      const name =
+        typeof detail === "string" || typeof detail === "number"
+          ? String(detail)
+          : String(detail?.name || "")
       const targetPath = TAB_PATH[name]
       const pages = getCurrentPages()
       const currentPage = pages[pages.length - 1]
@@ -22,7 +28,13 @@ Component({
       if (!targetPath || targetPath === `/${currentPath}`) {
         return
       }
-      wx.reLaunch({ url: targetPath })
+
+      wx.switchTab({
+        url: targetPath,
+        fail: () => {
+          wx.redirectTo({ url: targetPath })
+        },
+      })
     },
   },
 })

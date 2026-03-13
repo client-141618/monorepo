@@ -22,6 +22,15 @@ Page({
     this.onRefresherRefresh()
   },
 
+  onShow() {
+    if (typeof this.getTabBar === "function") {
+      const tabBar = this.getTabBar()
+      if (tabBar) {
+        tabBar.setData({ selected: "home" })
+      }
+    }
+  },
+
   onRefresherRefresh() {
     this.setData({ refresherTriggered: true })
     this.fetchVenueList(this.data.activeType, true)
@@ -71,3 +80,4 @@ Page({
     this.setData({ displayList })
   },
 })
+

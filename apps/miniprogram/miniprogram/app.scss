@@ -1,6 +1,13 @@
 @import "/miniprogram_npm/@vant/weapp/common/index.wxss";
 
 page {
+  --app-tabbar-height: 112rpx;
+  --app-tabbar-safe-bottom: calc(var(--app-tabbar-height) + env(safe-area-inset-bottom));
   background: #f6f7fb;
   color: #222;
+}
+
+.with-tabbar-safe-bottom {
+  padding-bottom: var(--app-tabbar-safe-bottom);
+  box-sizing: border-box;
 }
