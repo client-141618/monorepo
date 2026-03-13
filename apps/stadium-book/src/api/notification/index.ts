@@ -1,9 +1,10 @@
-import { request } from "@/utils/request"
 import type {
   NotificationDetail,
   NotificationOverview,
+  NotificationQueryPayload,
   NotificationUpsertPayload,
 } from "./type"
+import { request } from "@/utils/request"
 
 const PREFIX = "/api/notification"
 
@@ -11,6 +12,14 @@ export function getNotificationListApi() {
   return request<NotificationOverview[]>({
     url: `${PREFIX}/list`,
     method: "GET",
+  })
+}
+
+export function queryNotificationListApi(data: NotificationQueryPayload) {
+  return request<NotificationOverview[]>({
+    url: `${PREFIX}/query`,
+    method: "POST",
+    data,
   })
 }
 

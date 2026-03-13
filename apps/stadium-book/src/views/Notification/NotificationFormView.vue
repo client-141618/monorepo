@@ -12,9 +12,9 @@ import {
   updateNotificationApi,
 } from "@/api/notification"
 import {
+  getNotificationTypeLabel,
   NOTIFICATION_PUBLISH_STATUS_OPTIONS,
   NOTIFICATION_TYPE_OPTIONS,
-  getNotificationTypeLabel,
 } from "@/constants/notification"
 import { VenueRoute } from "@/router/routes/RouteNameEnum"
 import { sanitizeRichHtml } from "@/utils/sanitizeHtml"
@@ -25,7 +25,8 @@ interface NotificationFormData {
   summary: string
   content: string
   type: NotificationType
-  targetUserId: string
+  targetUserIdsText: string
+  creatorName: string
   publishStatus: 0 | 1
 }
 
@@ -41,7 +42,8 @@ const form = ref<NotificationFormData>({
   summary: "",
   content: "",
   type: 1,
-  targetUserId: "",
+  targetUserIdsText: "",
+  creatorName: "",
   publishStatus: 0,
 })
 
@@ -67,6 +69,12 @@ const pageTitle = computed(() => {
 
 const displayType = computed(() => getNotificationTypeLabel(form.value.type))
 const safeDetailHtml = computed(() => sanitizeRichHtml(form.value.content))
+const displayTargetUser = computed(() => {
+  const text = form.value.targetUserIdsText.trim()
+  if (!text) return "全体用户"
+  return text
+})
+const displayCreator = computed(() => form.value.creatorName || "--")
 
 const rules: FormRules<NotificationFormData> = {
   title: [{ required: true, message: "请输入标题", trigger: "blur" }],
@@ -85,12 +93,16 @@ const loadDetail = async () => {
   try {
     const res = await getNotificationByIdApi(currentId.value)
     const data = res.data
+    const targetUserIds = Array.isArray(data.targetUserIds)
+      ? data.targetUserIds.map((item) => Number(item)).filter((id) => Number.isInteger(id) && id > 0)
+      : []
     form.value = {
       title: data.title,
       summary: data.summary,
       content: data.content,
       type: data.type,
-      targetUserId: data.targetUserId ? String(data.targetUserId) : "",
+      targetUserIdsText: targetUserIds.join(", "),
+      creatorName: data.creatorName || "",
       publishStatus: data.publishStatus,
     }
   } finally {
@@ -103,13 +115,28 @@ const backToList = () => {
 }
 
 const buildPayload = () => {
-  const targetUserId = form.value.targetUserId.trim()
+  const idText = form.value.targetUserIdsText.trim()
+  const targetUserIds = idText
+    ? idText
+        .split(/[,\s，]+/)
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => Number(item))
+    : []
+
+  if (targetUserIds.some((id) => !Number.isInteger(id) || id <= 0)) {
+    ElMessage.warning("目标用户ID格式错误，请输入正整数，多个ID用逗号分隔")
+    return null
+  }
+
+  const dedupTargetUserIds = Array.from(new Set(targetUserIds))
+
   const payload = {
     title: form.value.title.trim(),
     summary: form.value.summary.trim(),
     content: form.value.content,
     type: form.value.type,
-    targetUserId: targetUserId ? Number(targetUserId) : null,
+    targetUserIds: dedupTargetUserIds,
     publishStatus: form.value.publishStatus,
   }
   if (isEdit.value) {
@@ -126,9 +153,11 @@ const submit = async () => {
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
 
+  const payload = buildPayload()
+  if (!payload) return
+
   submitting.value = true
   try {
-    const payload = buildPayload()
     if (isEdit.value) {
       await updateNotificationApi(payload)
       ElMessage.success("更新成功")
@@ -153,21 +182,20 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="notification-form-view" v-loading="loading">
-    <div class="notification-form-view__header">
-      <el-button @click="backToList">返回列表</el-button>
-      <div
-        class="notification-form-view__title"
-        :class="{ 'notification-form-view__title--center': isDetail }"
-      >
+    <div v-if="isDetail" class="notification-form-view__header notification-form-view__header--detail">
+      <div class="notification-form-view__back-row">
+        <el-button @click="backToList">返回列表</el-button>
+      </div>
+      <div class="notification-form-view__title notification-form-view__title--center">
         {{ pageTitle }}
       </div>
+    </div>
+
+    <div v-else class="notification-form-view__header">
+      <el-button @click="backToList">返回列表</el-button>
+      <div class="notification-form-view__title">{{ pageTitle }}</div>
       <div class="notification-form-view__spacer">
-        <el-button
-          v-if="!isReadonly"
-          type="primary"
-          :loading="submitting"
-          @click="submit"
-        >
+        <el-button type="primary" :loading="submitting" @click="submit">
           {{ isEdit ? "保存" : "创建" }}
         </el-button>
       </div>
@@ -202,8 +230,8 @@ onBeforeUnmount(() => {
 
       <el-form-item label="目标用户">
         <el-input
-          v-model="form.targetUserId"
-          placeholder="不填表示全体用户（填 user_auth_wechat.id）"
+          v-model="form.targetUserIdsText"
+          placeholder="多个用户ID用逗号分隔；留空表示全体用户"
         />
       </el-form-item>
 
@@ -246,6 +274,16 @@ onBeforeUnmount(() => {
           {{ form.publishStatus === 1 ? "已发布" : "草稿" }}
         </el-tag>
       </div>
+      <div class="notification-detail__info-grid">
+        <div class="notification-detail__info-item">
+          <span class="notification-detail__info-label">创建者</span>
+          <span class="notification-detail__info-value">{{ displayCreator }}</span>
+        </div>
+        <div class="notification-detail__info-item">
+          <span class="notification-detail__info-label">目标用户ID</span>
+          <span class="notification-detail__info-value">{{ displayTargetUser }}</span>
+        </div>
+      </div>
       <div class="notification-detail__summary">
         {{ form.summary }}
       </div>
@@ -265,6 +303,14 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.notification-form-view__header--detail {
+  display: block;
+}
+
+.notification-form-view__back-row {
+  margin-bottom: 8px;
 }
 
 .notification-form-view__title {
@@ -329,6 +375,39 @@ onBeforeUnmount(() => {
   color: #606266;
   padding: 12px;
   line-height: 22px;
+}
+
+.notification-detail__info-grid {
+  margin-top: 16px;
+  padding: 10px 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fbfcff;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.notification-detail__info-item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.notification-detail__info-label {
+  color: #94a3b8;
+  font-size: 12px;
+  flex: none;
+}
+
+.notification-detail__info-value {
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .notification-detail__content {

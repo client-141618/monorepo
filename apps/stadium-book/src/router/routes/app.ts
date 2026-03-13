@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from "vue-router"
 import home from "./modules/home"
+import notification from "./modules/notification"
 import setting from "./modules/setting"
 import venue from "./modules/venue"
 
@@ -13,4 +14,10 @@ export const loginRoute: RouteRecordRaw = {
   },
 }
 
-export const appRouter: RouteRecordRaw[] = [...home, ...venue, ...setting, loginRoute]
+export const appRouter: RouteRecordRaw[] = [
+  ...home,
+  ...venue,
+  ...notification,
+  ...setting,
+  loginRoute,
+]

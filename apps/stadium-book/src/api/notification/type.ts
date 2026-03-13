@@ -5,7 +5,7 @@ export interface NotificationOverview {
   title: string
   summary: string
   type: NotificationType
-  targetUserId: number | null
+  targetUserIds: number[]
   readCount: number
   creatorUserId: number
   creatorName: string
@@ -25,6 +25,12 @@ export interface NotificationUpsertPayload {
   summary: string
   content: string
   type: NotificationType
-  targetUserId: number | null
+  targetUserIds: number[]
   publishStatus: 0 | 1
+}
+
+export interface NotificationQueryPayload {
+  adminId: number | null
+  userId: number | null
+  type: NotificationType | null
 }
