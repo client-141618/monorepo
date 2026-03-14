@@ -16,3 +16,7 @@ export enum VenueRoute {
   NotificationEdit = "NotificationEdit",
   NotificationDetail = "NotificationDetail",
 }
+
+export enum WxUserRoute {
+  WxUserList = "WxUserList",
+}
