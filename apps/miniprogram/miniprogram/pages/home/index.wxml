@@ -32,7 +32,7 @@
     <view class="venue-list">
       <block wx:if="{{displayList.length}}">
         <block wx:for="{{displayList}}" wx:key="id">
-          <view class="venue-item">
+          <view class="venue-item" data-id="{{item.id}}" bindtap="onVenueTap">
             <view class="cover-wrap">
               <image
                 wx:if="{{item.image}}"
@@ -41,7 +41,7 @@
                 src="{{item.image}}"
               />
               <view wx:else class="cover-placeholder">图片占位</view>
-              <view class="price">¥{{item.pricePerHour}}/小时</view>
+              <view class="price">¥{{item.priceYuan}}/小时</view>
             </view>
             <view class="meta">
               <view class="name">{{item.name}}</view>

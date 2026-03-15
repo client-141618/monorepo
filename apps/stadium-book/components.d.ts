@@ -14,6 +14,7 @@ declare module 'vue' {
     Card: typeof import('./src/components/Card/Card.vue')['default']
     EditPassword: typeof import('./src/components/EditPassword/index.vue')['default']
     EditUserDialog: typeof import('./src/components/EditUserDialog/index.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
