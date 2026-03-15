@@ -4,7 +4,7 @@ import type { WxUserStatus } from "@/constants/wx-user"
 import { Refresh } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
-import { deleteWxUserApi, getWxUserListApi, updateWxUserStatusApi } from "@/api/wx-user"
+import { getWxUserListApi, updateWxUserStatusApi } from "@/api/wx-user"
 import { WX_USER_STATUS_OPTIONS } from "@/constants/wx-user"
 
 const tableLoading = ref(false)
@@ -26,6 +26,23 @@ const statusTypeMap = computed(() =>
 const statusChangeOptions = computed(() =>
   WX_USER_STATUS_OPTIONS.filter((item) => item.value !== 4),
 )
+
+const getStatusActionLabel = (currentStatus: number, nextStatus: Exclude<WxUserStatus, 4>) => {
+  if (nextStatus === 1) {
+    return currentStatus === 2 ? "解除限制" : "启用"
+  }
+  if (nextStatus === 2) return "限制预约"
+  return "停用"
+}
+
+const getStatusActions = (status: number) => {
+  return statusChangeOptions.value
+    .filter((item) => item.value !== status)
+    .map((item) => ({
+      value: item.value,
+      label: getStatusActionLabel(status, item.value as Exclude<WxUserStatus, 4>),
+    }))
+}
 
 const getStatusLabel = (status: number) => {
   return statusLabelMap.value[status as WxUserStatus] ?? "未知"
@@ -87,32 +104,6 @@ const handleChangeStatus = async (row: WxUser, status: WxUserStatus) => {
   }
 }
 
-const handleDelete = async (row: WxUser) => {
-  try {
-    await ElMessageBox.confirm(
-      `确认逻辑删除用户（ID: ${row.id}）？`,
-      "提示",
-      {
-        type: "warning",
-        confirmButtonText: "删除",
-        cancelButtonText: "取消",
-        confirmButtonClass: "el-button--danger",
-      },
-    )
-  } catch (_error) {
-    return
-  }
-
-  actionLoadingId.value = row.id
-  try {
-    await deleteWxUserApi(row.id)
-    ElMessage.success("删除成功")
-    await getWxUserList()
-  } finally {
-    actionLoadingId.value = null
-  }
-}
-
 onMounted(() => {
   getWxUserList()
 })
@@ -158,33 +149,15 @@ onMounted(() => {
         <el-table-column label="操作" width="240" fixed="right">
           <template #default="{ row }">
             <div class="wx-user-page__operation">
-              <el-dropdown
-                class="wx-user-page__status-dropdown"
-                trigger="click"
-                @command="(status: WxUserStatus) => handleChangeStatus(row, status)"
-              >
-                <el-button link type="primary" :loading="actionLoadingId === row.id">调整状态</el-button>
-                <template #dropdown>
-                  <el-dropdown-menu>
-                    <el-dropdown-item
-                      v-for="item in statusChangeOptions"
-                      :key="item.value"
-                      :command="item.value"
-                      :disabled="item.value === row.status"
-                    >
-                      {{ item.label }}
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
               <el-button
-                type="danger"
+                v-for="action in getStatusActions(row.status)"
+                :key="action.value"
                 link
-                :disabled="row.status === 4"
-                :loading="actionLoadingId === row.id"
-                @click="handleDelete(row)"
+                type="primary"
+                :disabled="actionLoadingId === row.id"
+                @click="handleChangeStatus(row, action.value)"
               >
-                删除
+                {{ action.label }}
               </el-button>
             </div>
           </template>
@@ -241,11 +214,6 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-}
-
-.wx-user-page__status-dropdown {
-  display: inline-flex;
-  align-items: center;
 }
 
 /* 统一操作列链接按钮的文字基线 */
