@@ -1,4 +1,10 @@
 import { getBaseUrl } from "../config/env"
+import {
+  BLOCKED_USER_REDIRECT_HOME,
+  WX_USER_BLOCKED_CODES,
+  WX_USER_BLOCKED_MESSAGE_MAP,
+} from "../constants/auth"
+import { mergeCacheToken } from "../utils/profile"
 
 interface ApiResponse<T> {
   code: number
@@ -13,6 +19,8 @@ interface RequestOptions extends WechatMiniprogram.RequestOption {
 
 let refreshingPromise: Promise<string> | null = null
 let loginPromise: Promise<string> | null = null
+let blockedUserModalPromise: Promise<never> | null = null
+const AUTH_ENDPOINTS = ["/api/auth/wx-login", "/api/auth/refresh"] as const
 
 function getAccessToken() {
   return (wx.getStorageSync("accessToken") as string) || ""
@@ -30,6 +38,46 @@ function saveTokens(accessToken: string, refreshToken: string) {
 function clearTokens() {
   wx.removeStorageSync("accessToken")
   wx.removeStorageSync("refreshToken")
+}
+
+function isBlockedUserCode(code: number): code is (typeof WX_USER_BLOCKED_CODES)[number] {
+  return WX_USER_BLOCKED_CODES.includes(code as (typeof WX_USER_BLOCKED_CODES)[number])
+}
+
+function handleBlockedUser(code: (typeof WX_USER_BLOCKED_CODES)[number], msg?: string) {
+  if (blockedUserModalPromise) {
+    return blockedUserModalPromise
+  }
+
+  clearTokens()
+
+  blockedUserModalPromise = new Promise<never>((_resolve, reject) => {
+    const content = msg || WX_USER_BLOCKED_MESSAGE_MAP[code] || "账号状态异常"
+
+    wx.showModal({
+      title: "提示",
+      content,
+      showCancel: false,
+      confirmText: "确认",
+      complete: () => {
+        wx.reLaunch({
+          url: "/pages/home/index",
+          complete: () => {
+            reject(new Error(BLOCKED_USER_REDIRECT_HOME))
+          },
+        })
+      },
+    })
+  }).finally(() => {
+    blockedUserModalPromise = null
+  })
+
+  return blockedUserModalPromise
+}
+
+function shouldHandleBlockedByOptions(options: RequestOptions) {
+  const isAuthEndpoint = AUTH_ENDPOINTS.includes((options.url || "") as (typeof AUTH_ENDPOINTS)[number])
+  return !options.skipAuth || isAuthEndpoint
 }
 
 function runWxLogin() {
@@ -67,8 +115,10 @@ async function ensureAccessToken() {
       }),
     )
     .then((res) => {
-      const { token, refreshToken } = res.data
+      const loginData = res.data as { token: string; refreshToken: string } & Record<string, unknown>
+      const { token, refreshToken } = loginData
       saveTokens(token, refreshToken)
+      mergeCacheToken(extractCacheTokenPatch(loginData))
       return token
     })
     .finally(() => {
@@ -76,6 +126,29 @@ async function ensureAccessToken() {
     })
 
   return loginPromise
+}
+
+function extractCacheTokenPatch(source: Record<string, unknown>) {
+  const patch: Record<string, unknown> = {}
+  const keys = [
+    "id",
+    "userId",
+    "wxUserId",
+    "key",
+    "username",
+    "avatar",
+    "status",
+  ]
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i]
+    const value = source[key]
+    if (value !== undefined && value !== null) {
+      patch[key] = value
+    }
+  }
+
+  return patch
 }
 
 function requestRaw<T>(options: RequestOptions) {
@@ -95,6 +168,12 @@ function requestRaw<T>(options: RequestOptions) {
       url: `${getBaseUrl()}${options.url}`,
       success: (res) => {
         const data = res.data as ApiResponse<T>
+
+        if (isBlockedUserCode(data.code) && shouldHandleBlockedByOptions(options)) {
+          handleBlockedUser(data.code, data.msg).catch((error) => reject(error))
+          return
+        }
+
         if (res.statusCode === 401 || data.code === 401) {
           reject(new Error("UNAUTHORIZED"))
           return
@@ -147,6 +226,10 @@ export async function request<T>(options: RequestOptions) {
     return await requestRaw<T>(options)
   } catch (error) {
     const message = (error as Error).message
+    if (message === BLOCKED_USER_REDIRECT_HOME) {
+      throw error
+    }
+
     if (message !== "UNAUTHORIZED" || options.skipAuth || options._retry) {
       throw error
     }

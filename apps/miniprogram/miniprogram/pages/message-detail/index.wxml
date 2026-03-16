@@ -12,17 +12,17 @@
       <van-loading size="24px" type="spinner" color="#1989fa" />
     </view>
 
-    <view wx:elif="{{detail}}" class="detail-card">
-      <view class="detail-header">
+    <view wx:elif="{{detail}}" class="detail-wrap">
+      <view class="detail-hero-card">
+        <view class="detail-type">{{typeLabel}}</view>
         <view class="detail-title">{{detail.title}}</view>
-        <view class="detail-meta">
-          <van-tag type="primary" plain>{{typeLabel}}</van-tag>
-        </view>
       </view>
+
       <view class="detail-summary-card">
         <view class="detail-label">摘要</view>
         <view class="detail-summary">{{detail.summary}}</view>
       </view>
+
       <view class="detail-content-card">
         <view class="detail-label">正文</view>
         <rich-text class="detail-content" nodes="{{safeContent}}" />

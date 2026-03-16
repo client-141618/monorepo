@@ -15,7 +15,7 @@ export default defineConfig({
     vue(),
     vueDevTools({
       componentInspector: true,
-      launchEditor: "cursor",
+      launchEditor: "code",
     }),
     AutoImport({
       resolvers: [ElementPlusResolver()],

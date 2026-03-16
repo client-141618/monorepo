@@ -3,12 +3,70 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: #f6f7fb;
 }
 
 .content {
   flex: 1;
-  min-height: 0;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  padding: 24rpx 32rpx 24rpx;
+}
+
+.profile-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 28rpx 0 44rpx;
+  background: linear-gradient(180deg, #f0f4ff 0%, #f7f8fc 100%);
+  border-bottom-left-radius: 240rpx 80rpx;
+  border-bottom-right-radius: 240rpx 80rpx;
+}
+
+.profile-avatar {
+  width: 150rpx;
+  height: 150rpx;
+  border-radius: 50%;
+  background: #e5e7eb;
+  box-shadow: 0 12rpx 28rpx rgb(15 23 42 / 10%);
+}
+
+.profile-name {
+  margin-top: 22rpx;
+  color: #111827;
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.setting-list {
+  width: 100%;
+  margin-top: 28rpx;
+}
+
+.setting-item {
   display: flex;
   align-items: center;
-  justify-content: center;
+  min-height: 92rpx;
+  padding: 0 28rpx;
+  margin-bottom: 20rpx;
+  background: #fff;
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 24rpx rgb(15 23 42 / 5%);
+}
+
+.setting-item__title {
+  flex: 1;
+  color: #111827;
+  font-size: 30rpx;
+  font-weight: 600;
+}
+
+.setting-item__arrow {
+  color: #94a3b8;
+  font-size: 34rpx;
+  line-height: 1;
 }

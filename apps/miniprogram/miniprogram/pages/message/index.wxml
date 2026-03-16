@@ -15,12 +15,14 @@
     <view wx:elif="{{list.length}}" class="message-list">
       <block wx:for="{{list}}" wx:key="id">
         <view class="message-item" data-id="{{item.id}}" bindtap="onTapItem">
-          <view class="message-item__top">
-            <van-tag type="primary" plain>{{item.typeLabel}}</van-tag>
-            <text class="message-item__arrow">查看详情</text>
-          </view>
+          <text class="message-item__type message-item__type--{{item.type}}">
+            {{item.typeLabel}}
+          </text>
           <view class="message-item__title">{{item.title}}</view>
-          <view class="message-item__summary">{{item.summary}}</view>
+          <view class="message-item__summary-row">
+            <text class="message-item__summary">{{item.summary}}</text>
+            <text class="message-item__arrow">›</text>
+          </view>
         </view>
       </block>
     </view>

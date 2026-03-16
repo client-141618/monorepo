@@ -7,6 +7,7 @@ type TabValue = "all" | string
 interface DisplayVenue extends Venue {
   remaining: number
   progress: number
+  priceYuan: string
 }
 
 Page({
@@ -70,14 +71,32 @@ Page({
       const remaining = Math.max(0, remainingValue)
       const total = Math.max(0, item.total || 0)
       const progress = total > 0 ? Math.min(100, (remaining / total) * 100) : 0
+      const priceCents = Number(item.pricePerHour)
+      const priceYuan = Number.isFinite(priceCents) ? (priceCents / 100).toFixed(2) : "--"
       return {
         ...item,
         remaining,
         progress,
+        priceYuan,
       }
     })
 
     this.setData({ displayList })
   },
-})
 
+  onVenueTap(event: WechatMiniprogram.BaseEvent) {
+    const { id } = event.currentTarget.dataset as { id?: number }
+    const venueId = Number(id)
+    if (!Number.isFinite(venueId) || venueId <= 0) {
+      wx.showToast({
+        title: "场馆参数错误",
+        icon: "none",
+      })
+      return
+    }
+
+    wx.navigateTo({
+      url: `/pages/venue-detail/index?id=${venueId}`,
+    })
+  },
+})

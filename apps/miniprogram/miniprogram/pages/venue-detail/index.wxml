@@ -1,0 +1,113 @@
+<view class="page">
+  <navigation-bar
+    title="场馆详情"
+    background="#f7f8fa"
+    color="#111827"
+    back="{{true}}"
+    bind:back="onBack"
+  />
+
+  <scroll-view class="content" scroll-y>
+    <view wx:if="{{loading}}" class="loading-wrap">
+      <van-loading size="24px" type="spinner" color="#1989fa" />
+    </view>
+
+    <view wx:elif="{{venue}}" class="detail-wrap">
+      <view class="hero-card">
+        <view class="cover-wrap">
+          <image class="cover" mode="aspectFill" src="{{coverSrc}}" />
+        </view>
+        <view class="info">
+          <view class="title">{{venue.name}}</view>
+          <view wx:if="{{venue.openTime && venue.closeTime}}" class="line">
+            <text class="line-key">营业时间：</text>
+            <text class="line-value">{{venue.openTime}} - {{venue.closeTime}}</text>
+          </view>
+          <view wx:if="{{hasPriceLabel}}" class="line">
+            <text class="line-key">单价：</text>
+            <text class="line-value">¥{{priceLabel}}/小时</text>
+          </view>
+          <view wx:if="{{venue.location}}" class="line">
+            <text class="line-key">位置：</text>
+            <text class="line-value">{{venue.location}}</text>
+          </view>
+          <view wx:if="{{venue.description}}" class="line">
+            <text class="line-key">描述：</text>
+            <text class="line-value">{{venue.description}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="booking-card">
+        <view class="booking-title">预约时段</view>
+        <view wx:if="{{boardMessage}}" class="board-message">{{boardMessage}}</view>
+
+        <scroll-view class="date-scroll" scroll-x>
+          <view class="date-row">
+            <block wx:for="{{dateOptions}}" wx:key="value">
+              <view
+                class="date-item {{item.className}}"
+                data-date="{{item.value}}"
+                bindtap="onDateTap"
+              >
+                {{item.label}}
+              </view>
+            </block>
+          </view>
+        </scroll-view>
+
+        <view class="board" wx:if="{{gridRows.length}}">
+          <view class="time-column">
+            <view class="head-cell">时间段</view>
+            <block wx:for="{{gridRows}}" wx:key="slotKey">
+              <view class="time-cell">{{item.slotLabel}}</view>
+            </block>
+          </view>
+
+          <scroll-view class="grid-scroll" scroll-x>
+            <view class="grid-inner" style="grid-template-columns: repeat({{courtOptions.length}}, 180rpx);">
+              <block wx:for="{{courtOptions}}" wx:key="*this">
+                <view class="head-cell">场地{{item}}</view>
+              </block>
+
+              <block wx:for="{{gridRows}}" wx:key="slotKey">
+                <block wx:for="{{item.cells}}" wx:key="cellKey">
+                  <view
+                    class="grid-cell {{item.className}}"
+                    data-cell-key="{{item.cellKey}}"
+                    data-court-id="{{item.courtId}}"
+                    data-slot-key="{{item.slotKey}}"
+                    data-disabled="{{item.disabled}}"
+                    bindtap="onCellTap"
+                  >
+                    {{item.text}}
+                  </view>
+                </block>
+              </block>
+            </view>
+          </scroll-view>
+        </view>
+
+        <van-empty wx:else description="暂无可预约时段" />
+
+      </view>
+    </view>
+
+    <view wx:else class="empty-wrap">
+      <van-empty description="场馆不存在或已下线" />
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{venue}}" class="bottom-action">
+    <view class="summary">已选 {{selectedCount}} 个时段</view>
+    <button
+      class="submit-btn"
+      type="primary"
+      loading="{{submitLoading}}"
+      disabled="{{!canSubmit}}"
+      bindtap="onSubmitReservation"
+    >
+      确认预约
+    </button>
+  </view>
+</view>

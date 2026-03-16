@@ -25,6 +25,31 @@ interface UserInfo {
   [key: string]: unknown
 }
 
+const SERVER_UNREACHABLE_MESSAGE =
+  "无法连接到后端服务，请检查接口地址或确认后端已启动"
+
+const getMessageFromPayload = (payload: unknown): string | undefined => {
+  if (typeof payload === "string") {
+    const message = payload.trim()
+    return message || undefined
+  }
+
+  if (payload && typeof payload === "object") {
+    const rawMessage = (payload as Record<string, unknown>).msg
+    if (typeof rawMessage === "string") {
+      const message = rawMessage.trim()
+      if (message) return message
+    }
+    const rawAltMessage = (payload as Record<string, unknown>).message
+    if (typeof rawAltMessage === "string") {
+      const message = rawAltMessage.trim()
+      if (message) return message
+    }
+  }
+
+  return undefined
+}
+
 const getStoredUser = (): UserInfo => {
   return JSON.parse(localStorage.getItem("userInfo") || "{}") as UserInfo
 }
@@ -84,33 +109,34 @@ service.interceptors.response.use(
   (response) => {
     const { code, msg } = (response.data ?? {}) as ApiResponse
     const statusCode = code
+    const message = getMessageFromPayload(response.data) ?? msg
 
     switch (statusCode) {
       case 200:
         return response.data
       case 400:
-        ElMessage.warning(msg ?? "请求参数错误")
+        ElMessage.warning(message ?? "请求参数错误")
         break
       case 401:
         return handleUnauthorized(response)
       case 402:
-        ElMessage.warning(msg ?? "登录状态已过期，请重新登录")
+        ElMessage.warning(message ?? "登录状态已过期，请重新登录")
         localStorage.removeItem("userInfo")
         router.push("/login")
         break
       case 403:
-        ElMessage.warning(msg ?? "禁止访问")
+        ElMessage.warning(message ?? "禁止访问")
         break
       case 404:
-        ElMessage.warning(msg ?? "资源不存在")
+        ElMessage.warning(message ?? "资源不存在")
         break
       case 500:
       default:
-        ElMessage.error(msg ?? "操作失败")
+        ElMessage.error(message ?? "操作失败")
         break
     }
 
-    return Promise.reject(new Error(msg ?? "请求失败"))
+    return Promise.reject(new Error(message ?? "请求失败"))
   },
   (error: AxiosError) => {
     if (error.response?.status === 401) {
@@ -123,10 +149,27 @@ service.interceptors.response.use(
       return Promise.reject(new Error("刷新令牌过期"))
     }
 
-    const responseData = (error.response?.data ?? {}) as {
-      msg?: string
+    if (!error.response) {
+      const errorMessage = String(error.message || "")
+      const isTimeout = error.code === "ECONNABORTED"
+      const isNetworkError =
+        error.code === "ERR_NETWORK" ||
+        /Network Error|Failed to fetch|ECONNREFUSED|ENOTFOUND/i.test(
+          errorMessage,
+        )
+      const msg = isTimeout
+        ? "请求超时，请稍后重试"
+        : isNetworkError
+          ? SERVER_UNREACHABLE_MESSAGE
+          : "网络异常，请稍后重试"
+      ElMessage.error(msg)
+      return Promise.reject(new Error(msg))
     }
-    const msg = responseData.msg
+
+    const msg =
+      getMessageFromPayload(error.response.data) ||
+      getMessageFromPayload(error.message) ||
+      (error.response.status >= 500 ? "服务器异常，请稍后重试" : "请求失败")
 
     ElMessage.error(msg)
     return Promise.reject(new Error(msg))

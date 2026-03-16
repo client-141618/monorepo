@@ -1,3 +1,4 @@
+import { mergeCacheToken } from "../../utils/profile"
 import { request } from "../request"
 
 export interface LoginTokenData {
@@ -19,6 +20,7 @@ export function wxLoginApi(data: WxLoginParams) {
     url: "/api/auth/wx-login",
     method: "POST",
     data,
+    skipAuth: true,
   })
 }
 
@@ -27,6 +29,7 @@ export function refreshTokenApi(data: RefreshTokenParams) {
     url: "/api/auth/refresh",
     method: "POST",
     data,
+    skipAuth: true,
   })
 }
 
@@ -53,8 +56,33 @@ export async function ensureLogin() {
 
   const code = await runWxLogin()
   const loginRes = await wxLoginApi({ code })
-  const { token: accessToken, refreshToken } = loginRes.data
+  const loginData = loginRes.data as LoginTokenData & Record<string, unknown>
+  const { token: accessToken, refreshToken } = loginData
   wx.setStorageSync("accessToken", accessToken)
   wx.setStorageSync("refreshToken", refreshToken)
+  mergeCacheToken(extractCacheTokenPatch(loginData))
   return accessToken
+}
+
+function extractCacheTokenPatch(source: Record<string, unknown>) {
+  const patch: Record<string, unknown> = {}
+  const keys = [
+    "id",
+    "userId",
+    "wxUserId",
+    "key",
+    "username",
+    "avatar",
+    "status",
+  ]
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i]
+    const value = source[key]
+    if (value !== undefined && value !== null) {
+      patch[key] = value
+    }
+  }
+
+  return patch
 }
