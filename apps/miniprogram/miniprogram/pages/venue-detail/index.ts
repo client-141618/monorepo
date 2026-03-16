@@ -21,6 +21,7 @@ type SlotOption = {
   label: string
   startMinutes: number
   availableCourtIds: number[]
+  bookedCourtIds: number[]
   blockedCourtIds: number[]
 }
 
@@ -355,6 +356,9 @@ Page({
       slot.availableCourtIds.forEach((courtId) => ids.add(courtId)),
     )
     slotOptions.forEach((slot) =>
+      slot.bookedCourtIds.forEach((courtId) => ids.add(courtId)),
+    )
+    slotOptions.forEach((slot) =>
       slot.blockedCourtIds.forEach((courtId) => ids.add(courtId)),
     )
     if (!ids.size) {
@@ -495,6 +499,7 @@ Page({
       label: normalizedSlotKey,
       startMinutes,
       availableCourtIds: [...slot.availableCourtIds].sort((left, right) => left - right),
+      bookedCourtIds: [...slot.bookedCourtIds].sort((left, right) => left - right),
       blockedCourtIds: [...(slot.blockedCourtIds || [])].sort((left, right) => left - right),
     }
   },
