@@ -5,6 +5,8 @@ export interface WxUser {
   openid: string
   unionid: string | null
   sessionKey: string | null
+  username?: string | null
+  avatar?: string | null
   status: 1 | 2 | 3 | 4
   createTime?: string
   updateTime?: string

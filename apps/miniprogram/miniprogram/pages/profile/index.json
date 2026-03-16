@@ -1,0 +1,8 @@
+{
+  "navigationStyle": "custom",
+  "usingComponents": {
+    "navigation-bar": "/components/navigation-bar/navigation-bar",
+    "van-button": "@vant/weapp/button/index",
+    "van-popup": "@vant/weapp/popup/index"
+  }
+}

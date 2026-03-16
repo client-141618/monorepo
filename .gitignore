@@ -73,3 +73,7 @@ secrets/
 
 # pen
 pencil/*
+
+# skills
+*.skills
+skills/*

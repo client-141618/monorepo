@@ -4,6 +4,7 @@ import {
   WX_USER_BLOCKED_CODES,
   WX_USER_BLOCKED_MESSAGE_MAP,
 } from "../constants/auth"
+import { mergeCacheToken } from "../utils/profile"
 
 interface ApiResponse<T> {
   code: number
@@ -114,8 +115,10 @@ async function ensureAccessToken() {
       }),
     )
     .then((res) => {
-      const { token, refreshToken } = res.data
+      const loginData = res.data as { token: string; refreshToken: string } & Record<string, unknown>
+      const { token, refreshToken } = loginData
       saveTokens(token, refreshToken)
+      mergeCacheToken(extractCacheTokenPatch(loginData))
       return token
     })
     .finally(() => {
@@ -123,6 +126,29 @@ async function ensureAccessToken() {
     })
 
   return loginPromise
+}
+
+function extractCacheTokenPatch(source: Record<string, unknown>) {
+  const patch: Record<string, unknown> = {}
+  const keys = [
+    "id",
+    "userId",
+    "wxUserId",
+    "key",
+    "username",
+    "avatar",
+    "status",
+  ]
+
+  for (let i = 0; i < keys.length; i += 1) {
+    const key = keys[i]
+    const value = source[key]
+    if (value !== undefined && value !== null) {
+      patch[key] = value
+    }
+  }
+
+  return patch
 }
 
 function requestRaw<T>(options: RequestOptions) {

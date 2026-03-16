@@ -63,6 +63,14 @@ const maskSessionKey = (value: string | null) => {
   return `${value.slice(0, 6)}...${value.slice(-4)}`
 }
 
+const getDisplayUsername = (row: WxUser) => {
+  return row.username || "--"
+}
+
+const getDisplayAvatar = (row: WxUser) => {
+  return row.avatar || ""
+}
+
 const getWxUserList = async () => {
   try {
     tableLoading.value = true
@@ -124,6 +132,16 @@ onMounted(() => {
     <el-card class="wx-user-page__table-card" shadow="never">
       <el-table v-loading="tableLoading" :data="wxUserList" stripe>
         <el-table-column prop="id" label="ID" width="90" />
+        <el-table-column label="用户信息" min-width="200">
+          <template #default="{ row }">
+            <div class="wx-user-page__user">
+              <el-avatar :size="34" :src="getDisplayAvatar(row)">
+                {{ getDisplayUsername(row).slice(0, 1) }}
+              </el-avatar>
+              <span class="wx-user-page__user-name">{{ getDisplayUsername(row) }}</span>
+            </div>
+          </template>
+        </el-table-column>
         <el-table-column prop="appid" label="AppID" min-width="160" show-overflow-tooltip />
         <el-table-column prop="openid" label="OpenID" min-width="220" show-overflow-tooltip />
         <el-table-column label="SessionKey" min-width="150">
@@ -216,7 +234,20 @@ onMounted(() => {
   gap: 12px;
 }
 
-/* 统一操作列链接按钮的文字基线 */
+.wx-user-page__user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.wx-user-page__user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 :deep(.wx-user-page__operation .el-button.is-link) {
   height: 20px;
   line-height: 20px;

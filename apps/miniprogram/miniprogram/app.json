@@ -4,6 +4,7 @@
     "pages/message/index",
     "pages/order/index",
     "pages/mine/index",
+    "pages/profile/index",
     "pages/message-detail/index",
     "pages/venue-detail/index"
   ],

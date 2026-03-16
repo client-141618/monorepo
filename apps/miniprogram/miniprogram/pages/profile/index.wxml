@@ -1,0 +1,67 @@
+<view class="page">
+  <navigation-bar
+    title="个人资料"
+    background="#f6f7fb"
+    color="#111827"
+    back="{{true}}"
+    bind:back="onBack"
+  />
+
+  <view class="content">
+    <view class="profile-card">
+      <image class="avatar" mode="aspectFill" src="{{userProfile.avatar}}" />
+      <text class="name">{{userProfile.username}}</text>
+    </view>
+
+    <view class="action-wrap">
+      <van-button
+        type="primary"
+        color="#1989fa"
+        block
+        bindtap="onTapEditProfile"
+      >
+        编辑资料
+      </van-button>
+    </view>
+  </view>
+
+  <van-popup
+    show="{{showEditor}}"
+    position="bottom"
+    round
+    bind:close="onCloseEditor"
+  >
+    <view class="editor-wrap">
+      <view class="editor-title">编辑资料</view>
+
+      <view class="editor-row">
+        <text class="editor-label">头像</text>
+        <button class="avatar-picker" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+          <image class="editor-avatar" mode="aspectFill" src="{{draftAvatar}}" />
+        </button>
+      </view>
+
+      <view class="editor-row">
+        <text class="editor-label">昵称</text>
+        <input
+          class="editor-input"
+          type="nickname"
+          value="{{draftUsername}}"
+          maxlength="30"
+          placeholder="请输入昵称"
+          bind:input="onNicknameInput"
+        />
+      </view>
+
+      <van-button
+        type="primary"
+        color="#1989fa"
+        block
+        loading="{{submitting}}"
+        bindtap="onSubmitProfile"
+      >
+        保存
+      </van-button>
+    </view>
+  </van-popup>
+</view>

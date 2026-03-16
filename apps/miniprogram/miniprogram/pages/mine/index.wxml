@@ -1,5 +1,25 @@
 <view class="page">
+  <navigation-bar
+    title="我的"
+    background="#f6f7fb"
+    color="#111827"
+    back="{{false}}"
+    home-button="{{false}}"
+  />
+
   <view class="content with-tabbar-safe-bottom">
-    <van-empty description="我的页面开发中" />
+    <view class="profile-panel">
+      <image class="profile-avatar" mode="aspectFill" src="{{userProfile.avatar}}" />
+      <text class="profile-name">{{userProfile.username}}</text>
+    </view>
+
+    <view class="setting-list">
+      <block wx:for="{{settingList}}" wx:key="key">
+        <view class="setting-item" data-key="{{item.key}}" bindtap="onTapSetting">
+          <text class="setting-item__title">{{item.title}}</text>
+          <text class="setting-item__arrow">›</text>
+        </view>
+      </block>
+    </view>
   </view>
 </view>

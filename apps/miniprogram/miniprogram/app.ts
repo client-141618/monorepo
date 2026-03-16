@@ -1,5 +1,18 @@
 import { ensureLogin } from "./api/auth/index"
+import {
+  getCurrentWxUserProfileApi,
+  saveCurrentWxUserProfileToCache,
+} from "./api/wx-user/index"
 import { BLOCKED_USER_REDIRECT_HOME } from "./constants/auth"
+
+async function syncWxUserInfoSilently() {
+  try {
+    const res = await getCurrentWxUserProfileApi()
+    saveCurrentWxUserProfileToCache(res.data || {})
+  } catch (error) {
+    console.warn("silent load wx user info failed:", error)
+  }
+}
 
 // app.ts
 App<IAppOption>({
@@ -11,6 +24,7 @@ App<IAppOption>({
 
     try {
       await ensureLogin()
+      await syncWxUserInfoSilently()
     } catch (error) {
       if ((error as Error).message === BLOCKED_USER_REDIRECT_HOME) {
         return
