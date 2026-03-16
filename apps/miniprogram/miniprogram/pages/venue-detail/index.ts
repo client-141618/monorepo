@@ -21,15 +21,17 @@ type SlotOption = {
   label: string
   startMinutes: number
   availableCourtIds: number[]
+  blockedCourtIds: number[]
 }
 
 type GridCell = {
   cellKey: string
   courtId: number
   slotKey: string
-  text: "可选" | "已约" | "已选"
+  text: "可选" | "已约" | "已选" | "不可用"
   selected: boolean
   occupied: boolean
+  blocked: boolean
   disabled: boolean
   className: string
 }
@@ -352,6 +354,9 @@ Page({
     slotOptions.forEach((slot) =>
       slot.availableCourtIds.forEach((courtId) => ids.add(courtId)),
     )
+    slotOptions.forEach((slot) =>
+      slot.blockedCourtIds.forEach((courtId) => ids.add(courtId)),
+    )
     if (!ids.size) {
       const total = Number(
         (availability && availability.totalCourts) ||
@@ -377,14 +382,17 @@ Page({
       const cells = courtOptions.map((courtId) => {
         const cellKey = `${courtId}@${slot.key}`
         const selected = selectedCellSet.has(cellKey)
-        const occupied = !slot.availableCourtIds.includes(courtId)
+        const blocked = slot.blockedCourtIds.includes(courtId)
+        const occupied = !blocked && !slot.availableCourtIds.includes(courtId)
         const disabled =
           !canOperate ||
+          blocked ||
           occupied ||
           (selectedCourtId > 0 && selectedCourtId !== courtId && !selected)
 
         let text: GridCell["text"] = "可选"
-        if (selected) text = "已选"
+        if (blocked) text = "不可用"
+        else if (selected) text = "已选"
         else if (occupied) text = "已约"
 
         return {
@@ -394,9 +402,11 @@ Page({
           text,
           selected,
           occupied,
+          blocked,
           disabled,
           className: [
             selected ? "grid-cell--selected" : "",
+            blocked ? "grid-cell--blocked" : "",
             occupied ? "grid-cell--occupied" : "",
             disabled ? "grid-cell--disabled" : "",
           ]
@@ -485,6 +495,7 @@ Page({
       label: normalizedSlotKey,
       startMinutes,
       availableCourtIds: [...slot.availableCourtIds].sort((left, right) => left - right),
+      blockedCourtIds: [...(slot.blockedCourtIds || [])].sort((left, right) => left - right),
     }
   },
 

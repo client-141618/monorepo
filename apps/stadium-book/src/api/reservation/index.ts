@@ -1,7 +1,11 @@
 import type {
+  AdminCancelReservationPayload,
+  AdminReservationRecord,
+  CreateReservationBlockPayload,
   CreateReservationPayload,
   CreateReservationResult,
   ReservationAvailabilityData,
+  ReservationBlockRecord,
 } from "./type"
 import { request } from "@/utils/request"
 
@@ -23,5 +27,45 @@ export function createReservationApi(data: CreateReservationPayload) {
     url: `${PREFIX}/create`,
     method: "POST",
     data,
+  })
+}
+
+export function getReservationListByVenueAndDateAdminApi(venueId: number, date: string) {
+  return request<AdminReservationRecord[]>({
+    url: `${PREFIX}/admin/venue/${venueId}/date/${date}`,
+    method: "GET",
+  })
+}
+
+export function cancelReservationAdminApi(
+  reservationId: number,
+  data?: AdminCancelReservationPayload,
+) {
+  return request<null>({
+    url: `${PREFIX}/admin/cancel/${reservationId}`,
+    method: "PUT",
+    data,
+  })
+}
+
+export function createReservationBlockAdminApi(data: CreateReservationBlockPayload) {
+  return request<ReservationBlockRecord>({
+    url: `${PREFIX}/admin/block/create`,
+    method: "POST",
+    data,
+  })
+}
+
+export function disableReservationBlockAdminApi(blockId: number) {
+  return request<null>({
+    url: `${PREFIX}/admin/block/disable/${blockId}`,
+    method: "PUT",
+  })
+}
+
+export function getReservationBlockListByVenueAndDateAdminApi(venueId: number, date: string) {
+  return request<ReservationBlockRecord[]>({
+    url: `${PREFIX}/admin/block/venue/${venueId}/date/${date}`,
+    method: "GET",
   })
 }

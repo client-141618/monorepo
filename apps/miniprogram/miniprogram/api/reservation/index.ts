@@ -5,8 +5,10 @@ export interface ReservationAvailabilitySlot {
   endTime: string
   totalCourts: number
   bookedCount: number
+  blockedCount?: number
   availableCount: number
   bookedCourtIds: number[]
+  blockedCourtIds?: number[]
   availableCourtIds: number[]
 }
 

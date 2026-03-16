@@ -37,3 +37,54 @@ export interface CreateReservationResult {
   bookingDate: string
   confirmedSlots: string[]
 }
+
+export interface AdminReservationRecord {
+  id: number
+  userId: number | string
+  venueId: number
+  courtId: number
+  reservationDate: string
+  startTime: string
+  endTime: string
+  durationMinutes: number
+  reservedSeats: number
+  totalPrice: number
+  status: number
+  remark?: string
+  createTime?: string
+  updateTime?: string
+}
+
+export interface AdminCancelReservationPayload {
+  reason?: string
+}
+
+export interface CreateReservationBlockPayload {
+  venueId: number
+  courtId: number | null
+  blockType: 1 | 2
+  blockDate?: string
+  weekday?: number
+  repeatStartDate?: string
+  repeatEndDate?: string
+  startTime: string
+  endTime: string
+  reason?: string
+}
+
+export interface ReservationBlockRecord {
+  id: number
+  venueId: number
+  courtId: number | null
+  blockType: 1 | 2
+  blockDate?: string | null
+  weekday?: number | null
+  repeatStartDate?: string | null
+  repeatEndDate?: string | null
+  startTime: string
+  endTime: string
+  reason?: string | null
+  status: number
+  createTime?: string
+  updateTime?: string
+}
