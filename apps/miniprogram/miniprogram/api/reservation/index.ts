@@ -61,6 +61,11 @@ export interface ReservationCheckInPayload {
   qrContent: string
 }
 
+export interface ReservationUserCountResponse {
+  pendingVerificationCount?: number
+  totalCount?: number
+}
+
 export function getReservationAvailabilityNextSevenDaysApi(
   venueId: number,
   startDate?: string,
@@ -87,10 +92,24 @@ export function getReservationListByUserApi() {
   })
 }
 
+export function getReservationUserCountApi() {
+  return request<ReservationUserCountResponse>({
+    url: "/api/reservation/user/count",
+    method: "GET",
+  })
+}
+
 export function checkInReservationApi(data: ReservationCheckInPayload) {
   return request<null>({
     url: "/api/reservation/check-in",
     method: "POST",
     data,
+  })
+}
+
+export function cancelReservationApi(reservationId: number) {
+  return request<null>({
+    url: `/api/reservation/cancel/${reservationId}`,
+    method: "PUT",
   })
 }

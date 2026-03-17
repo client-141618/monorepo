@@ -8,14 +8,12 @@
     bindrefresherrefresh="onRefresherRefresh"
   >
     <view class="overview-wrap">
-      <view class="overview-card overview-card--active">
-        <view class="overview-card__label">进行中预约</view>
-        <view class="overview-card__value">{{overviewMock.activeCount}}</view>
-      </view>
-      <view class="overview-card overview-card--total">
-        <view class="overview-card__label">总预约</view>
-        <view class="overview-card__value">{{overviewMock.totalCount}}</view>
-      </view>
+      <block wx:for="{{overviewCards}}" wx:for-item="card" wx:key="key">
+        <view class="overview-card {{card.className}}">
+          <view class="overview-card__label">{{card.label}}</view>
+          <view class="overview-card__value">{{card.value}}</view>
+        </view>
+      </block>
     </view>
 
     <view class="section-title">预定信息</view>
@@ -25,41 +23,39 @@
     </view>
 
     <view wx:elif="{{reservationList.length}}" class="reservation-list">
-      <block wx:for="{{reservationList}}" wx:key="id">
+      <block wx:for="{{reservationList}}" wx:for-item="reservation" wx:key="id">
         <view class="reservation-card">
-          <view class="status-tag {{item.statusClass}}">{{item.statusText}}</view>
-          <view class="reservation-card__title">{{item.title}}</view>
+          <view class="status-tag {{reservation.statusClass}}">{{reservation.statusText}}</view>
+          <view class="reservation-card__title">{{reservation.title}}</view>
 
-          <view class="reservation-card__line">
-            <text class="reservation-card__key">预约日期</text>
-            <text class="reservation-card__value">{{item.reservationDate}}</text>
-          </view>
+          <block wx:for="{{reservation.detailLines}}" wx:for-item="line" wx:key="key">
+            <view class="reservation-card__line">
+              <text class="reservation-card__key">{{line.label}}</text>
+              <text class="reservation-card__value {{line.valueClassName || ''}}">{{line.value}}</text>
+            </view>
+          </block>
 
-          <view class="reservation-card__line">
-            <text class="reservation-card__key">预约时段</text>
-            <text class="reservation-card__value">{{item.timeRange}}</text>
-          </view>
-
-          <view wx:if="{{item.amountText}}" class="reservation-card__line">
-            <text class="reservation-card__key">金额</text>
-            <text class="reservation-card__value reservation-card__value--price">{{item.amountText}}</text>
-          </view>
-
-          <view wx:if="{{item.createTimeText}}" class="reservation-card__line">
-            <text class="reservation-card__key">创建时间</text>
-            <text class="reservation-card__value">{{item.createTimeText}}</text>
-          </view>
-
-          <view wx:if="{{item.status === 1}}" class="reservation-card__actions">
+          <view wx:if="{{reservation.status === 1}}" class="reservation-card__actions">
+            <van-button
+              plain
+              size="small"
+              block
+              custom-class="reservation-card__cancel-btn"
+              loading="{{cancelLoadingId === reservation.id}}"
+              disabled="{{checkInLoadingId > 0 || cancelLoadingId > 0}}"
+              data-reservation-id="{{reservation.id}}"
+              bindtap="onTapCancelReservation"
+            >
+              取消预约
+            </van-button>
             <van-button
               type="primary"
               size="small"
-              round
               block
               custom-class="reservation-card__checkin-btn"
-              loading="{{checkInLoadingId === item.id}}"
-              disabled="{{checkInLoadingId > 0}}"
-              data-reservation-id="{{item.id}}"
+              loading="{{checkInLoadingId === reservation.id}}"
+              disabled="{{checkInLoadingId > 0 || cancelLoadingId > 0}}"
+              data-reservation-id="{{reservation.id}}"
               bindtap="onTapCheckIn"
             >
               去签到

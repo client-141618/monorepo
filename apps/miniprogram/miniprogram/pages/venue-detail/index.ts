@@ -43,8 +43,15 @@ type GridRow = {
   cells: GridCell[]
 }
 
+type LoadPageDataOptions = {
+  preferredDate?: string
+  selectedCells?: string[]
+}
+
 const DEFAULT_COVER =
   "https://dummyimage.com/1200x500/1f2430/ffffff&text=Venue"
+
+let confirmDialogResolver: ((_value: boolean) => void) | null = null
 
 Page({
   data: {
@@ -67,6 +74,10 @@ Page({
     hasPriceLabel: false,
     availability: null as ReservationAvailabilityData | null,
     canSubmit: false,
+    confirmDialogVisible: false,
+    confirmDialogVenueLine: "",
+    confirmDialogDateLine: "",
+    confirmDialogSlotLine: "",
   },
 
   onLoad(options) {
@@ -83,13 +94,10 @@ Page({
     this.loadPageData()
   },
 
-  async loadPageData() {
+  async loadPageData(options?: LoadPageDataOptions) {
     if (!this.data.venueId) return
     this.setData({
       loading: true,
-      selectedCells: [],
-      selectedCount: 0,
-      selectedCourtId: 0,
       boardMessage: "",
     })
     try {
@@ -106,16 +114,36 @@ Page({
       const rawDateOptions = this.buildDateOptions(availability)
       const firstDateOption = rawDateOptions[0]
       const firstDateValue = firstDateOption ? firstDateOption.value : ""
-      const dateOptions = this.applyDateOptionState(rawDateOptions, firstDateValue)
-      const selectedDate = firstDateValue
-      const selectedDateLabel = firstDateOption ? firstDateOption.label : ""
+      const preferredDateCandidate =
+        (options && options.preferredDate) || this.data.selectedDate || firstDateValue
+      const hasPreferredDate = rawDateOptions.some(
+        (item) => item.value === preferredDateCandidate,
+      )
+      const selectedDate = hasPreferredDate ? preferredDateCandidate : firstDateValue
+      const dateOptions = this.applyDateOptionState(rawDateOptions, selectedDate)
+      const selectedDateOption = rawDateOptions.find(
+        (item) => item.value === selectedDate,
+      )
+      const selectedDateLabel = selectedDateOption ? selectedDateOption.label : ""
       const slotOptions = this.buildSlotOptions(availability, selectedDate, venue)
       const courtOptions = this.buildCourtOptions(slotOptions, availability, venue)
+      const validCellKeySet = new Set<string>()
+      slotOptions.forEach((slot) => {
+        courtOptions.forEach((courtId) => {
+          validCellKeySet.add(`${courtId}@${slot.key}`)
+        })
+      })
+      const rawSelectedCells =
+        (options && Array.isArray(options.selectedCells) && options.selectedCells) ||
+        this.data.selectedCells ||
+        []
+      const selectedCells = rawSelectedCells.filter((item) => validCellKeySet.has(item))
+      const selectedCourtId = this.resolveSelectedCourtId(selectedCells)
       const gridRows = this.buildGridRows(
         slotOptions,
         courtOptions,
-        [],
-        0,
+        selectedCells,
+        selectedCourtId,
         Boolean(venue && venue.status === 1 && selectedDate),
       )
 
@@ -125,16 +153,21 @@ Page({
         dateOptions,
         selectedDate,
         selectedDateLabel,
+        selectedCells,
+        selectedCount: selectedCells.length,
+        selectedCourtId,
         courtOptions,
         gridRows,
-        canSubmit: false,
+        canSubmit:
+          selectedCells.length > 0 &&
+          Boolean(venue && venue.status === 1 && selectedDate),
         boardMessage: this.buildBoardMessage(
           venue,
           availability,
           slotOptions.length,
           courtOptions.length,
           selectedDate,
-          0,
+          selectedCourtId,
         ),
         coverSrc: (venue && venue.image) || DEFAULT_COVER,
         priceLabel: this.formatPriceYuan(venue ? venue.pricePerHour : undefined),
@@ -268,21 +301,32 @@ Page({
       wx.showToast({ title: "未解析到有效时段", icon: "none" })
       return
     }
+    const mergedDisplayLabels = this.mergeAdjacentTimeRanges(labels)
+
+    const preservedSelectedDate = this.data.selectedDate
+    const preservedSelectedCells = [...this.data.selectedCells]
 
     try {
-      await this.confirmPromise(
-        [
-          `场馆：${(this.data.venue && this.data.venue.name) || "--"}`,
-          `日期：${this.data.selectedDateLabel} (${this.data.selectedDate})`,
-          `场地：${courtId}`,
-          `时段：${labels.join("、")}`,
-        ].join("\n"),
-      )
+      const venueName = (this.data.venue && this.data.venue.name) || "--"
+      const dateLine = this.data.selectedDateLabel
+        ? `${this.data.selectedDateLabel} (${this.data.selectedDate})`
+        : this.data.selectedDate
+      const confirmLines = [
+        `场地：${venueName}  ${courtId}号场`,
+        `日期：${dateLine}`,
+        `时段：${mergedDisplayLabels.join("、")}`,
+      ]
+      const confirmed = await this.confirmPromise(confirmLines)
+      if (!confirmed) return
     } catch (_error) {
       return
     }
 
     this.setData({ submitLoading: true, canSubmit: false })
+    wx.showLoading({
+      title: "预约提交中",
+      mask: true,
+    })
     try {
       await createReservationApi({
         venueId: this.data.venueId,
@@ -292,11 +336,15 @@ Page({
         clientRequestId: this.createClientRequestId(),
       })
       wx.showToast({ title: "预约成功", icon: "success" })
-      await this.loadPageData()
+      await this.loadPageData({
+        preferredDate: preservedSelectedDate,
+        selectedCells: preservedSelectedCells,
+      })
     } catch (error) {
       console.error("create reservation failed:", error)
       wx.showToast({ title: "预约失败", icon: "none" })
     } finally {
+      wx.hideLoading()
       this.setData({
         submitLoading: false,
         canSubmit: this.data.selectedCount > 0,
@@ -367,8 +415,8 @@ Page({
     if (!ids.size) {
       const total = Number(
         (availability && availability.totalCourts) ||
-          (venue && venue.total) ||
-          0,
+        (venue && venue.total) ||
+        0,
       )
       for (let index = 1; index <= total; index += 1) {
         ids.add(index)
@@ -485,6 +533,59 @@ Page({
     }
   },
 
+  mergeAdjacentTimeRanges(labels: string[]) {
+    const parsed = labels
+      .map((label) => {
+        const parts = label.split("-")
+        const startText = (parts[0] || "").trim()
+        const endText = (parts[1] || "").trim()
+        const startMinutes = this.toMinutes(startText)
+        const endMinutes = this.toMinutes(endText)
+        if (startMinutes === null || endMinutes === null || endMinutes <= startMinutes) {
+          return null
+        }
+        return {
+          startText,
+          endText,
+          startMinutes,
+          endMinutes,
+        }
+      })
+      .filter((item) => Boolean(item)) as {
+      startText: string
+      endText: string
+      startMinutes: number
+      endMinutes: number
+    }[]
+
+    if (!parsed.length) {
+      return labels
+    }
+
+    parsed.sort((left, right) => left.startMinutes - right.startMinutes)
+
+    const merged: string[] = []
+    let currentStartText = parsed[0].startText
+    let currentEndText = parsed[0].endText
+    let currentEndMinutes = parsed[0].endMinutes
+
+    for (let index = 1; index < parsed.length; index += 1) {
+      const item = parsed[index]
+      if (item.startMinutes === currentEndMinutes) {
+        currentEndMinutes = item.endMinutes
+        currentEndText = item.endText
+        continue
+      }
+      merged.push(`${currentStartText}-${currentEndText}`)
+      currentStartText = item.startText
+      currentEndText = item.endText
+      currentEndMinutes = item.endMinutes
+    }
+
+    merged.push(`${currentStartText}-${currentEndText}`)
+    return merged
+  },
+
   normalizeSlot(slot: ReservationAvailabilitySlot, closeMinutesLimit: number | null) {
     const startMinutes = this.toMinutes(slot.startTime)
     const endMinutes = this.toMinutes(slot.endTime)
@@ -541,20 +642,41 @@ Page({
     return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`
   },
 
-  confirmPromise(content: string) {
-    return new Promise<void>((resolve, reject) => {
-      wx.showModal({
-        title: "确认预约",
-        content,
-        success: (res) => {
-          if (res.confirm) {
-            resolve()
-            return
-          }
-          reject(new Error("cancel"))
-        },
-        fail: (error) => reject(error),
+  confirmPromise(lines: string[]) {
+    return new Promise<boolean>((resolve) => {
+      confirmDialogResolver = resolve
+      this.setData({
+        confirmDialogVisible: true,
+        confirmDialogVenueLine: lines[0] || "",
+        confirmDialogDateLine: lines[1] || "",
+        confirmDialogSlotLine: lines[2] || "",
       })
     })
+  },
+
+  onConfirmReservationDialog() {
+    const resolver = confirmDialogResolver
+    confirmDialogResolver = null
+
+    this.setData({
+      confirmDialogVisible: false,
+    })
+
+    if (resolver) {
+      resolver(true)
+    }
+  },
+
+  onCancelReservationDialog() {
+    const resolver = confirmDialogResolver
+    confirmDialogResolver = null
+
+    this.setData({
+      confirmDialogVisible: false,
+    })
+
+    if (resolver) {
+      resolver(false)
+    }
   },
 })

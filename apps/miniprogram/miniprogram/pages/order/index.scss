@@ -146,13 +146,32 @@
 
 .reservation-card__actions {
   margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.reservation-card__actions .van-button {
+  width: 100% !important;
+  margin: 0 !important;
 }
 
 .reservation-card__checkin-btn {
-  height: 64rpx !important;
+  height: 68rpx !important;
+  border-radius: 12rpx !important;
   border: 0 !important;
   background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) !important;
   box-shadow: 0 8rpx 20rpx rgb(37 99 235 / 24%);
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+}
+
+.reservation-card__cancel-btn {
+  height: 68rpx !important;
+  border-radius: 12rpx !important;
+  border: 2rpx solid #fecaca !important;
+  color: #b91c1c !important;
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%) !important;
   font-size: 28rpx !important;
   font-weight: 600 !important;
 }

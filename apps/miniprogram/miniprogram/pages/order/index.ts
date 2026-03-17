@@ -1,16 +1,27 @@
 import type { UserReservationRecord } from "../../api/reservation/index"
 import type { ReservationStatusClassName } from "../../constants/reservation"
 import {
+  cancelReservationApi,
   checkInReservationApi,
   getReservationListByUserApi,
+  getReservationUserCountApi,
 } from "../../api/reservation/index"
 import {
   getReservationStatusMeta,
 } from "../../constants/reservation"
 
-type OverviewMock = {
-  activeCount: number
-  totalCount: number
+type OverviewCardItem = {
+  key: string
+  label: string
+  value: number
+  className: string
+}
+
+type ReservationDetailLine = {
+  key: string
+  label: string
+  value: string
+  valueClassName?: string
 }
 
 type ReservationCardItem = {
@@ -19,22 +30,30 @@ type ReservationCardItem = {
   status: number
   statusText: string
   statusClass: ReservationStatusClassName
-  reservationDate: string
-  timeRange: string
-  amountText: string
-  createTimeText: string
+  detailLines: ReservationDetailLine[]
 }
 
 Page({
   data: {
     loading: false,
     refresherTriggered: false,
-    overviewMock: {
-      activeCount: 3,
-      totalCount: 12,
-    } as OverviewMock,
+    overviewCards: [
+      {
+        key: "active",
+        label: "进行中预约",
+        value: 0,
+        className: "overview-card--active",
+      },
+      {
+        key: "total",
+        label: "总预约",
+        value: 0,
+        className: "overview-card--total",
+      },
+    ] as OverviewCardItem[],
     reservationList: [] as ReservationCardItem[],
     checkInLoadingId: 0,
+    cancelLoadingId: 0,
     errorText: "",
   },
 
@@ -64,25 +83,53 @@ Page({
     })
 
     try {
-      const res = await getReservationListByUserApi()
-      const list = Array.isArray(res.data) ? res.data : []
+      const [countRes, listRes] = await Promise.all([
+        getReservationUserCountApi(),
+        getReservationListByUserApi(),
+      ])
+      const list = Array.isArray(listRes.data) ? listRes.data : []
       const reservationList = list.map((item, index) =>
         this.toReservationCardItem(item, index),
       )
+      const overviewCards = this.toOverviewCards(countRes.data)
 
       this.setData({
+        overviewCards,
         reservationList,
         errorText: "",
       })
     } catch (error) {
       console.error("load reservation list failed:", error)
       this.setData({
+        overviewCards: this.toOverviewCards({}),
         reservationList: [],
         errorText: "预定记录加载失败，请下拉重试",
       })
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+  toOverviewCards(raw: {
+    pendingVerificationCount?: number
+    totalCount?: number
+  }) {
+    const pendingVerificationCount = Number(raw.pendingVerificationCount)
+    const totalCount = Number(raw.totalCount)
+    return [
+      {
+        key: "active",
+        label: "进行中预约",
+        value: Number.isFinite(pendingVerificationCount) ? pendingVerificationCount : 0,
+        className: "overview-card--active",
+      },
+      {
+        key: "total",
+        label: "总预约",
+        value: Number.isFinite(totalCount) ? totalCount : 0,
+        className: "overview-card--total",
+      },
+    ] as OverviewCardItem[]
   },
 
   toReservationCardItem(item: UserReservationRecord, index: number): ReservationCardItem {
@@ -102,11 +149,33 @@ Page({
       typeof item.courtId === "number" ? `${item.courtId}号场` : "场地待定"
 
     const amountText = this.formatAmount(item.totalPrice)
-    const createTimeText =
-      this.formatDateTime(item.createTime)
+    const createTimeText = this.formatDateTime(item.createTime)
     const statusValue = Number(item.status)
     const status = Number.isFinite(statusValue) ? statusValue : -1
     const statusMeta = getReservationStatusMeta(status)
+    const detailLines = [
+      {
+        key: "reservationDate",
+        label: "预约日期",
+        value: reservationDate,
+      },
+      {
+        key: "timeRange",
+        label: "预约时段",
+        value: timeRange,
+      },
+      {
+        key: "amount",
+        label: "金额",
+        value: amountText,
+        valueClassName: "reservation-card__value--price",
+      },
+      {
+        key: "createTime",
+        label: "创建时间",
+        value: createTimeText,
+      },
+    ].filter((line) => Boolean(line.value))
 
     return {
       id: Number(item.id) || 100000000 + index,
@@ -114,10 +183,7 @@ Page({
       status,
       statusText: statusMeta.text,
       statusClass: statusMeta.className,
-      reservationDate,
-      timeRange,
-      amountText,
-      createTimeText,
+      detailLines,
     }
   },
 
@@ -155,6 +221,35 @@ Page({
     }
   },
 
+  async onTapCancelReservation(event: WechatMiniprogram.BaseEvent) {
+    const reservationId = Number(event.currentTarget.dataset.reservationId || 0)
+    if (!reservationId) return
+    if (Number(this.data.checkInLoadingId) > 0 || Number(this.data.cancelLoadingId) > 0) return
+
+    const confirmed = await this.confirmCancelReservation()
+    if (!confirmed) return
+
+    this.setData({ cancelLoadingId: reservationId })
+    try {
+      await cancelReservationApi(reservationId)
+
+      wx.showToast({
+        title: "取消成功",
+        icon: "success",
+      })
+
+      await this.loadReservationList()
+    } catch (error) {
+      const message = (error as Error).message || "取消失败，请稍后重试"
+      wx.showToast({
+        title: message,
+        icon: "none",
+      })
+    } finally {
+      this.setData({ cancelLoadingId: 0 })
+    }
+  },
+
   scanQrCode() {
     return new Promise<string>((resolve, reject) => {
       wx.scanCode({
@@ -176,6 +271,23 @@ Page({
             return
           }
           reject(error)
+        },
+      })
+    })
+  },
+
+  confirmCancelReservation() {
+    return new Promise<boolean>((resolve) => {
+      wx.showModal({
+        title: "确认取消",
+        content: "取消后该预约将无法继续签到，是否继续？",
+        confirmText: "确认取消",
+        confirmColor: "#dc2626",
+        success: (res) => {
+          resolve(Boolean(res.confirm))
+        },
+        fail: () => {
+          resolve(false)
         },
       })
     })

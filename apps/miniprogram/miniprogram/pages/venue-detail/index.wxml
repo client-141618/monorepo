@@ -102,4 +102,21 @@
       确认预约
     </button>
   </view>
+
+  <van-dialog
+    use-slot
+    show="{{confirmDialogVisible}}"
+    title="确认预约"
+    show-cancel-button
+    cancel-button-text="取消"
+    confirm-button-text="确定"
+    bind:confirm="onConfirmReservationDialog"
+    bind:cancel="onCancelReservationDialog"
+  >
+    <view class="confirm-dialog__content">
+      <view class="confirm-dialog__line">{{confirmDialogVenueLine}}</view>
+      <view class="confirm-dialog__line">{{confirmDialogDateLine}}</view>
+      <view class="confirm-dialog__line confirm-dialog__line--slot">{{confirmDialogSlotLine}}</view>
+    </view>
+  </van-dialog>
 </view>
