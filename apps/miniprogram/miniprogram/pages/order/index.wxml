@@ -1,5 +1,61 @@
 <view class="page">
-  <view class="content with-tabbar-safe-bottom">
-    <van-empty description="订单页面开发中" />
-  </view>
+  <scroll-view
+    class="content with-tabbar-safe-bottom"
+    scroll-y
+    enable-flex
+    refresher-enabled
+    refresher-triggered="{{refresherTriggered}}"
+    bindrefresherrefresh="onRefresherRefresh"
+  >
+    <view class="overview-wrap">
+      <view class="overview-card overview-card--active">
+        <view class="overview-card__label">进行中预约</view>
+        <view class="overview-card__value">{{overviewMock.activeCount}}</view>
+      </view>
+      <view class="overview-card overview-card--total">
+        <view class="overview-card__label">总预约</view>
+        <view class="overview-card__value">{{overviewMock.totalCount}}</view>
+      </view>
+    </view>
+
+    <view class="section-title">预定信息</view>
+
+    <view wx:if="{{loading}}" class="loading-wrap">
+      <van-loading size="24px" type="spinner" color="#1989fa" />
+    </view>
+
+    <view wx:elif="{{reservationList.length}}" class="reservation-list">
+      <block wx:for="{{reservationList}}" wx:key="id">
+        <view class="reservation-card">
+          <view class="status-tag {{item.statusClass}}">{{item.statusText}}</view>
+          <view class="reservation-card__title">{{item.title}}</view>
+
+          <view class="reservation-card__line">
+            <text class="reservation-card__key">预约日期</text>
+            <text class="reservation-card__value">{{item.reservationDate}}</text>
+          </view>
+
+          <view class="reservation-card__line">
+            <text class="reservation-card__key">预约时段</text>
+            <text class="reservation-card__value">{{item.timeRange}}</text>
+          </view>
+
+          <view wx:if="{{item.amountText}}" class="reservation-card__line">
+            <text class="reservation-card__key">金额</text>
+            <text class="reservation-card__value reservation-card__value--price">{{item.amountText}}</text>
+          </view>
+
+          <view wx:if="{{item.createTimeText}}" class="reservation-card__line">
+            <text class="reservation-card__key">创建时间</text>
+            <text class="reservation-card__value">{{item.createTimeText}}</text>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view wx:else class="empty-wrap">
+      <view wx:if="{{errorText}}" class="error-tip">{{errorText}}</view>
+      <van-empty description="暂无预定记录" />
+    </view>
+  </scroll-view>
 </view>

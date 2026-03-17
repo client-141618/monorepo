@@ -22,6 +22,9 @@ Page({
   },
 
   onShow() {
+    wx.setNavigationBarTitle({
+      title: "通知消息",
+    })
     if (typeof this.getTabBar === "function") {
       const tabBar = this.getTabBar()
       if (tabBar) {

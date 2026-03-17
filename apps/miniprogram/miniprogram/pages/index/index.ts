@@ -14,6 +14,13 @@ Component({
     canIUseGetUserProfile: wx.canIUse('getUserProfile'),
     canIUseNicknameComp: wx.canIUse('input.type.nickname'),
   },
+  lifetimes: {
+    attached() {
+      wx.setNavigationBarTitle({
+        title: "Weixin",
+      })
+    },
+  },
   methods: {
     // 事件处理函数
     bindViewTap() {

@@ -21,6 +21,9 @@ Page({
   },
 
   onLoad(options) {
+    wx.setNavigationBarTitle({
+      title: "通知详情",
+    })
     const id = Number(options.id)
     if (!Number.isFinite(id) || id <= 0) {
       wx.showToast({

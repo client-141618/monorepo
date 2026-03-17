@@ -48,14 +48,100 @@ const form = reactive<VenueForm>({
 
 const imageUrl = ref<string>("")
 
+const slotMinuteValue = computed(() => {
+  const parsed = Math.floor(Number(form.slotMinutes))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
+})
+
+const isSlotMinuteReady = computed(() => slotMinuteValue.value > 0)
+
+const parseTimeToMinutes = (value: string): number | null => {
+  const [hoursText, minutesText] = value.split(":")
+  const hours = Number(hoursText)
+  const minutes = Number(minutesText)
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null
+  return hours * 60 + minutes
+}
+
+const isTimeAlignedWithSlot = (timeText: string, slot: number) => {
+  const totalMinutes = parseTimeToMinutes(timeText)
+  if (totalMinutes === null) return false
+  return totalMinutes % slot === 0
+}
+
+const formatMinutesToTime = (totalMinutes: number) => {
+  const hours = Math.floor(totalMinutes / 60)
+  const minutes = totalMinutes % 60
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
+}
+
+const timeSelectStep = computed(() => formatMinutesToTime(slotMinuteValue.value || 1))
+
+const timeSelectEnd = computed(() => {
+  if (!isSlotMinuteReady.value) return "23:59"
+  const alignedLastMinute = Math.floor((24 * 60 - 1) / slotMinuteValue.value) * slotMinuteValue.value
+  return formatMinutesToTime(alignedLastMinute)
+})
+
+const validateOpenTime = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (!value) {
+    callback(new Error("请选择开放时间"))
+    return
+  }
+  if (!isSlotMinuteReady.value) {
+    callback(new Error("请先填写最小预约单元"))
+    return
+  }
+  if (!isTimeAlignedWithSlot(value, slotMinuteValue.value)) {
+    callback(new Error("开放时间需按最小预约单元对齐"))
+    return
+  }
+  callback()
+}
+
+const validateCloseTime = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (!value) {
+    callback(new Error("请选择关闭时间"))
+    return
+  }
+  if (!isSlotMinuteReady.value) {
+    callback(new Error("请先填写最小预约单元"))
+    return
+  }
+  if (!isTimeAlignedWithSlot(value, slotMinuteValue.value)) {
+    callback(new Error("关闭时间需按最小预约单元对齐"))
+    return
+  }
+  if (!form.openTime) {
+    callback()
+    return
+  }
+  const openTimeMinutes = parseTimeToMinutes(form.openTime)
+  const closeTimeMinutes = parseTimeToMinutes(value)
+  if (openTimeMinutes === null || closeTimeMinutes === null) {
+    callback(new Error("时间格式不正确"))
+    return
+  }
+  if (closeTimeMinutes <= openTimeMinutes) {
+    callback(new Error("关闭时间需晚于开放时间"))
+    return
+  }
+  if ((closeTimeMinutes - openTimeMinutes) % slotMinuteValue.value !== 0) {
+    callback(new Error("开放与关闭时间跨度需按最小预约单元对齐"))
+    return
+  }
+  callback()
+}
+
 const rules: FormRules<VenueForm> = {
   name: [{ required: true, message: "请输入场馆名称", trigger: "blur" }],
   typeId: [{ required: true, message: "请选择场馆类型", trigger: "change" }],
   pricePerHour: [
     { required: true, message: "请输入每小时价格", trigger: "change" },
   ],
-  openTime: [{ required: true, message: "请选择开放时间", trigger: "change" }],
-  closeTime: [{ required: true, message: "请选择关闭时间", trigger: "change" }],
+  openTime: [{ validator: validateOpenTime, trigger: "change" }],
+  closeTime: [{ validator: validateCloseTime, trigger: "change" }],
   total: [{ required: true, message: "请输入场地单元数量", trigger: "change" }],
   unitCapacity: [{ required: true, message: "请输入每个场地人数", trigger: "change" }],
   slotMinutes: [{ required: true, message: "请输入最小预约时间单元", trigger: "change" }],
@@ -184,6 +270,25 @@ watch(
     resetForm()
   },
 )
+
+watch(
+  () => form.slotMinutes,
+  () => {
+    if (!isSlotMinuteReady.value) {
+      form.openTime = ""
+      form.closeTime = ""
+      return
+    }
+
+    const slot = slotMinuteValue.value
+    if (form.openTime && !isTimeAlignedWithSlot(form.openTime, slot)) {
+      form.openTime = ""
+    }
+    if (form.closeTime && !isTimeAlignedWithSlot(form.closeTime, slot)) {
+      form.closeTime = ""
+    }
+  },
+)
 </script>
 
 <template>
@@ -269,7 +374,7 @@ watch(
                   :min="0"
                   :step="10"
                   :precision="2"
-                  controls-position="right"
+                  :controls="false"
                   class="full-width-input-number"
                 />
               </el-form-item>
@@ -280,7 +385,7 @@ watch(
                   v-model="form.slotMinutes"
                   :min="1"
                   :step="5"
-                  controls-position="right"
+                  :controls="false"
                   class="full-width-input-number"
                 />
                 <div class="venue-form__inline-hint">单位：分钟，起止时间需按该单元对齐。</div>
@@ -291,22 +396,27 @@ watch(
           <el-row :gutter="18">
             <el-col :xs="24" :sm="24" :md="12">
               <el-form-item label="开放时间" prop="openTime">
-                <el-time-picker
+                <el-time-select
                   v-model="form.openTime"
-                  placeholder="请选择开放时间"
-                  format="HH:mm"
-                  value-format="HH:mm"
+                  :disabled="!isSlotMinuteReady"
+                  :placeholder="isSlotMinuteReady ? '请选择开放时间' : '请先填写最小预约单元'"
+                  start="00:00"
+                  :end="timeSelectEnd"
+                  :step="timeSelectStep"
                   class="full-width-picker"
                 />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12">
               <el-form-item label="关闭时间" prop="closeTime">
-                <el-time-picker
+                <el-time-select
                   v-model="form.closeTime"
-                  placeholder="请选择关闭时间"
-                  format="HH:mm"
-                  value-format="HH:mm"
+                  :disabled="!isSlotMinuteReady"
+                  :placeholder="isSlotMinuteReady ? '请选择关闭时间' : '请先填写最小预约单元'"
+                  start="00:00"
+                  :end="timeSelectEnd"
+                  :step="timeSelectStep"
+                  :min-time="form.openTime || undefined"
                   class="full-width-picker"
                 />
               </el-form-item>
@@ -320,7 +430,7 @@ watch(
                   v-model="form.total"
                   :min="1"
                   :step="1"
-                  controls-position="right"
+                  :controls="false"
                   class="full-width-input-number"
                 />
               </el-form-item>
@@ -331,7 +441,7 @@ watch(
                   v-model="form.unitCapacity"
                   :min="1"
                   :step="1"
-                  controls-position="right"
+                  :controls="false"
                   class="full-width-input-number"
                 />
               </el-form-item>
@@ -501,18 +611,6 @@ watch(
 
 .venue-form :deep(.el-input-number) {
   overflow: hidden;
-}
-
-.venue-form :deep(.el-input-number__increase),
-.venue-form :deep(.el-input-number__decrease) {
-  width: 40px;
-  color: #6b7280;
-  background: #f7faff;
-  border-left: 1px solid #d2dae6;
-}
-
-.venue-form :deep(.el-input-number__increase) {
-  border-bottom: 1px solid #d2dae6;
 }
 
 .venue-form :deep(.el-textarea__inner) {

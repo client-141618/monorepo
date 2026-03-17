@@ -1,6 +1,10 @@
 {
-  "navigationStyle": "custom",
+  "navigationStyle": "default",
+  "navigationBarTitleText": "预定",
+  "navigationBarBackgroundColor": "#f7f8fa",
+  "navigationBarTextStyle": "black",
   "usingComponents": {
-    "van-empty": "@vant/weapp/empty/index"
+    "van-empty": "@vant/weapp/empty/index",
+    "van-loading": "@vant/weapp/loading/index"
   }
 }

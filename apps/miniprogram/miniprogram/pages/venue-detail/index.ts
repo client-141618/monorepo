@@ -70,6 +70,9 @@ Page({
   },
 
   onLoad(options) {
+    wx.setNavigationBarTitle({
+      title: "场馆详情",
+    })
     const venueId = Number(options.id)
     if (!Number.isFinite(venueId) || venueId <= 0) {
       wx.showToast({ title: "场馆参数错误", icon: "none" })

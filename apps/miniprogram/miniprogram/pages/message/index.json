@@ -1,7 +1,9 @@
 {
-  "navigationStyle": "custom",
+  "navigationStyle": "default",
+  "navigationBarTitleText": "通知消息",
+  "navigationBarBackgroundColor": "#f7f8fa",
+  "navigationBarTextStyle": "black",
   "usingComponents": {
-    "navigation-bar": "/components/navigation-bar/navigation-bar",
     "van-empty": "@vant/weapp/empty/index",
     "van-loading": "@vant/weapp/loading/index",
     "van-tag": "@vant/weapp/tag/index"

@@ -42,6 +42,20 @@ export interface CreateReservationResult {
   confirmedSlots: string[]
 }
 
+export interface UserReservationRecord {
+  id: number
+  userId: number | string
+  status?: number
+  venueId?: number
+  venueName?: string
+  courtId?: number
+  reservationDate?: string
+  startTime?: string
+  endTime?: string
+  totalPrice?: number
+  createTime?: string
+}
+
 export function getReservationAvailabilityNextSevenDaysApi(
   venueId: number,
   startDate?: string,
@@ -58,5 +72,12 @@ export function createReservationApi(data: CreateReservationPayload) {
     url: "/api/reservation/create",
     method: "POST",
     data,
+  })
+}
+
+export function getReservationListByUserApi() {
+  return request<UserReservationRecord[]>({
+    url: "/api/reservation/user",
+    method: "GET",
   })
 }
