@@ -6,6 +6,7 @@ import type {
   CreateReservationResult,
   ReservationAvailabilityData,
   ReservationBlockRecord,
+  VenueCheckInQrData,
 } from "./type"
 import { request } from "@/utils/request"
 
@@ -66,6 +67,13 @@ export function disableReservationBlockAdminApi(blockId: number) {
 export function getReservationBlockListByVenueAndDateAdminApi(venueId: number, date: string) {
   return request<ReservationBlockRecord[]>({
     url: `${PREFIX}/admin/block/venue/${venueId}/date/${date}`,
+    method: "GET",
+  })
+}
+
+export function getVenueCheckInQrAdminApi(venueId: number, courtId: number) {
+  return request<VenueCheckInQrData>({
+    url: `${PREFIX}/admin/check-in/qr/venue/${venueId}/court/${courtId}`,
     method: "GET",
   })
 }

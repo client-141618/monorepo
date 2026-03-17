@@ -144,6 +144,19 @@
   font-weight: 700;
 }
 
+.reservation-card__actions {
+  margin-top: 18rpx;
+}
+
+.reservation-card__checkin-btn {
+  height: 64rpx !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) !important;
+  box-shadow: 0 8rpx 20rpx rgb(37 99 235 / 24%);
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+}
+
 .empty-wrap {
   margin-top: 110rpx;
 }

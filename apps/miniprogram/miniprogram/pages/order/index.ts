@@ -1,7 +1,12 @@
 import type { UserReservationRecord } from "../../api/reservation/index"
 import type { ReservationStatusClassName } from "../../constants/reservation"
-import { getReservationListByUserApi } from "../../api/reservation/index"
-import { getReservationStatusMeta } from "../../constants/reservation"
+import {
+  checkInReservationApi,
+  getReservationListByUserApi,
+} from "../../api/reservation/index"
+import {
+  getReservationStatusMeta,
+} from "../../constants/reservation"
 
 type OverviewMock = {
   activeCount: number
@@ -11,6 +16,7 @@ type OverviewMock = {
 type ReservationCardItem = {
   id: number
   title: string
+  status: number
   statusText: string
   statusClass: ReservationStatusClassName
   reservationDate: string
@@ -28,6 +34,7 @@ Page({
       totalCount: 12,
     } as OverviewMock,
     reservationList: [] as ReservationCardItem[],
+    checkInLoadingId: 0,
     errorText: "",
   },
 
@@ -97,11 +104,14 @@ Page({
     const amountText = this.formatAmount(item.totalPrice)
     const createTimeText =
       this.formatDateTime(item.createTime)
-    const statusMeta = getReservationStatusMeta(item.status)
+    const statusValue = Number(item.status)
+    const status = Number.isFinite(statusValue) ? statusValue : -1
+    const statusMeta = getReservationStatusMeta(status)
 
     return {
       id: Number(item.id) || 100000000 + index,
       title: `${venueName}  ${courtText}`,
+      status,
       statusText: statusMeta.text,
       statusClass: statusMeta.className,
       reservationDate,
@@ -109,6 +119,66 @@ Page({
       amountText,
       createTimeText,
     }
+  },
+
+  async onTapCheckIn(event: WechatMiniprogram.BaseEvent) {
+    const reservationId = Number(event.currentTarget.dataset.reservationId || 0)
+    if (!reservationId) return
+    if (Number(this.data.checkInLoadingId) > 0) return
+
+    this.setData({ checkInLoadingId: reservationId })
+    try {
+      const qrContent = await this.scanQrCode()
+      if (!qrContent) {
+        return
+      }
+
+      await checkInReservationApi({
+        reservationId,
+        qrContent,
+      })
+
+      wx.showToast({
+        title: "核销成功",
+        icon: "success",
+      })
+
+      await this.loadReservationList()
+    } catch (error) {
+      const message = (error as Error).message || "核销失败，请稍后重试"
+      wx.showToast({
+        title: message,
+        icon: "none",
+      })
+    } finally {
+      this.setData({ checkInLoadingId: 0 })
+    }
+  },
+
+  scanQrCode() {
+    return new Promise<string>((resolve, reject) => {
+      wx.scanCode({
+        onlyFromCamera: true,
+        scanType: ["qrCode"],
+        success: (res) => {
+          const result = typeof res.result === "string" ? res.result.trim() : ""
+          if (!result) {
+            reject(new Error("二维码内容为空"))
+            return
+          }
+          resolve(result)
+        },
+        fail: (error) => {
+          const errMsg =
+            error && typeof error.errMsg === "string" ? error.errMsg : ""
+          if (errMsg.indexOf("cancel") >= 0) {
+            resolve("")
+            return
+          }
+          reject(error)
+        },
+      })
+    })
   },
 
   formatAmount(totalPrice: unknown) {

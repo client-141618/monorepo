@@ -56,6 +56,11 @@ export interface UserReservationRecord {
   createTime?: string
 }
 
+export interface ReservationCheckInPayload {
+  reservationId: number
+  qrContent: string
+}
+
 export function getReservationAvailabilityNextSevenDaysApi(
   venueId: number,
   startDate?: string,
@@ -79,5 +84,13 @@ export function getReservationListByUserApi() {
   return request<UserReservationRecord[]>({
     url: "/api/reservation/user",
     method: "GET",
+  })
+}
+
+export function checkInReservationApi(data: ReservationCheckInPayload) {
+  return request<null>({
+    url: "/api/reservation/check-in",
+    method: "POST",
+    data,
   })
 }

@@ -49,6 +49,22 @@
             <text class="reservation-card__key">创建时间</text>
             <text class="reservation-card__value">{{item.createTimeText}}</text>
           </view>
+
+          <view wx:if="{{item.status === 1}}" class="reservation-card__actions">
+            <van-button
+              type="primary"
+              size="small"
+              round
+              block
+              custom-class="reservation-card__checkin-btn"
+              loading="{{checkInLoadingId === item.id}}"
+              disabled="{{checkInLoadingId > 0}}"
+              data-reservation-id="{{item.id}}"
+              bindtap="onTapCheckIn"
+            >
+              去签到
+            </van-button>
+          </view>
         </view>
       </block>
     </view>

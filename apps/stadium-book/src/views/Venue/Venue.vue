@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import type { TableInstance } from "element-plus"
+import type { VenueCheckInQrData } from "@/api/reservation/type"
 import type { Venue } from "@/api/venue/type"
 import { Refresh } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from 'vue'
+import { getVenueCheckInQrAdminApi } from "@/api/reservation"
 import {
   batchDeleteVenueApi,
   batchDisableVenueApi,
@@ -28,9 +30,24 @@ const batchDeleteLoading = ref(false)
 const statusLoadingIds = ref<number[]>([])
 const statusOperateAt = ref<Record<number, number>>({})
 const tableRef = ref<TableInstance>()
+const checkInQrDialogVisible = ref(false)
+const checkInQrLoading = ref(false)
+const checkInQrGenerating = ref(false)
+const checkInQrRow = ref<Venue | null>(null)
+const selectedCourtId = ref<number | null>(null)
+const checkInQrData = ref<VenueCheckInQrData | null>(null)
 
 const hasData = computed(() => venueList.value.length > 0)
 const hasSelectedVenue = computed(() => selectedVenueIds.value.length > 0)
+const selectedVenueCourtOptions = computed(() => {
+  const total = Number(checkInQrRow.value?.total)
+  if (!Number.isFinite(total) || total <= 0) return []
+  return Array.from({ length: total }, (_, index) => index + 1)
+})
+const checkInQrImageSrc = computed(() => {
+  if (!checkInQrData.value?.qrImageBase64) return ""
+  return `data:image/png;base64,${checkInQrData.value.qrImageBase64}`
+})
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 const DEFAULT_VENUE_IMAGE = "/default.jpg"
 
@@ -186,6 +203,70 @@ const handleDelete = async (row: Venue) => {
   await deleteVenueApi(row.id)
   ElMessage.success("删除成功")
   await getVenueList()
+}
+
+const handleOpenCheckInQrDialog = (row: Venue) => {
+  checkInQrRow.value = row
+  const fallbackCourtId = Number.isFinite(Number(row.total)) && Number(row.total) > 0 ? 1 : null
+  selectedCourtId.value = fallbackCourtId
+  checkInQrData.value = null
+  checkInQrDialogVisible.value = true
+}
+
+const handleCheckInQrDialogClosed = () => {
+  checkInQrRow.value = null
+  selectedCourtId.value = null
+  checkInQrData.value = null
+  checkInQrGenerating.value = false
+}
+
+const handleGenerateCheckInQr = async () => {
+  const row = checkInQrRow.value
+  const courtId = selectedCourtId.value
+  if (!row) return
+  if (!courtId) {
+    ElMessage.warning("请先选择场地号")
+    return
+  }
+
+  checkInQrGenerating.value = true
+  try {
+    const res = await getVenueCheckInQrAdminApi(row.id, courtId)
+    checkInQrData.value = res.data
+    ElMessage.success("签到码生成成功")
+  } finally {
+    checkInQrGenerating.value = false
+  }
+}
+
+const handleCourtIdChange = () => {
+  checkInQrData.value = null
+}
+
+const sanitizeFileName = (text: string) =>
+  text.replace(/[\\/:*?"<>|]/g, "-").trim() || "venue"
+
+const handleDownloadCheckInQr = () => {
+  const row = checkInQrRow.value
+  const courtId = selectedCourtId.value
+  const imageSrc = checkInQrImageSrc.value
+  if (!row || !courtId || !imageSrc) {
+    ElMessage.warning("请先生成签到码")
+    return
+  }
+
+  checkInQrLoading.value = true
+  try {
+    const link = document.createElement("a")
+    link.href = imageSrc
+    const venueName = sanitizeFileName(row.name || `venue-${row.id}`)
+    link.download = `${venueName}-场地${courtId}-签到码.png`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  } finally {
+    checkInQrLoading.value = false
+  }
 }
 
 const isStatusLoading = (id: number) => statusLoadingIds.value.includes(id)
@@ -360,8 +441,9 @@ onMounted(() => {
           </template>
         </el-table-column>
 
-        <el-table-column label="操作" fixed="right" width="160">
+        <el-table-column label="操作" fixed="right" width="240">
           <template #default="{ row }">
+            <el-button type="success" link @click="handleOpenCheckInQrDialog(row)">生成签到码</el-button>
             <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
             <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
           </template>
@@ -377,6 +459,63 @@ onMounted(() => {
       :edit-data="editingVenue"
       @success="handleCreateSuccess"
     />
+
+    <el-dialog
+      v-model="checkInQrDialogVisible"
+      width="520px"
+      :close-on-click-modal="false"
+      title="生成签到码"
+      @closed="handleCheckInQrDialogClosed"
+    >
+      <div class="check-in-qr-dialog">
+        <div class="check-in-qr-dialog__header">
+          <div class="check-in-qr-dialog__title">
+            {{ checkInQrRow?.name || "场馆" }}
+          </div>
+          <div class="check-in-qr-dialog__subtitle">选择场地后生成静态核销二维码，可直接下载打印</div>
+        </div>
+
+        <el-form label-width="76px">
+          <el-form-item label="场地号">
+            <el-select
+              v-model="selectedCourtId"
+              placeholder="请选择场地号"
+              style="width: 100%"
+              :disabled="checkInQrGenerating"
+              @change="handleCourtIdChange"
+            >
+              <el-option
+                v-for="courtId in selectedVenueCourtOptions"
+                :key="courtId"
+                :label="`场地 ${courtId}`"
+                :value="courtId"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
+
+        <div class="check-in-qr-preview">
+          <el-empty v-if="!checkInQrImageSrc" description="请选择场地号并生成签到码" :image-size="80" />
+          <template v-else>
+            <img :src="checkInQrImageSrc" class="check-in-qr-preview__image" alt="签到码" />
+            <p class="check-in-qr-preview__meta">
+              场地 {{ selectedCourtId }} · 核销码已就绪
+            </p>
+          </template>
+        </div>
+      </div>
+      <template #footer>
+        <div class="check-in-qr-dialog__footer">
+          <el-button @click="checkInQrDialogVisible = false">关闭</el-button>
+          <el-button type="primary" :loading="checkInQrGenerating" @click="handleGenerateCheckInQr">
+            {{ checkInQrImageSrc ? "刷新签到码" : "生成签到码" }}
+          </el-button>
+          <el-button type="success" :loading="checkInQrLoading" :disabled="!checkInQrImageSrc" @click="handleDownloadCheckInQr">
+            下载
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -418,5 +557,61 @@ onMounted(() => {
   height: 60px;
   border-radius: 4px;
   object-fit: cover;
+}
+
+.check-in-qr-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.check-in-qr-dialog__header {
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ecfeff 0%, #dbeafe 100%);
+  padding: 12px 14px;
+}
+
+.check-in-qr-dialog__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.check-in-qr-dialog__subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.check-in-qr-preview {
+  min-height: 240px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.check-in-qr-preview__image {
+  width: 220px;
+  height: 220px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.12);
+}
+
+.check-in-qr-preview__meta {
+  margin: 10px 0 0;
+  color: #475569;
+  font-size: 13px;
+}
+
+.check-in-qr-dialog__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 </style>
