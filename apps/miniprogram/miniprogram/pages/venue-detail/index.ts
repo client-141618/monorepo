@@ -342,7 +342,8 @@ Page({
       })
     } catch (error) {
       console.error("create reservation failed:", error)
-      wx.showToast({ title: "预约失败", icon: "none" })
+      const message = (error as Error).message || "预约失败"
+      wx.showToast({ title: message, icon: "none" })
     } finally {
       wx.hideLoading()
       this.setData({
