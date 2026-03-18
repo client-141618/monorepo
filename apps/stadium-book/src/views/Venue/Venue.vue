@@ -67,15 +67,6 @@ const formatPriceYuanPerHour = (value: unknown) => {
   return (cents / 100).toFixed(2)
 }
 
-const formatTotalSeats = (row: Venue) => {
-  const totalSeats = Number(row.totalSeats)
-  if (Number.isFinite(totalSeats) && totalSeats > 0) {
-    return totalSeats
-  }
-
-  return Number(row.total ?? 0) * Number(row.unitCapacity ?? 0)
-}
-
 const formatLocationVerifyStatus = (row: Venue) => {
   return row.enableLocationVerify === 1 ? "已开启" : "未开启"
 }
@@ -427,15 +418,7 @@ onMounted(() => {
             {{ formatPriceYuanPerHour(row.pricePerHour) }}
           </template>
         </el-table-column>
-        <el-table-column prop="openTime" label="开放时间" min-width="160" />
-        <el-table-column prop="closeTime" label="关闭时间" min-width="160" />
         <el-table-column prop="total" label="场地单元数" min-width="120" />
-        <el-table-column prop="unitCapacity" label="每场地人数" min-width="120" />
-        <el-table-column label="总可约人数" min-width="120">
-          <template #default="{ row }">
-            {{ formatTotalSeats(row) }}
-          </template>
-        </el-table-column>
         <el-table-column label="最小预约单元" min-width="140">
           <template #default="{ row }">
             {{ row.slotMinutes }} 分钟
@@ -465,6 +448,8 @@ onMounted(() => {
             />
           </template>
         </el-table-column>
+        <el-table-column prop="openTime" label="开放时间" min-width="160" />
+        <el-table-column prop="closeTime" label="关闭时间" min-width="160" />
 
         <el-table-column label="操作" fixed="right" width="240">
           <template #default="{ row }">

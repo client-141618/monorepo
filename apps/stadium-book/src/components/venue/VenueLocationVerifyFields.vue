@@ -48,6 +48,9 @@ const emit = defineEmits<{
 const { mapConfig, loading, errorMessage, ensureLoaded } = useTencentMapConfig()
 const reverseGeocodeLoading = shallowRef(false)
 const latestReverseGeocode = shallowRef<TencentMapReverseGeocodeResult | null>(null)
+const mapReady = shallowRef(false)
+const browserLocateTried = shallowRef(false)
+const browserLocateLoading = shallowRef(false)
 
 const enableLocationVerifyModel = computed({
   get: () => props.enableLocationVerify,
@@ -116,23 +119,11 @@ const mapZoom = computed(() => (hasSelectedPoint.value ? 16 : 11))
 
 const mapHint = computed(() => {
   if (loading.value) return "正在加载地图配置..."
+  if (browserLocateLoading.value) return "正在获取当前位置..."
   if (errorMessage.value) return errorMessage.value
   if (reverseGeocodeLoading.value) return "正在解析选点地址..."
   return props.location?.trim() || "请选取地址"
 })
-
-watch(
-  () => props.enableLocationVerify,
-  async (enabled) => {
-    if (enabled !== 1) return
-    try {
-      await ensureLoaded()
-    } catch {
-      // request 层已统一提示，这里保持界面状态即可
-    }
-  },
-  { immediate: true },
-)
 
 const buildAddressText = (result: TencentMapReverseGeocodeResult) => {
   if (result.address?.trim()) return result.address.trim()
@@ -176,6 +167,14 @@ const handleMapClick = async (event: unknown) => {
     return
   }
 
+  try {
+    await applyPointAndReverseGeocode(point)
+  } catch {
+    ElMessage.error("地址解析失败，请重新选点或稍后重试")
+  }
+}
+
+const applyPointAndReverseGeocode = async (point: MapPoint) => {
   emit("update:checkinLatGcj02", point.lat)
   emit("update:checkinLngGcj02", point.lng)
   emit("update:location", "")
@@ -188,19 +187,76 @@ const handleMapClick = async (event: unknown) => {
       longitude: point.lng,
     })
     const resolvedAddress = buildAddressText(res.data)
-    if (!resolvedAddress) {
-      ElMessage.warning("地址解析结果为空，请重新选点")
-      return
-    }
+    if (!resolvedAddress) return
 
     latestReverseGeocode.value = res.data
     emit("update:location", resolvedAddress)
-  } catch {
-    ElMessage.error("地址解析失败，请重新选点或稍后重试")
   } finally {
     reverseGeocodeLoading.value = false
   }
 }
+
+const ensureMapReady = async () => {
+  if (mapReady.value) return true
+  try {
+    await ensureLoaded()
+    mapReady.value = true
+    return true
+  } catch {
+    mapReady.value = false
+    return false
+  }
+}
+
+const tryUseBrowserCurrentPosition = async () => {
+  if (browserLocateTried.value || hasSelectedPoint.value) return
+  browserLocateTried.value = true
+  if (!navigator?.geolocation) return
+
+  browserLocateLoading.value = true
+  try {
+    const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 8000,
+        maximumAge: 60000,
+      })
+    })
+
+    await applyPointAndReverseGeocode({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+    })
+  } catch {
+    // 用户拒绝或定位失败时保持静默，让用户手动选点
+  } finally {
+    browserLocateLoading.value = false
+  }
+}
+
+watch(
+  () => props.enableLocationVerify,
+  async (enabled) => {
+    if (enabled !== 1) {
+      browserLocateTried.value = false
+      browserLocateLoading.value = false
+      return
+    }
+    const loaded = await ensureMapReady()
+    if (!loaded) return
+    tryUseBrowserCurrentPosition()
+  },
+  { immediate: true },
+)
+
+watch(
+  () => hasSelectedPoint.value,
+  (selected) => {
+    if (selected) {
+      browserLocateLoading.value = false
+    }
+  },
+)
 </script>
 
 <template>
@@ -247,7 +303,7 @@ const handleMapClick = async (event: unknown) => {
           </div>
         </div>
 
-        <div v-loading="loading || reverseGeocodeLoading" class="location-verify-map__canvas-wrap">
+        <div v-loading="loading || reverseGeocodeLoading || browserLocateLoading" class="location-verify-map__canvas-wrap">
           <div v-if="errorMessage" class="location-verify-map__fallback">
             <el-alert
               :title="errorMessage"
@@ -258,7 +314,7 @@ const handleMapClick = async (event: unknown) => {
           </div>
 
           <BaseMap
-            v-else-if="mapConfig?.key"
+            v-else-if="mapReady && mapConfig?.key"
             class="location-verify-map__canvas"
             :api-key="mapConfig.key"
             :center="selectedCenter"

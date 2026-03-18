@@ -1,32 +1,12 @@
 <script setup lang="ts">
-import type { FormInstance, FormRules, UploadProps } from "element-plus"
-import type { VenueType } from "@/api/venue-type/type"
-import type { Venue, VenueUpsertPayload } from "@/api/venue/type"
-import { Plus } from "@element-plus/icons-vue"
-import { ElMessage } from "element-plus"
-import { computed, reactive, ref, watch } from "vue"
-import { addVenueApi, updateVenueApi } from "@/api/venue"
-import { getVenueTypeListApi } from "@/api/venue-type"
+import type { Venue } from "@/api/venue/type"
+import { computed, watch } from "vue"
 import VenueLocationVerifyFields from "@/components/venue/VenueLocationVerifyFields.vue"
-
-interface VenueForm {
-  name: string
-  image: string
-  typeId: number
-  description: string
-  location: string
-  pricePerHour: number
-  openTime: string
-  closeTime: string
-  total: number
-  unitCapacity: number
-  slotMinutes: number
-  status: number
-  enableLocationVerify: 0 | 1
-  checkinLatGcj02?: number
-  checkinLngGcj02?: number
-  checkinRadiusM?: number
-}
+import { useTencentMapConfig } from "@/composables/useTencentMapConfig"
+import VenueBasicInfoSection from "./components/VenueBasicInfoSection.vue"
+import VenueBookingRulesSection from "./components/VenueBookingRulesSection.vue"
+import VenueMediaSection from "./components/VenueMediaSection.vue"
+import { useVenueFormDialog } from "./composables/useVenueFormDialog"
 
 const props = defineProps<{
   visible: boolean
@@ -44,213 +24,24 @@ const dialogVisible = computed({
 const isEditMode = computed(() => props.mode === "edit")
 const dialogTitle = computed(() => (isEditMode.value ? "编辑场馆" : "新增场馆"))
 
-const formRef = ref<FormInstance>()
-const venueTypeOptions = ref<VenueType[]>([])
-const venueTypeLoading = ref(false)
+const {
+  formRef,
+  form,
+  rules,
+  venueTypeOptions,
+  venueTypeLoading,
+  ensureVenueTypeOptions,
+  timeSelectStep,
+  timeSelectEnd,
+  isSlotMinuteReady,
+  isTimeAlignedWithSlot,
+  getSlotMinuteValue,
+  resetForm,
+  setFormByVenue,
+  submitVenue,
+} = useVenueFormDialog()
 
-const form = reactive<VenueForm>({
-  name: "",
-  image: "",
-  typeId: undefined as unknown as number,
-  description: "",
-  location: "",
-  pricePerHour: 0,
-  openTime: "",
-  closeTime: "",
-  total: 0,
-  unitCapacity: 0,
-  slotMinutes: 0,
-  status: 1,
-  enableLocationVerify: 0,
-  checkinLatGcj02: undefined,
-  checkinLngGcj02: undefined,
-  checkinRadiusM: undefined,
-})
-
-const imageUrl = ref("")
-
-const slotMinuteValue = computed(() => {
-  const parsed = Math.floor(Number(form.slotMinutes))
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0
-})
-
-const isSlotMinuteReady = computed(() => slotMinuteValue.value > 0)
-
-const parseTimeToMinutes = (value: string): number | null => {
-  const [hoursText, minutesText] = value.split(":")
-  const hours = Number(hoursText)
-  const minutes = Number(minutesText)
-  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null
-  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null
-  return hours * 60 + minutes
-}
-
-const isTimeAlignedWithSlot = (timeText: string, slot: number) => {
-  const totalMinutes = parseTimeToMinutes(timeText)
-  if (totalMinutes === null) return false
-  return totalMinutes % slot === 0
-}
-
-const formatMinutesToTime = (totalMinutes: number) => {
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
-}
-
-const hasSelectedLocationPoint = () => {
-  return Number.isFinite(form.checkinLatGcj02) && Number.isFinite(form.checkinLngGcj02)
-}
-
-const timeSelectStep = computed(() => formatMinutesToTime(slotMinuteValue.value || 1))
-
-const timeSelectEnd = computed(() => {
-  if (!isSlotMinuteReady.value) return "23:59"
-  const alignedLastMinute = Math.floor((24 * 60 - 1) / slotMinuteValue.value) * slotMinuteValue.value
-  return formatMinutesToTime(alignedLastMinute)
-})
-
-const validateOpenTime = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  if (!value) {
-    callback(new Error("请选择开放时间"))
-    return
-  }
-  if (!isSlotMinuteReady.value) {
-    callback(new Error("请先填写最小预约单元"))
-    return
-  }
-  if (!isTimeAlignedWithSlot(value, slotMinuteValue.value)) {
-    callback(new Error("开放时间需按最小预约单元对齐"))
-    return
-  }
-  callback()
-}
-
-const validateCloseTime = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  if (!value) {
-    callback(new Error("请选择关闭时间"))
-    return
-  }
-  if (!isSlotMinuteReady.value) {
-    callback(new Error("请先填写最小预约单元"))
-    return
-  }
-  if (!isTimeAlignedWithSlot(value, slotMinuteValue.value)) {
-    callback(new Error("关闭时间需按最小预约单元对齐"))
-    return
-  }
-  if (!form.openTime) {
-    callback()
-    return
-  }
-  const openTimeMinutes = parseTimeToMinutes(form.openTime)
-  const closeTimeMinutes = parseTimeToMinutes(value)
-  if (openTimeMinutes === null || closeTimeMinutes === null) {
-    callback(new Error("时间格式不正确"))
-    return
-  }
-  if (closeTimeMinutes <= openTimeMinutes) {
-    callback(new Error("关闭时间需晚于开放时间"))
-    return
-  }
-  if ((closeTimeMinutes - openTimeMinutes) % slotMinuteValue.value !== 0) {
-    callback(new Error("开放与关闭时间跨度需按最小预约单元对齐"))
-    return
-  }
-  callback()
-}
-
-const validateLocationText = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  if (form.enableLocationVerify !== 1) {
-    callback()
-    return
-  }
-  if (!value?.trim()) {
-    callback(new Error("请通过地图选点回填场馆地址"))
-    return
-  }
-  callback()
-}
-
-const validateLocationPoint = (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
-  if (form.enableLocationVerify !== 1) {
-    callback()
-    return
-  }
-  if (!hasSelectedLocationPoint()) {
-    callback(new Error("请在地图上选择签到中心点"))
-    return
-  }
-  callback()
-}
-
-const validateLocationRadius = (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
-  if (form.enableLocationVerify !== 1) {
-    callback()
-    return
-  }
-  const radius = Number(value)
-  if (!Number.isFinite(radius) || radius <= 0) {
-    callback(new Error("请输入有效的校验范围"))
-    return
-  }
-  callback()
-}
-
-const rules: FormRules<VenueForm> = {
-  name: [{ required: true, message: "请输入场馆名称", trigger: "blur" }],
-  typeId: [{ required: true, message: "请选择场馆类型", trigger: "change" }],
-  location: [{ validator: validateLocationText, trigger: ["blur", "change"] }],
-  pricePerHour: [
-    { required: true, message: "请输入每小时价格", trigger: "change" },
-  ],
-  openTime: [{ validator: validateOpenTime, trigger: "change" }],
-  closeTime: [{ validator: validateCloseTime, trigger: "change" }],
-  total: [{ required: true, message: "请输入场地单元数量", trigger: "change" }],
-  unitCapacity: [{ required: true, message: "请输入每个场地人数", trigger: "change" }],
-  slotMinutes: [{ required: true, message: "请输入最小预约时间单元", trigger: "change" }],
-  checkinRadiusM: [{ validator: validateLocationRadius, trigger: "change" }],
-  checkinLatGcj02: [{ validator: validateLocationPoint, trigger: "change" }],
-}
-
-const resetForm = () => {
-  form.name = ""
-  form.image = ""
-  form.typeId = undefined as unknown as number
-  form.description = ""
-  form.location = ""
-  form.pricePerHour = 0
-  form.openTime = ""
-  form.closeTime = ""
-  form.total = 0
-  form.unitCapacity = 0
-  form.slotMinutes = 0
-  form.status = 1
-  form.enableLocationVerify = 0
-  form.checkinLatGcj02 = undefined
-  form.checkinLngGcj02 = undefined
-  form.checkinRadiusM = undefined
-  imageUrl.value = ""
-}
-
-const setFormByVenue = (venue: Venue) => {
-  form.name = venue.name ?? ""
-  form.image = venue.image ?? ""
-  form.typeId = venue.typeId
-  form.description = venue.description ?? ""
-  form.location = venue.location ?? ""
-  form.pricePerHour = Number((Number(venue.pricePerHour) / 100).toFixed(2))
-  form.openTime = venue.openTime ?? ""
-  form.closeTime = venue.closeTime ?? ""
-  form.total = Number(venue.total ?? 0)
-  form.unitCapacity = Number(venue.unitCapacity ?? 0)
-  form.slotMinutes = Number(venue.slotMinutes ?? 0)
-  form.status = venue.status ?? 1
-  form.enableLocationVerify = venue.enableLocationVerify ?? 0
-  form.checkinLatGcj02 = venue.checkinLatGcj02
-  form.checkinLngGcj02 = venue.checkinLngGcj02
-  form.checkinRadiusM = venue.checkinRadiusM
-  imageUrl.value = form.image || ""
-}
+const { ensureLoaded: ensureTencentMapLoaded } = useTencentMapConfig()
 
 const handleCancel = () => {
   dialogVisible.value = false
@@ -261,59 +52,10 @@ const handleClosed = () => {
   resetForm()
 }
 
-const normalizeOptionalNumber = (value: number | undefined) => {
-  return Number.isFinite(value) ? Number(value) : undefined
-}
-
 const handleConfirm = async () => {
-  if (!formRef.value) return
-
-  const valid = await formRef.value.validate()
-  if (!valid) return
-
-  const payload: VenueUpsertPayload = {
-    name: form.name.trim(),
-    image: form.image || undefined,
-    typeId: form.typeId,
-    description: form.description?.trim() || undefined,
-    location: form.location?.trim() || undefined,
-    pricePerHour: Math.round(Number(form.pricePerHour) * 100),
-    openTime: form.openTime,
-    closeTime: form.closeTime,
-    total: Number(form.total),
-    unitCapacity: Number(form.unitCapacity),
-    slotMinutes: Number(form.slotMinutes),
-    status: form.status,
-    enableLocationVerify: form.enableLocationVerify,
-    checkinLatGcj02: form.enableLocationVerify === 1
-      ? normalizeOptionalNumber(form.checkinLatGcj02)
-      : undefined,
-    checkinLngGcj02: form.enableLocationVerify === 1
-      ? normalizeOptionalNumber(form.checkinLngGcj02)
-      : undefined,
-    checkinRadiusM: form.enableLocationVerify === 1
-      ? normalizeOptionalNumber(form.checkinRadiusM)
-      : undefined,
-  }
-
-  if (isEditMode.value) {
-    payload.id = props.editData?.id
-    await updateVenueApi(payload)
-  } else {
-    await addVenueApi(payload)
-  }
-
+  const success = await submitVenue(props.mode, props.editData)
+  if (!success) return
   emit("success")
-}
-
-const getVenueTypeOptions = async () => {
-  try {
-    venueTypeLoading.value = true
-    const res = await getVenueTypeListApi()
-    venueTypeOptions.value = res.data
-  } finally {
-    venueTypeLoading.value = false
-  }
 }
 
 const headers = computed(() => {
@@ -323,61 +65,31 @@ const headers = computed(() => {
   }
 })
 
-const handleCoverSuccess: UploadProps["onSuccess"] = (response, uploadFile) => {
-  if (uploadFile?.raw) {
-    imageUrl.value = URL.createObjectURL(uploadFile.raw)
-  }
-
-  if (response?.code === 200) {
-    form.image = response.data
-  } else {
-    ElMessage.error(response?.msg || "上传失败")
-  }
-}
-
-const beforeCoverUpload: UploadProps["beforeUpload"] = (rawFile) => {
-  const isImage =
-    rawFile.type === "image/jpeg" ||
-    rawFile.type === "image/png" ||
-    rawFile.type === "image/jpg"
-
-  if (!isImage) {
-    ElMessage.error("仅支持 JPG/PNG 图片!")
-    return false
-  }
-
-  if (rawFile.size / 1024 / 1024 > 2) {
-    ElMessage.error("图片大小不能超过 2MB!")
-    return false
-  }
-
-  return true
-}
-
 watch(
   () => props.visible,
-  async (visible) => {
+  (visible) => {
     if (!visible) return
-    await getVenueTypeOptions()
     formRef.value?.clearValidate()
     if (isEditMode.value && props.editData) {
       setFormByVenue(props.editData)
-      return
+    } else {
+      resetForm()
     }
-    resetForm()
+    ensureVenueTypeOptions()
+    ensureTencentMapLoaded().catch(() => {})
   },
 )
 
 watch(
   () => form.slotMinutes,
   () => {
-    if (!isSlotMinuteReady.value) {
+    if (!isSlotMinuteReady()) {
       form.openTime = ""
       form.closeTime = ""
       return
     }
 
-    const slot = slotMinuteValue.value
+    const slot = getSlotMinuteValue()
     if (form.openTime && !isTimeAlignedWithSlot(form.openTime, slot)) {
       form.openTime = ""
     }
@@ -423,61 +135,11 @@ watch(
         label-position="right"
         class="venue-form"
       >
-        <section class="venue-form__section">
-          <div class="venue-form__section-title">基础信息</div>
-          <el-row :gutter="18">
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="场馆名称" prop="name">
-                <el-input v-model="form.name" placeholder="请输入场馆名称" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="场馆类型" prop="typeId">
-                <el-select
-                  v-model="form.typeId"
-                  :loading="venueTypeLoading"
-                  placeholder="请选择场馆类型"
-                >
-                  <el-option
-                    v-for="opt in venueTypeOptions"
-                    :key="opt.id"
-                    :label="opt.name"
-                    :value="opt.id"
-                  />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="18">
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="所在位置" prop="location">
-                <el-input
-                  v-model="form.location"
-                  :readonly="form.enableLocationVerify === 1"
-                  placeholder="开启位置校验后可通过地图选点自动回填"
-                />
-                <div class="venue-form__inline-hint">
-                  {{ form.enableLocationVerify === 1
-                    ? "已开启位置校验时，该地址由地图选点自动回填。"
-                    : "关闭位置校验时，可按需手动补充场馆地址。"
-                  }}
-                </div>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="是否开放" prop="status" class="venue-form__switch-item">
-                <el-switch
-                  v-model="form.status"
-                  :active-value="1"
-                  :inactive-value="0"
-                  active-text="开放"
-                  inactive-text="关闭"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </section>
+        <VenueBasicInfoSection
+          v-model:form="form"
+          :venue-type-options="venueTypeOptions"
+          :venue-type-loading="venueTypeLoading"
+        />
 
         <VenueLocationVerifyFields
           v-model:enable-location-verify="form.enableLocationVerify"
@@ -487,134 +149,18 @@ watch(
           v-model:checkin-radius-m="form.checkinRadiusM"
         />
 
-        <section class="venue-form__section">
-          <div class="venue-form__section-title">预约规则</div>
-          <el-row :gutter="18">
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="每小时价格" prop="pricePerHour">
-                <el-input-number
-                  v-model="form.pricePerHour"
-                  :min="0"
-                  :step="10"
-                  :precision="2"
-                  :controls="false"
-                  class="full-width-input-number"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="最小预约单元" prop="slotMinutes">
-                <el-input-number
-                  v-model="form.slotMinutes"
-                  :min="1"
-                  :step="5"
-                  :controls="false"
-                  class="full-width-input-number"
-                />
-                <div class="venue-form__inline-hint">单位：分钟，起止时间需按该单元对齐。</div>
-              </el-form-item>
-            </el-col>
-          </el-row>
+        <VenueBookingRulesSection
+          v-model:form="form"
+          :is-slot-minute-ready="isSlotMinuteReady()"
+          :time-select-step="timeSelectStep()"
+          :time-select-end="timeSelectEnd()"
+        />
 
-          <el-row :gutter="18">
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="开放时间" prop="openTime">
-                <el-time-select
-                  v-model="form.openTime"
-                  :disabled="!isSlotMinuteReady"
-                  :placeholder="isSlotMinuteReady ? '请选择开放时间' : '请先填写最小预约单元'"
-                  start="00:00"
-                  :end="timeSelectEnd"
-                  :step="timeSelectStep"
-                  class="full-width-picker"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="关闭时间" prop="closeTime">
-                <el-time-select
-                  v-model="form.closeTime"
-                  :disabled="!isSlotMinuteReady"
-                  :placeholder="isSlotMinuteReady ? '请选择关闭时间' : '请先填写最小预约单元'"
-                  start="00:00"
-                  :end="timeSelectEnd"
-                  :step="timeSelectStep"
-                  :min-time="form.openTime || undefined"
-                  class="full-width-picker"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-
-          <el-row :gutter="18">
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="场地单元数" prop="total">
-                <el-input-number
-                  v-model="form.total"
-                  :min="1"
-                  :step="1"
-                  :controls="false"
-                  class="full-width-input-number"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12">
-              <el-form-item label="每场地人数" prop="unitCapacity">
-                <el-input-number
-                  v-model="form.unitCapacity"
-                  :min="1"
-                  :step="1"
-                  :controls="false"
-                  class="full-width-input-number"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </section>
-
-        <section class="venue-form__section venue-form__section--media">
-          <div class="venue-form__section-title">展示信息</div>
-          <div class="venue-form__media-grid">
-            <el-form-item label="封面图片" prop="image" class="venue-form__media-item venue-form__upload-item">
-              <div class="venue-form__upload-panel">
-                <div class="venue-form__upload-tip">建议上传横版封面，展示更协调</div>
-                <el-upload
-                  class="venue-cover-uploader"
-                  action="/api/file/upload"
-                  :headers="headers"
-                  :show-file-list="false"
-                  :on-success="handleCoverSuccess"
-                  :before-upload="beforeCoverUpload"
-                >
-                  <img
-                    v-if="imageUrl"
-                    :src="imageUrl"
-                    alt="封面图片"
-                    class="venue-cover-image"
-                  />
-                  <div v-else class="venue-cover-placeholder">
-                    <el-icon class="venue-cover-icon">
-                      <Plus />
-                    </el-icon>
-                    <span>上传封面</span>
-                  </div>
-                </el-upload>
-              </div>
-            </el-form-item>
-
-            <el-form-item label="场馆介绍" prop="description" class="venue-form__media-item">
-              <el-input
-                v-model="form.description"
-                type="textarea"
-                :rows="7"
-                placeholder="请输入场馆介绍"
-                maxlength="300"
-                show-word-limit
-                resize="none"
-              />
-            </el-form-item>
-          </div>
-        </section>
+        <VenueMediaSection
+          v-model:image="form.image"
+          v-model:description="form.description"
+          :headers="headers"
+        />
       </el-form>
     </div>
 
@@ -627,7 +173,7 @@ watch(
   </el-dialog>
 </template>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .venue-dialog__header {
   display: flex;
   flex-direction: column;
