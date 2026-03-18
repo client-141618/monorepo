@@ -33,6 +33,12 @@ type ReservationCardItem = {
   detailLines: ReservationDetailLine[]
 }
 
+type FuzzyLocationPayload = {
+  latitudeGcj02: number
+  longitudeGcj02: number
+  locationAccuracy: number
+}
+
 Page({
   data: {
     loading: false,
@@ -194,6 +200,8 @@ Page({
 
     this.setData({ checkInLoadingId: reservationId })
     try {
+      const locationPayload = await this.getFuzzyLocationPayload()
+
       const qrContent = await this.scanQrCode()
       if (!qrContent) {
         return
@@ -202,6 +210,9 @@ Page({
       await checkInReservationApi({
         reservationId,
         qrContent,
+        latitudeGcj02: locationPayload.latitudeGcj02,
+        longitudeGcj02: locationPayload.longitudeGcj02,
+        locationAccuracy: locationPayload.locationAccuracy,
       })
 
       wx.showToast({
@@ -276,6 +287,43 @@ Page({
     })
   },
 
+  getFuzzyLocationPayload() {
+    return new Promise<FuzzyLocationPayload>((resolve, reject) => {
+      wx.getFuzzyLocation({
+        type: "gcj02",
+        success: (res) => {
+          const latitude = Number(res.latitude)
+          const longitude = Number(res.longitude)
+          const accuracy = Number(res.accuracy)
+
+          if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+            reject(new Error("获取定位失败，请重试"))
+            return
+          }
+
+          resolve({
+            latitudeGcj02: this.roundToFixed(latitude, 6),
+            longitudeGcj02: this.roundToFixed(longitude, 6),
+            locationAccuracy: Number.isFinite(accuracy) ? this.roundToFixed(accuracy, 2) : 0,
+          })
+        },
+        fail: (error) => {
+          const errMsg =
+            error && typeof error.errMsg === "string" ? error.errMsg : ""
+          if (
+            errMsg.indexOf("auth deny") >= 0 ||
+            errMsg.indexOf("scope.userFuzzyLocation") >= 0 ||
+            errMsg.indexOf("cancel") >= 0
+          ) {
+            reject(new Error("您已取消授权"))
+            return
+          }
+          reject(new Error("获取定位失败，请稍后重试"))
+        },
+      })
+    })
+  },
+
   confirmCancelReservation() {
     return new Promise<boolean>((resolve) => {
       wx.showModal({
@@ -306,5 +354,9 @@ Page({
       return ""
     }
     return raw.replace("T", " ")
+  },
+
+  roundToFixed(value: number, fractionDigits: number) {
+    return Number(value.toFixed(fractionDigits))
   },
 })

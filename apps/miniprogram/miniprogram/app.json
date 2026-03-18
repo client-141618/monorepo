@@ -13,6 +13,14 @@
     "navigationStyle": "default",
     "navigationBarBackgroundColor": "#ffffff"
   },
+  "requiredPrivateInfos": [
+    "getFuzzyLocation"
+  ],
+  "permission": {
+    "scope.userFuzzyLocation": {
+      "desc": "用于签到时校验您的大致位置"
+    }
+  },
   "rendererOptions": {
     "skyline": {
       "defaultDisplayBlock": true,

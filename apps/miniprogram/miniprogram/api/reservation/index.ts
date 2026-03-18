@@ -59,6 +59,9 @@ export interface UserReservationRecord {
 export interface ReservationCheckInPayload {
   reservationId: number
   qrContent: string
+  latitudeGcj02: number
+  longitudeGcj02: number
+  locationAccuracy: number
 }
 
 export interface ReservationUserCountResponse {
