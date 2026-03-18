@@ -16,6 +16,7 @@ declare module 'vue' {
     EditUserDialog: typeof import('./src/components/EditUserDialog/index.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
+    ElAutocomplete: typeof import('element-plus/es')['ElAutocomplete']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
@@ -64,6 +65,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SideMenu: typeof import('./src/components/SideMenu/SideMenu.vue')['default']
     SvgIcon: typeof import('./src/components/SvgIcon/index.vue')['default']
+    VenueLocationVerifyFields: typeof import('./src/components/venue/VenueLocationVerifyFields.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

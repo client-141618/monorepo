@@ -1,9 +1,7 @@
-export interface Venue {
-  id: number
+export interface VenueBase {
   name: string
   image?: string
   typeId: number
-  typeName?: string
   description?: string
   location?: string
   pricePerHour: number
@@ -13,7 +11,20 @@ export interface Venue {
   unitCapacity: number
   slotMinutes: number
   status: number
+  enableLocationVerify: 0 | 1
+  checkinLatGcj02?: number
+  checkinLngGcj02?: number
+  checkinRadiusM?: number
+}
+
+export interface Venue extends VenueBase {
+  id: number
+  typeName?: string
   totalSeats?: number
   createTime?: string
   updateTime?: string
+}
+
+export interface VenueUpsertPayload extends VenueBase {
+  id?: number
 }

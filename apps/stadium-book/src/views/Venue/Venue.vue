@@ -76,6 +76,19 @@ const formatTotalSeats = (row: Venue) => {
   return Number(row.total ?? 0) * Number(row.unitCapacity ?? 0)
 }
 
+const formatLocationVerifyStatus = (row: Venue) => {
+  return row.enableLocationVerify === 1 ? "已开启" : "未开启"
+}
+
+const formatLocationVerifyRadius = (row: Venue) => {
+  const radius = Number(row.checkinRadiusM)
+  if (row.enableLocationVerify !== 1 || !Number.isFinite(radius) || radius <= 0) {
+    return "--"
+  }
+
+  return `${radius} 米`
+}
+
 const handleCreate = () => {
   venueDialogMode.value = "create"
   editingVenue.value = null
@@ -426,6 +439,18 @@ onMounted(() => {
         <el-table-column label="最小预约单元" min-width="140">
           <template #default="{ row }">
             {{ row.slotMinutes }} 分钟
+          </template>
+        </el-table-column>
+        <el-table-column label="位置校验" min-width="120">
+          <template #default="{ row }">
+            <el-tag :type="row.enableLocationVerify === 1 ? 'success' : 'info'">
+              {{ formatLocationVerifyStatus(row) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="校验范围" min-width="120">
+          <template #default="{ row }">
+            {{ formatLocationVerifyRadius(row) }}
           </template>
         </el-table-column>
 

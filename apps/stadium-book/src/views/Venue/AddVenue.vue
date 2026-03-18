@@ -1,12 +1,32 @@
 <script setup lang="ts">
 import type { FormInstance, FormRules, UploadProps } from "element-plus"
 import type { VenueType } from "@/api/venue-type/type"
-import type { Venue } from "@/api/venue/type"
+import type { Venue, VenueUpsertPayload } from "@/api/venue/type"
 import { Plus } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { computed, reactive, ref, watch } from "vue"
 import { addVenueApi, updateVenueApi } from "@/api/venue"
 import { getVenueTypeListApi } from "@/api/venue-type"
+import VenueLocationVerifyFields from "@/components/venue/VenueLocationVerifyFields.vue"
+
+interface VenueForm {
+  name: string
+  image: string
+  typeId: number
+  description: string
+  location: string
+  pricePerHour: number
+  openTime: string
+  closeTime: string
+  total: number
+  unitCapacity: number
+  slotMinutes: number
+  status: number
+  enableLocationVerify: 0 | 1
+  checkinLatGcj02?: number
+  checkinLngGcj02?: number
+  checkinRadiusM?: number
+}
 
 const props = defineProps<{
   visible: boolean
@@ -23,9 +43,6 @@ const dialogVisible = computed({
 
 const isEditMode = computed(() => props.mode === "edit")
 const dialogTitle = computed(() => (isEditMode.value ? "编辑场馆" : "新增场馆"))
-
-type VenueForm = Omit<Venue, "id" | "createTime" | "updateTime" | "totalSeats">
-type VenueSubmitPayload = Omit<Venue, "createTime" | "updateTime" | "totalSeats">
 
 const formRef = ref<FormInstance>()
 const venueTypeOptions = ref<VenueType[]>([])
@@ -44,9 +61,13 @@ const form = reactive<VenueForm>({
   unitCapacity: 0,
   slotMinutes: 0,
   status: 1,
+  enableLocationVerify: 0,
+  checkinLatGcj02: undefined,
+  checkinLngGcj02: undefined,
+  checkinRadiusM: undefined,
 })
 
-const imageUrl = ref<string>("")
+const imageUrl = ref("")
 
 const slotMinuteValue = computed(() => {
   const parsed = Math.floor(Number(form.slotMinutes))
@@ -74,6 +95,10 @@ const formatMinutesToTime = (totalMinutes: number) => {
   const hours = Math.floor(totalMinutes / 60)
   const minutes = totalMinutes % 60
   return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`
+}
+
+const hasSelectedLocationPoint = () => {
+  return Number.isFinite(form.checkinLatGcj02) && Number.isFinite(form.checkinLngGcj02)
 }
 
 const timeSelectStep = computed(() => formatMinutesToTime(slotMinuteValue.value || 1))
@@ -134,9 +159,47 @@ const validateCloseTime = (_rule: unknown, value: string, callback: (error?: Err
   callback()
 }
 
+const validateLocationText = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (form.enableLocationVerify !== 1) {
+    callback()
+    return
+  }
+  if (!value?.trim()) {
+    callback(new Error("请通过地图选点回填场馆地址"))
+    return
+  }
+  callback()
+}
+
+const validateLocationPoint = (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
+  if (form.enableLocationVerify !== 1) {
+    callback()
+    return
+  }
+  if (!hasSelectedLocationPoint()) {
+    callback(new Error("请在地图上选择签到中心点"))
+    return
+  }
+  callback()
+}
+
+const validateLocationRadius = (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+  if (form.enableLocationVerify !== 1) {
+    callback()
+    return
+  }
+  const radius = Number(value)
+  if (!Number.isFinite(radius) || radius <= 0) {
+    callback(new Error("请输入有效的校验范围"))
+    return
+  }
+  callback()
+}
+
 const rules: FormRules<VenueForm> = {
   name: [{ required: true, message: "请输入场馆名称", trigger: "blur" }],
   typeId: [{ required: true, message: "请选择场馆类型", trigger: "change" }],
+  location: [{ validator: validateLocationText, trigger: ["blur", "change"] }],
   pricePerHour: [
     { required: true, message: "请输入每小时价格", trigger: "change" },
   ],
@@ -145,6 +208,8 @@ const rules: FormRules<VenueForm> = {
   total: [{ required: true, message: "请输入场地单元数量", trigger: "change" }],
   unitCapacity: [{ required: true, message: "请输入每个场地人数", trigger: "change" }],
   slotMinutes: [{ required: true, message: "请输入最小预约时间单元", trigger: "change" }],
+  checkinRadiusM: [{ validator: validateLocationRadius, trigger: "change" }],
+  checkinLatGcj02: [{ validator: validateLocationPoint, trigger: "change" }],
 }
 
 const resetForm = () => {
@@ -160,6 +225,10 @@ const resetForm = () => {
   form.unitCapacity = 0
   form.slotMinutes = 0
   form.status = 1
+  form.enableLocationVerify = 0
+  form.checkinLatGcj02 = undefined
+  form.checkinLngGcj02 = undefined
+  form.checkinRadiusM = undefined
   imageUrl.value = ""
 }
 
@@ -176,6 +245,10 @@ const setFormByVenue = (venue: Venue) => {
   form.unitCapacity = Number(venue.unitCapacity ?? 0)
   form.slotMinutes = Number(venue.slotMinutes ?? 0)
   form.status = venue.status ?? 1
+  form.enableLocationVerify = venue.enableLocationVerify ?? 0
+  form.checkinLatGcj02 = venue.checkinLatGcj02
+  form.checkinLngGcj02 = venue.checkinLngGcj02
+  form.checkinRadiusM = venue.checkinRadiusM
   imageUrl.value = form.image || ""
 }
 
@@ -188,19 +261,43 @@ const handleClosed = () => {
   resetForm()
 }
 
+const normalizeOptionalNumber = (value: number | undefined) => {
+  return Number.isFinite(value) ? Number(value) : undefined
+}
+
 const handleConfirm = async () => {
   if (!formRef.value) return
 
   const valid = await formRef.value.validate()
   if (!valid) return
 
-  const payload: VenueSubmitPayload = {
-    ...(form as unknown as Venue),
-    id: props.editData?.id ?? 0,
+  const payload: VenueUpsertPayload = {
+    name: form.name.trim(),
+    image: form.image || undefined,
+    typeId: form.typeId,
+    description: form.description?.trim() || undefined,
+    location: form.location?.trim() || undefined,
     pricePerHour: Math.round(Number(form.pricePerHour) * 100),
+    openTime: form.openTime,
+    closeTime: form.closeTime,
+    total: Number(form.total),
+    unitCapacity: Number(form.unitCapacity),
+    slotMinutes: Number(form.slotMinutes),
+    status: form.status,
+    enableLocationVerify: form.enableLocationVerify,
+    checkinLatGcj02: form.enableLocationVerify === 1
+      ? normalizeOptionalNumber(form.checkinLatGcj02)
+      : undefined,
+    checkinLngGcj02: form.enableLocationVerify === 1
+      ? normalizeOptionalNumber(form.checkinLngGcj02)
+      : undefined,
+    checkinRadiusM: form.enableLocationVerify === 1
+      ? normalizeOptionalNumber(form.checkinRadiusM)
+      : undefined,
   }
 
   if (isEditMode.value) {
+    payload.id = props.editData?.id
     await updateVenueApi(payload)
   } else {
     await addVenueApi(payload)
@@ -289,6 +386,14 @@ watch(
     }
   },
 )
+
+watch(
+  () => form.enableLocationVerify,
+  (enabled) => {
+    if (enabled === 1) return
+    formRef.value?.clearValidate(["checkinRadiusM", "checkinLatGcj02", "location"])
+  },
+)
 </script>
 
 <template>
@@ -347,7 +452,17 @@ watch(
           <el-row :gutter="18">
             <el-col :xs="24" :sm="24" :md="12">
               <el-form-item label="所在位置" prop="location">
-                <el-input v-model="form.location" placeholder="请输入场馆位置" />
+                <el-input
+                  v-model="form.location"
+                  :readonly="form.enableLocationVerify === 1"
+                  placeholder="开启位置校验后可通过地图选点自动回填"
+                />
+                <div class="venue-form__inline-hint">
+                  {{ form.enableLocationVerify === 1
+                    ? "已开启位置校验时，该地址由地图选点自动回填。"
+                    : "关闭位置校验时，可按需手动补充场馆地址。"
+                  }}
+                </div>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="24" :md="12">
@@ -363,6 +478,14 @@ watch(
             </el-col>
           </el-row>
         </section>
+
+        <VenueLocationVerifyFields
+          v-model:enable-location-verify="form.enableLocationVerify"
+          v-model:location="form.location"
+          v-model:checkin-lat-gcj02="form.checkinLatGcj02"
+          v-model:checkin-lng-gcj02="form.checkinLngGcj02"
+          v-model:checkin-radius-m="form.checkinRadiusM"
+        />
 
         <section class="venue-form__section">
           <div class="venue-form__section-title">预约规则</div>
