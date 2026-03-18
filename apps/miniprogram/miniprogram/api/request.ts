@@ -21,6 +21,9 @@ let refreshingPromise: Promise<string> | null = null
 let loginPromise: Promise<string> | null = null
 let blockedUserModalPromise: Promise<never> | null = null
 const AUTH_ENDPOINTS = ["/api/auth/wx-login", "/api/auth/refresh"] as const
+const BUSINESS_ERROR_MESSAGE_MAP: Record<number, string> = {
+  40902: "签到失败，不在可签到范围内",
+}
 
 function getAccessToken() {
   return (wx.getStorageSync("accessToken") as string) || ""
@@ -151,6 +154,19 @@ function extractCacheTokenPatch(source: Record<string, unknown>) {
   return patch
 }
 
+function resolveBusinessErrorMessage(code: number, fallbackMsg?: string) {
+  const mappedMessage = BUSINESS_ERROR_MESSAGE_MAP[code]
+  if (mappedMessage) {
+    return mappedMessage
+  }
+
+  if (typeof fallbackMsg === "string" && fallbackMsg.trim()) {
+    return fallbackMsg
+  }
+
+  return "请求失败"
+}
+
 function requestRaw<T>(options: RequestOptions) {
   return new Promise<ApiResponse<T>>((resolve, reject) => {
     const headers: Record<string, string> = {
@@ -182,7 +198,7 @@ function requestRaw<T>(options: RequestOptions) {
           resolve(data)
           return
         }
-        reject(new Error(data.msg || "请求失败"))
+        reject(new Error(resolveBusinessErrorMessage(data.code, data.msg)))
       },
       fail: (error) => reject(error),
     })

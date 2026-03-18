@@ -1,4 +1,4 @@
-import type { Venue } from "./type"
+import type { Venue, VenueUpsertPayload } from "./type"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/venue"
@@ -36,7 +36,7 @@ export function getVenueByIdApi(id: Venue["id"]) {
 /**
  * 新增场馆
  */
-export function addVenueApi(data: Venue) {
+export function addVenueApi(data: VenueUpsertPayload) {
   return request({
     url: `${PREFIX}/add`,
     method: "POST",
@@ -47,7 +47,7 @@ export function addVenueApi(data: Venue) {
 /**
  * 更新场馆
  */
-export function updateVenueApi(data: Venue) {
+export function updateVenueApi(data: VenueUpsertPayload) {
   return request<Venue>({
     url: `${PREFIX}/update`,
     method: "PUT",

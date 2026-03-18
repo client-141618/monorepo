@@ -42,6 +42,33 @@ export interface CreateReservationResult {
   confirmedSlots: string[]
 }
 
+export interface UserReservationRecord {
+  id: number
+  userId: number | string
+  status?: number
+  venueId?: number
+  venueName?: string
+  courtId?: number
+  reservationDate?: string
+  startTime?: string
+  endTime?: string
+  totalPrice?: number
+  createTime?: string
+}
+
+export interface ReservationCheckInPayload {
+  reservationId: number
+  qrContent: string
+  latitudeGcj02: number
+  longitudeGcj02: number
+  locationAccuracy: number
+}
+
+export interface ReservationUserCountResponse {
+  pendingVerificationCount?: number
+  totalCount?: number
+}
+
 export function getReservationAvailabilityNextSevenDaysApi(
   venueId: number,
   startDate?: string,
@@ -58,5 +85,34 @@ export function createReservationApi(data: CreateReservationPayload) {
     url: "/api/reservation/create",
     method: "POST",
     data,
+  })
+}
+
+export function getReservationListByUserApi() {
+  return request<UserReservationRecord[]>({
+    url: "/api/reservation/user",
+    method: "GET",
+  })
+}
+
+export function getReservationUserCountApi() {
+  return request<ReservationUserCountResponse>({
+    url: "/api/reservation/user/count",
+    method: "GET",
+  })
+}
+
+export function checkInReservationApi(data: ReservationCheckInPayload) {
+  return request<null>({
+    url: "/api/reservation/check-in",
+    method: "POST",
+    data,
+  })
+}
+
+export function cancelReservationApi(reservationId: number) {
+  return request<null>({
+    url: `/api/reservation/cancel/${reservationId}`,
+    method: "PUT",
   })
 }

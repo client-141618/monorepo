@@ -21,6 +21,9 @@ Page({
   },
 
   onShow() {
+    wx.setNavigationBarTitle({
+      title: "个人资料",
+    })
     this.setData({
       userProfile: getWxUserProfileFromStorage(),
     })

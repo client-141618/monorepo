@@ -24,6 +24,9 @@ Page({
   },
 
   onShow() {
+    wx.setNavigationBarTitle({
+      title: "场馆预约",
+    })
     if (typeof this.getTabBar === "function") {
       const tabBar = this.getTabBar()
       if (tabBar) {

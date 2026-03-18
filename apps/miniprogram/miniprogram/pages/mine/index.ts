@@ -18,6 +18,9 @@ Page({
   },
 
   onShow() {
+    wx.setNavigationBarTitle({
+      title: "我的",
+    })
     if (typeof this.getTabBar === "function") {
       const tabBar = this.getTabBar()
       if (tabBar) {

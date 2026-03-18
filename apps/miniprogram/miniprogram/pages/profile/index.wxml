@@ -1,12 +1,4 @@
 <view class="page">
-  <navigation-bar
-    title="个人资料"
-    background="#f6f7fb"
-    color="#111827"
-    back="{{true}}"
-    bind:back="onBack"
-  />
-
   <view class="content">
     <view class="profile-card">
       <image class="avatar" mode="aspectFill" src="{{userProfile.avatar}}" />

@@ -9,14 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@wangeditor/editor": "^5.1.23",
-    "@wangeditor/editor-for-vue": "^5.1.12",
     "@client/components": "workspace:*",
     "@element-plus/icons-vue": "catalog:",
+    "@wangeditor/editor": "^5.1.23",
+    "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "catalog:",
     "dompurify": "^3.3.0",
     "element-plus": "catalog:",
     "pinia": "catalog:",
+    "tlbs-map-vue": "^1.3.2",
     "vite-plugin-vue-devtools": "catalog:",
     "vue": "catalog:",
     "vue-router": "catalog:"

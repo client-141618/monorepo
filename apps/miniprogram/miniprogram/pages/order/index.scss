@@ -3,12 +3,189 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: #f7f8fa;
 }
 
 .content {
   flex: 1;
   min-height: 0;
+  box-sizing: border-box;
+}
+
+.overview-wrap {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18rpx;
+  padding: 20rpx 24rpx 0;
+}
+
+.overview-card {
+  border-radius: 22rpx;
+  padding: 24rpx 22rpx;
+  box-shadow: 0 10rpx 26rpx rgb(15 23 42 / 8%);
+}
+
+.overview-card--active {
+  background: linear-gradient(160deg, #dbeafe 0%, #eff6ff 100%);
+}
+
+.overview-card--total {
+  background: linear-gradient(160deg, #e0f2fe 0%, #f0f9ff 100%);
+}
+
+.overview-card__label {
+  color: #475569;
+  font-size: 26rpx;
+  line-height: 1.4;
+}
+
+.overview-card__value {
+  margin-top: 14rpx;
+  color: #0f172a;
+  font-size: 48rpx;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.section-title {
+  margin: 24rpx 24rpx 0;
+  color: #111827;
+  font-size: 34rpx;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.loading-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 140rpx;
+}
+
+.reservation-list {
+  padding: 16rpx 24rpx 24rpx;
+}
+
+.reservation-card {
+  position: relative;
+  margin-bottom: 18rpx;
+  padding: 24rpx 22rpx;
+  border-radius: 20rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 28rpx rgb(15 23 42 / 7%);
+}
+
+.reservation-card__title {
+  color: #0f172a;
+  font-size: 36rpx;
+  font-weight: 700;
+  line-height: 1.4;
+  padding-right: 160rpx;
+}
+
+.status-tag {
+  position: absolute;
+  top: 22rpx;
+  right: 22rpx;
+  padding: 6rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.status-tag--cancelled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.status-tag--pending {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.status-tag--completed {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.status-tag--no-show {
+  background: #fce7f3;
+  color: #9d174d;
+}
+
+.status-tag--unknown {
+  background: #e2e8f0;
+  color: #334155;
+}
+
+.reservation-card__line {
   display: flex;
   align-items: center;
-  justify-content: center;
+  margin-top: 12rpx;
+}
+
+.reservation-card__key {
+  min-width: 120rpx;
+  color: #6b7280;
+  font-size: 26rpx;
+  line-height: 1.5;
+}
+
+.reservation-card__value {
+  flex: 1;
+  color: #1f2937;
+  font-size: 29rpx;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.reservation-card__value--price {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+.reservation-card__actions {
+  margin-top: 18rpx;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14rpx;
+}
+
+.reservation-card__actions .van-button {
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.reservation-card__checkin-btn {
+  height: 68rpx !important;
+  border-radius: 12rpx !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%) !important;
+  box-shadow: 0 8rpx 20rpx rgb(37 99 235 / 24%);
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+}
+
+.reservation-card__cancel-btn {
+  height: 68rpx !important;
+  border-radius: 12rpx !important;
+  border: 2rpx solid #fecaca !important;
+  color: #b91c1c !important;
+  background: linear-gradient(180deg, #fff1f2 0%, #ffe4e6 100%) !important;
+  font-size: 28rpx !important;
+  font-weight: 600 !important;
+}
+
+.empty-wrap {
+  margin-top: 110rpx;
+}
+
+.error-tip {
+  margin: 0 24rpx 12rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 14rpx;
+  background: #fff7ed;
+  color: #9a3412;
+  font-size: 26rpx;
+  line-height: 1.45;
 }

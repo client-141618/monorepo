@@ -1,12 +1,4 @@
 <view class="page">
-  <navigation-bar
-    title="我的"
-    background="#f6f7fb"
-    color="#111827"
-    back="{{false}}"
-    home-button="{{false}}"
-  />
-
   <view class="content with-tabbar-safe-bottom">
     <view class="profile-panel">
       <image class="profile-avatar" mode="aspectFill" src="{{userProfile.avatar}}" />

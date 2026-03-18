@@ -38,6 +38,13 @@ export interface CreateReservationResult {
   confirmedSlots: string[]
 }
 
+export interface VenueCheckInQrData {
+  venueId: number
+  courtId: number
+  qrPayload: string
+  qrImageBase64: string
+}
+
 export interface AdminReservationRecord {
   id: number
   userId: number | string
