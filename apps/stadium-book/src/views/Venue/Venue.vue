@@ -383,6 +383,7 @@ onMounted(() => {
         v-loading="tableLoading"
         :data="venueList"
         style="width: 100%"
+        height="100%"
         stripe
         @selection-change="handleSelectionChange"
       >
@@ -461,8 +462,14 @@ onMounted(() => {
         </el-table-column>
       </el-table>
     </div>
-    <div v-else-if="tableLoading || !hasLoadedOnce" class="venue-table-wrapper venue-table-wrapper--loading" v-loading="true" />
-    <el-empty v-else description="暂无场馆信息" />
+    <div
+      v-else-if="tableLoading || !hasLoadedOnce"
+      class="venue-table-wrapper venue-table-wrapper--loading"
+      v-loading="true"
+    />
+    <div v-else class="venue-table-wrapper venue-table-wrapper--empty">
+      <el-empty description="暂无场馆信息" />
+    </div>
 
     <AddVenue
       v-model:visible="createDialogVisible"
@@ -532,7 +539,12 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .venue-page {
+  height: 100%;
+  min-height: 0;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .venue-header {
@@ -553,14 +565,25 @@ onMounted(() => {
 }
 
 .venue-table-wrapper {
+  flex: 1;
+  min-height: 0;
   background-color: #fff;
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .venue-table-wrapper--loading {
-  min-height: 240px;
+  display: flex;
+  min-height: 0;
+}
+
+.venue-table-wrapper--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }
 
 .venue-table__image {

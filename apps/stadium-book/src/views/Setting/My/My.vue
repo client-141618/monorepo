@@ -22,28 +22,74 @@ const handleEditPassword = () => {
 </script>
 
 <template>
-  <div p-10px>
-    <el-card shadow="hover" style="border-radius: 10px">
-      <div flex gap-20px>
-        <el-avatar :size="100" :src="userInfo?.avatar" @error="() => { return true }">
-          <img
-            src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
-          />
-        </el-avatar>
-        <div flex flex-col gap-10px>
-          <span text-20px font-bold>{{ userInfo?.username || "--" }}</span>
-          <div flex flex-col gap-6px>
-            <div> <User size="12px" /> {{ userInfo?.age || "--" }} </div>
-            <div> <Message size="12px" /> {{ userInfo?.email || "--" }} </div>
-            <div> <Phone size="12px" /> {{ userInfo?.phone || "--" }} </div>
+  <div class="my-page">
+    <div class="my-page__content">
+      <el-card shadow="hover" class="my-page__card">
+        <div class="my-page__card-body">
+          <el-avatar :size="100" :src="userInfo?.avatar" @error="() => { return true }">
+            <img
+              src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
+            />
+          </el-avatar>
+          <div class="my-page__profile">
+            <span class="my-page__name">{{ userInfo?.username || "--" }}</span>
+            <div class="my-page__meta">
+              <div> <User size="12px" /> {{ userInfo?.age || "--" }} </div>
+              <div> <Message size="12px" /> {{ userInfo?.email || "--" }} </div>
+              <div> <Phone size="12px" /> {{ userInfo?.phone || "--" }} </div>
+            </div>
           </div>
+          <el-button class="my-page__action--start" type="primary" @click="handleEdit">编辑</el-button>
+          <el-button type="primary" @click="handleEditPassword">修改密码</el-button>
         </div>
-        <el-button ml-auto type="primary" @click="handleEdit">编辑</el-button>
-        <el-button ml-auto type="primary" @click="handleEditPassword">修改密码</el-button>
-      </div>
-    </el-card>
+      </el-card>
+    </div>
 
     <EditUserDialog v-model="dialogVisible" />
     <EditPassword v-model="editPasswordVisible" />
   </div>
 </template>
+
+<style scoped lang="scss">
+.my-page {
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  overflow: hidden;
+}
+
+.my-page__content {
+  height: 100%;
+  overflow: auto;
+}
+
+.my-page__card {
+  border-radius: 10px;
+}
+
+.my-page__card-body {
+  display: flex;
+  gap: 20px;
+}
+
+.my-page__profile {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.my-page__name {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.my-page__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.my-page__action--start {
+  margin-left: auto;
+}
+</style>

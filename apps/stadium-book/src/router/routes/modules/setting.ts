@@ -1,10 +1,12 @@
 import type { RouteRecordRaw } from "vue-router"
-import { Operation, Setting, User } from "@element-plus/icons-vue"
+import { Operation, Picture, Setting, User } from "@element-plus/icons-vue"
 import { SettingRoute } from "../RouteNameEnum"
 
 const Layout = () => import("@/layout/index.vue")
 const My = () => import("@/views/Setting/My/My.vue")
 const VenueType = () => import("@/views/Setting/VenueType/VenueType.vue")
+const MiniappBanner = () =>
+  import("@/views/Setting/MiniappBanner/MiniappBanner.vue")
 
 const setting: RouteRecordRaw[] = [
   {
@@ -17,6 +19,7 @@ const setting: RouteRecordRaw[] = [
       showTag: true,
       keepAlive: true,
       order: 2,
+      lockOuterScroll: true,
     },
     children: [
       {
@@ -35,6 +38,15 @@ const setting: RouteRecordRaw[] = [
         meta: {
           title: "场地类型设置",
           icon: Operation,
+        },
+      },
+      {
+        path: "miniapp-banner",
+        component: MiniappBanner,
+        name: SettingRoute.MiniappBanner,
+        meta: {
+          title: "小程序banner设置",
+          icon: Picture,
         },
       },
     ],

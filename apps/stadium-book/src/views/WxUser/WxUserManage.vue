@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import { getWxUserListApi, updateWxUserStatusApi } from "@/api/wx-user"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageFilterBar from "@/components/PageFilterBar/index.vue"
 import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
 import { WX_USER_STATUS_OPTIONS } from "@/constants/wx-user"
@@ -147,103 +148,105 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="wx-user-page">
-    <PageRouteTitle fallback-title="用户管理" />
-    <PageFilterBar :query-loading="tableLoading" @query="handleQuery" @reset="handleReset">
-      <el-input
-        v-model="userIdFilter"
-        clearable
-        placeholder="用户ID"
-        class="wx-user-page__filter-item"
-      />
-      <el-select
-        v-model="statusFilter"
-        clearable
-        placeholder="用户状态"
-        class="wx-user-page__filter-item"
-      >
-        <el-option
-          v-for="item in WX_USER_STATUS_OPTIONS"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+  <PageContentShell class="wx-user-page">
+    <template #header>
+      <PageRouteTitle fallback-title="用户管理" />
+      <PageFilterBar :query-loading="tableLoading" @query="handleQuery" @reset="handleReset">
+        <el-input
+          v-model="userIdFilter"
+          clearable
+          placeholder="用户ID"
+          class="wx-user-page__filter-item"
         />
-      </el-select>
-    </PageFilterBar>
+        <el-select
+          v-model="statusFilter"
+          clearable
+          placeholder="用户状态"
+          class="wx-user-page__filter-item"
+        >
+          <el-option
+            v-for="item in WX_USER_STATUS_OPTIONS"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </PageFilterBar>
+    </template>
 
     <el-card class="wx-user-page__table-card" shadow="never">
-      <el-table v-loading="tableLoading" :data="wxUserList" stripe>
-        <el-table-column label="ID" width="90">
-          <template #default="{ row }">
-            <el-button
-              link
-              type="primary"
-              class="wx-user-page__id-link"
-              @click="handleGoReservationByUserId(row.id)"
-            >
-              {{ row.id }}
-            </el-button>
-          </template>
-        </el-table-column>
-        <el-table-column label="用户信息" min-width="200">
-          <template #default="{ row }">
-            <div class="wx-user-page__user">
-              <el-avatar :size="34" :src="getDisplayAvatar(row)">
-                {{ getDisplayUsername(row).slice(0, 1) }}
-              </el-avatar>
-              <span class="wx-user-page__user-name">{{ getDisplayUsername(row) }}</span>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="appid" label="AppID" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="openid" label="OpenID" min-width="220" show-overflow-tooltip />
-        <el-table-column label="SessionKey" min-width="150">
-          <template #default="{ row }">
-            {{ maskSessionKey(row.sessionKey) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="120">
-          <template #default="{ row }">
-            <el-tag :type="getStatusType(row.status)">{{ getStatusLabel(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="创建时间" min-width="170">
-          <template #default="{ row }">
-            {{ formatDateTimeText(row.createTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="更新时间" min-width="170">
-          <template #default="{ row }">
-            {{ formatDateTimeText(row.updateTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="240" fixed="right">
-          <template #default="{ row }">
-            <div class="wx-user-page__operation">
+      <div class="wx-user-page__table-wrap">
+        <el-table v-loading="tableLoading" :data="wxUserList" stripe height="100%">
+          <el-table-column label="ID" width="90">
+            <template #default="{ row }">
               <el-button
-                v-for="action in getStatusActions(row.status)"
-                :key="action.value"
                 link
                 type="primary"
-                :disabled="actionLoadingId === row.id"
-                @click="handleChangeStatus(row, action.value)"
+                class="wx-user-page__id-link"
+                @click="handleGoReservationByUserId(row.id)"
               >
-                {{ action.label }}
+                {{ row.id }}
               </el-button>
-            </div>
-          </template>
-        </el-table-column>
-      </el-table>
+            </template>
+          </el-table-column>
+          <el-table-column label="用户信息" min-width="200">
+            <template #default="{ row }">
+              <div class="wx-user-page__user">
+                <el-avatar :size="34" :src="getDisplayAvatar(row)">
+                  {{ getDisplayUsername(row).slice(0, 1) }}
+                </el-avatar>
+                <span class="wx-user-page__user-name">{{ getDisplayUsername(row) }}</span>
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="appid" label="AppID" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="openid" label="OpenID" min-width="220" show-overflow-tooltip />
+          <el-table-column label="SessionKey" min-width="150">
+            <template #default="{ row }">
+              {{ maskSessionKey(row.sessionKey) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" width="120">
+            <template #default="{ row }">
+              <el-tag :type="getStatusType(row.status)">{{ getStatusLabel(row.status) }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="170">
+            <template #default="{ row }">
+              {{ formatDateTimeText(row.createTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="更新时间" min-width="170">
+            <template #default="{ row }">
+              {{ formatDateTimeText(row.updateTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="240" fixed="right">
+            <template #default="{ row }">
+              <div class="wx-user-page__operation">
+                <el-button
+                  v-for="action in getStatusActions(row.status)"
+                  :key="action.value"
+                  link
+                  type="primary"
+                  :disabled="actionLoadingId === row.id"
+                  @click="handleChangeStatus(row, action.value)"
+                >
+                  {{ action.label }}
+                </el-button>
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-card>
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
-.wx-user-page {
-  padding: 16px;
-}
-
 .wx-user-page__table-card {
+  flex: 1;
+  min-height: 0;
   border-radius: 12px;
 }
 
@@ -274,6 +277,19 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+:deep(.wx-user-page__table-card .el-card__body) {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+
+.wx-user-page__table-wrap {
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  box-sizing: border-box;
 }
 
 :deep(.wx-user-page__operation .el-button.is-link) {

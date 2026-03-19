@@ -7,6 +7,7 @@ export enum SettingRoute {
   Setting = "Setting",
   My = "My",
   VenueType = "VenueType",
+  MiniappBanner = "MiniappBanner",
 }
 
 export enum VenueRoute {

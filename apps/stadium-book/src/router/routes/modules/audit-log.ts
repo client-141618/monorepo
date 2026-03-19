@@ -22,6 +22,7 @@ const auditLog: RouteRecordRaw[] = [
     ],
     meta: {
       order: 4,
+      lockOuterScroll: true,
     },
   },
 ]

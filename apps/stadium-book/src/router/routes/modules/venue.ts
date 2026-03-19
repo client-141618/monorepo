@@ -23,6 +23,7 @@ const venue: RouteRecordRaw[] = [
     ],
     meta: {
       order: 1,
+      lockOuterScroll: true,
     },
   },
 ]

@@ -51,6 +51,7 @@ const notification: RouteRecordRaw[] = [
     ],
     meta: {
       order: 3,
+      lockOuterScroll: true,
     },
   },
 ]

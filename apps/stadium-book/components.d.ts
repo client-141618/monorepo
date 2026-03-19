@@ -60,6 +60,7 @@ declare module 'vue' {
     ElTooltip: typeof import('element-plus/es')['ElTooltip']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     Header: typeof import('./src/components/Header/Header.vue')['default']
+    PageContentShell: typeof import('./src/components/PageContentShell/index.vue')['default']
     PageFilterBar: typeof import('./src/components/PageFilterBar/index.vue')['default']
     PageRouteTitle: typeof import('./src/components/PageRouteTitle/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

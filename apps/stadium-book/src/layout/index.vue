@@ -34,7 +34,12 @@ const lockOuterScroll = computed(() =>
             class="common-layout__content"
             :class="{ 'common-layout__content--fill': lockOuterScroll }"
           >
-            <router-view />
+            <div
+              class="common-layout__page-shell"
+              :class="{ 'common-layout__page-shell--inner-scroll': lockOuterScroll }"
+            >
+              <router-view />
+            </div>
           </div>
         </el-main>
       </el-container>
@@ -80,5 +85,15 @@ const lockOuterScroll = computed(() =>
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.common-layout__page-shell {
+  min-height: 100%;
+}
+
+.common-layout__page-shell--inner-scroll {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
 }
 </style>
