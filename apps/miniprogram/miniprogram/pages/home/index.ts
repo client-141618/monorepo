@@ -1,8 +1,12 @@
 import type { Venue } from "../../api/venue/index"
+import { getVenueTypeListApi } from "../../api/venue-type/index"
 import { getVenueListApi, getVenueListByTypeApi } from "../../api/venue/index"
-import { VENUE_TYPE_OPTIONS } from "../../constants/venue"
 
 type TabValue = "all" | string
+interface VenueTypeOption {
+  label: string
+  value: string
+}
 
 interface DisplayVenue extends Venue {
   remaining: number
@@ -15,7 +19,7 @@ Page({
     loading: false,
     refresherTriggered: false,
     activeType: "all" as TabValue,
-    typeOptions: VENUE_TYPE_OPTIONS,
+    typeOptions: [] as VenueTypeOption[],
     displayList: [] as DisplayVenue[],
   },
 
@@ -37,11 +41,52 @@ Page({
 
   onRefresherRefresh() {
     this.setData({ refresherTriggered: true })
-    this.fetchVenueList(this.data.activeType, true)
+    this.refreshHomeData(true)
   },
 
-  async fetchVenueList(type: TabValue = "all", fromPullDown = false) {
+  async refreshHomeData(fromPullDown = false) {
     this.setData({ loading: true })
+    try {
+      await this.fetchTypeOptions()
+      await this.fetchVenueList(this.data.activeType)
+    } finally {
+      if (fromPullDown) {
+        this.setData({ refresherTriggered: false })
+      }
+      this.setData({ loading: false })
+    }
+  },
+
+  async fetchTypeOptions() {
+    try {
+      const res = await getVenueTypeListApi()
+      const rawList = Array.isArray(res.data) ? res.data : []
+      const nextTypeOptions: VenueTypeOption[] = rawList
+        .filter((item) => typeof item.id === "number" && item.id > 0)
+        .map((item) => ({
+          label: item.name,
+          value: String(item.id),
+        }))
+
+      const currentActiveType = String(this.data.activeType)
+      const activeTypeExists =
+        currentActiveType === "all" ||
+        nextTypeOptions.some((item) => item.value === currentActiveType)
+
+      this.setData({
+        typeOptions: nextTypeOptions,
+        activeType: activeTypeExists ? currentActiveType : "all",
+      })
+    } catch (error) {
+      console.error("load venue type list failed:", error)
+      wx.showToast({
+        title: "类型加载失败",
+        icon: "none",
+      })
+    }
+  },
+
+  async fetchVenueList(type: TabValue = "all") {
     try {
       const res =
         type === "all" ? await getVenueListApi() : await getVenueListByTypeApi(String(type))
@@ -53,18 +98,22 @@ Page({
         title: "场馆加载失败",
         icon: "none",
       })
-    } finally {
-      if (fromPullDown) {
-        this.setData({ refresherTriggered: false })
-      }
-      this.setData({ loading: false })
     }
   },
 
   onTypeChange(event: WechatMiniprogram.CustomEvent<{ name: string | number }>) {
     const activeType = String(event.detail.name)
     this.setData({ activeType })
-    this.fetchVenueList(activeType)
+    this.refreshVenueListByActiveType()
+  },
+
+  async refreshVenueListByActiveType() {
+    this.setData({ loading: true })
+    try {
+      await this.fetchVenueList(this.data.activeType)
+    } finally {
+      this.setData({ loading: false })
+    }
   },
 
   updateDisplayList(list: Venue[]) {

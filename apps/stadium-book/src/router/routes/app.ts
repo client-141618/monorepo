@@ -1,4 +1,5 @@
 import type { RouteRecordRaw } from "vue-router"
+import auditLog from "./modules/audit-log"
 import home from "./modules/home"
 import notification from "./modules/notification"
 import reservation from "./modules/reservation"
@@ -21,6 +22,7 @@ export const appRouter: RouteRecordRaw[] = [
   ...venue,
   ...reservation,
   ...notification,
+  ...auditLog,
   ...wxUser,
   ...setting,
   loginRoute,

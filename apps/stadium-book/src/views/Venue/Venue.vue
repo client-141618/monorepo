@@ -387,7 +387,8 @@ onMounted(() => {
         @selection-change="handleSelectionChange"
       >
         <el-table-column v-if="isBatchMode" type="selection" width="55" />
-        <el-table-column label="图片" width="120">
+        <el-table-column prop="id" label="ID" width="50" />
+        <el-table-column label="图片" width="120" align="center">
           <template #default="{ row }">
             <el-image
               :src="getVenueImageSrc(row.image)"

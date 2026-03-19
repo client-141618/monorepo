@@ -24,3 +24,7 @@ export enum ReservationRoute {
 export enum WxUserRoute {
   WxUserList = "WxUserList",
 }
+
+export enum AuditLogRoute {
+  AuditLogList = "AuditLogList",
+}
