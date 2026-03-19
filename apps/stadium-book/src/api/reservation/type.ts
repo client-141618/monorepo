@@ -63,6 +63,13 @@ export interface AdminReservationRecord {
   updateTime?: string
 }
 
+export interface AdminReservationListQuery {
+  userId?: number
+  status?: number
+  startDate?: string
+  endDate?: string
+}
+
 export interface AdminCancelReservationPayload {
   reason?: string
 }

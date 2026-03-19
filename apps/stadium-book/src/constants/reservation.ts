@@ -13,8 +13,15 @@ export const RESERVATION_STATUS_MAP: Record<
   0: { label: "已取消", type: "warning" },
   1: { label: "待核销", type: "primary" },
   2: { label: "已完成", type: "success" },
-  3: { label: "已过期未到场", type: "danger" },
+  3: { label: "未到场", type: "danger" },
 }
+
+export const RESERVATION_STATUS_OPTIONS = Object.entries(RESERVATION_STATUS_MAP)
+  .map(([key, value]) => ({
+    label: value.label,
+    value: Number(key),
+  }))
+  .sort((a, b) => a.value - b.value)
 
 export const getReservationStatusLabel = (status: number) => {
   return RESERVATION_STATUS_MAP[status]?.label ?? `状态${status}`

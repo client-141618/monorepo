@@ -1,4 +1,5 @@
 import ElementPlus from "element-plus"
+import zhCn from "element-plus/es/locale/lang/zh-cn"
 import { createPinia } from "pinia"
 import TlbsMap from "tlbs-map-vue"
 import { createApp } from "vue"
@@ -13,4 +14,4 @@ const pinia = createPinia()
 const app = createApp(App)
 
 app.use(pinia)
-app.use(router).use(ElementPlus).use(TlbsMap).mount("#app")
+app.use(router).use(ElementPlus, { locale: zhCn }).use(TlbsMap).mount("#app")

@@ -1,5 +1,6 @@
 import type {
   AdminCancelReservationPayload,
+  AdminReservationListQuery,
   AdminReservationRecord,
   CreateReservationBlockPayload,
   CreateReservationPayload,
@@ -38,10 +39,11 @@ export function getReservationListByVenueAndDateAdminApi(venueId: number, date: 
   })
 }
 
-export function getReservationListAllAdminApi() {
+export function getReservationListAllAdminApi(params?: AdminReservationListQuery) {
   return request<AdminReservationRecord[]>({
     url: `${PREFIX}/admin/all`,
     method: "GET",
+    params,
   })
 }
 

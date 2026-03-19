@@ -16,3 +16,8 @@ export interface UpdateWxUserStatusPayload {
   id: number
   status: 1 | 2 | 3 | 4
 }
+
+export interface WxUserListQuery {
+  userId?: number
+  status?: WxUser["status"]
+}

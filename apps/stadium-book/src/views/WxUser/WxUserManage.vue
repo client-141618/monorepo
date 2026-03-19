@@ -1,16 +1,23 @@
 <script setup lang="ts">
 import type { WxUser } from "@/api/wx-user/type"
 import type { WxUserStatus } from "@/constants/wx-user"
-import { Refresh } from "@element-plus/icons-vue"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
+import { useRouter } from "vue-router"
 import { getWxUserListApi, updateWxUserStatusApi } from "@/api/wx-user"
+import PageFilterBar from "@/components/PageFilterBar/index.vue"
+import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
 import { WX_USER_STATUS_OPTIONS } from "@/constants/wx-user"
+import { ReservationRoute } from "@/router/routes/RouteNameEnum"
 import { formatDateTimeText } from "@/utils/format"
+import { parseOptionalNonNegativeInteger } from "@/utils/query"
 
+const router = useRouter()
 const tableLoading = ref(false)
 const actionLoadingId = ref<number | null>(null)
 const wxUserList = ref<WxUser[]>([])
+const userIdFilter = ref("")
+const statusFilter = ref<WxUserStatus | "">("")
 
 const statusLabelMap = computed(() =>
   Object.fromEntries(
@@ -67,14 +74,40 @@ const getDisplayAvatar = (row: WxUser) => {
   return row.avatar || ""
 }
 
+const handleGoReservationByUserId = (id: number) => {
+  router.push({
+    name: ReservationRoute.ReservationManage,
+    query: { userId: String(id) },
+  })
+}
+
 const getWxUserList = async () => {
+  const parsedUserId = parseOptionalNonNegativeInteger(userIdFilter.value)
+  if (!parsedUserId.valid) {
+    ElMessage.warning("用户ID请输入非负整数")
+    return
+  }
+
   try {
     tableLoading.value = true
-    const res = await getWxUserListApi()
+    const res = await getWxUserListApi({
+      userId: parsedUserId.value ?? undefined,
+      status: statusFilter.value === "" ? undefined : statusFilter.value,
+    })
     wxUserList.value = Array.isArray(res.data) ? res.data : []
   } finally {
     tableLoading.value = false
   }
+}
+
+const handleQuery = async () => {
+  await getWxUserList()
+}
+
+const handleReset = async () => {
+  userIdFilter.value = ""
+  statusFilter.value = ""
+  await getWxUserList()
 }
 
 const handleChangeStatus = async (row: WxUser, status: WxUserStatus) => {
@@ -115,19 +148,43 @@ onMounted(() => {
 
 <template>
   <div class="wx-user-page">
-    <div class="wx-user-page__hero">
-      <div class="wx-user-page__title-block">
-        <div class="wx-user-page__title">用户管理</div>
-        <div class="wx-user-page__subtitle">微信来源用户只读展示，本系统仅可维护状态</div>
-      </div>
-      <div class="wx-user-page__actions">
-        <el-button :icon="Refresh" @click="getWxUserList">刷新</el-button>
-      </div>
-    </div>
+    <PageRouteTitle fallback-title="用户管理" />
+    <PageFilterBar :query-loading="tableLoading" @query="handleQuery" @reset="handleReset">
+      <el-input
+        v-model="userIdFilter"
+        clearable
+        placeholder="用户ID"
+        class="wx-user-page__filter-item"
+      />
+      <el-select
+        v-model="statusFilter"
+        clearable
+        placeholder="用户状态"
+        class="wx-user-page__filter-item"
+      >
+        <el-option
+          v-for="item in WX_USER_STATUS_OPTIONS"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+    </PageFilterBar>
 
     <el-card class="wx-user-page__table-card" shadow="never">
       <el-table v-loading="tableLoading" :data="wxUserList" stripe>
-        <el-table-column prop="id" label="ID" width="90" />
+        <el-table-column label="ID" width="90">
+          <template #default="{ row }">
+            <el-button
+              link
+              type="primary"
+              class="wx-user-page__id-link"
+              @click="handleGoReservationByUserId(row.id)"
+            >
+              {{ row.id }}
+            </el-button>
+          </template>
+        </el-table-column>
         <el-table-column label="用户信息" min-width="200">
           <template #default="{ row }">
             <div class="wx-user-page__user">
@@ -186,48 +243,23 @@ onMounted(() => {
   padding: 16px;
 }
 
-.wx-user-page__hero {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-  margin-bottom: 14px;
-  padding: 14px 16px;
-  border: 1px solid #e6f4ff;
-  border-radius: 12px;
-  background: linear-gradient(120deg, #f7fbff 0%, #f3fff8 100%);
-}
-
-.wx-user-page__title-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.wx-user-page__title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1d2129;
-}
-
-.wx-user-page__subtitle {
-  font-size: 13px;
-  color: #4e5969;
-}
-
-.wx-user-page__actions {
-  display: flex;
-  gap: 8px;
-}
-
 .wx-user-page__table-card {
   border-radius: 12px;
+}
+
+.wx-user-page__filter-item {
+  width: 200px;
 }
 
 .wx-user-page__operation {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.wx-user-page__id-link {
+  min-height: 20px;
+  padding: 0;
 }
 
 .wx-user-page__user {
@@ -248,16 +280,5 @@ onMounted(() => {
   height: 20px;
   line-height: 20px;
   padding: 0;
-}
-
-@media (max-width: 900px) {
-  .wx-user-page__hero {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .wx-user-page__actions {
-    justify-content: flex-end;
-  }
 }
 </style>

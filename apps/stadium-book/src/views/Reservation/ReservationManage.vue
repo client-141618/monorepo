@@ -1,19 +1,28 @@
 <script setup lang="ts">
 import type { AdminReservationRecord } from "@/api/reservation/type"
-import { Refresh } from "@element-plus/icons-vue"
+import { ElMessage } from "element-plus"
 import { onMounted, ref } from "vue"
+import { useRoute } from "vue-router"
 import { getReservationListAllAdminApi } from "@/api/reservation"
 import { getVenueListApi } from "@/api/venue"
+import PageFilterBar from "@/components/PageFilterBar/index.vue"
+import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
 import {
   getReservationStatusLabel,
   getReservationStatusTagType,
+  RESERVATION_STATUS_OPTIONS,
 } from "@/constants/reservation"
 import { formatCurrencyFromFen, formatDateTimeText } from "@/utils/format"
+import { parseOptionalNonNegativeInteger } from "@/utils/query"
 import { formatVenueCourtInfo } from "@/utils/venue"
 
+const route = useRoute()
 const loading = ref(false)
 const reservationList = ref<AdminReservationRecord[]>([])
 const venueNameMap = ref<Record<number, string>>({})
+const userIdFilter = ref("")
+const dateRangeFilter = ref<[string, string] | null>(null)
+const statusFilter = ref<number | "">("")
 
 const getCourtInfo = (row: AdminReservationRecord) => {
   return formatVenueCourtInfo({
@@ -25,6 +34,7 @@ const getCourtInfo = (row: AdminReservationRecord) => {
 }
 
 const loadVenueNameMap = async () => {
+  if (Object.keys(venueNameMap.value).length > 0) return
   const res = await getVenueListApi()
   const list = Array.isArray(res.data) ? res.data : []
   venueNameMap.value = Object.fromEntries(
@@ -33,10 +43,21 @@ const loadVenueNameMap = async () => {
 }
 
 const loadReservationList = async () => {
+  const parsedUserId = parseOptionalNonNegativeInteger(userIdFilter.value)
+  if (!parsedUserId.valid) {
+    ElMessage.warning("用户ID请输入非负整数")
+    return
+  }
+
   loading.value = true
   try {
     const [reservationRes] = await Promise.all([
-      getReservationListAllAdminApi(),
+      getReservationListAllAdminApi({
+        userId: parsedUserId.value ?? undefined,
+        startDate: dateRangeFilter.value?.[0] || undefined,
+        endDate: dateRangeFilter.value?.[1] || undefined,
+        status: statusFilter.value === "" ? undefined : statusFilter.value,
+      }),
       loadVenueNameMap(),
     ])
     const res = reservationRes
@@ -46,20 +67,62 @@ const loadReservationList = async () => {
   }
 }
 
+const handleQuery = async () => {
+  await loadReservationList()
+}
+
+const handleReset = async () => {
+  userIdFilter.value = ""
+  dateRangeFilter.value = null
+  statusFilter.value = ""
+  await loadReservationList()
+}
+
 onMounted(() => {
+  const userIdQuery = route.query.userId
+  if (typeof userIdQuery === "string") {
+    userIdFilter.value = userIdQuery
+  } else if (Array.isArray(userIdQuery) && typeof userIdQuery[0] === "string") {
+    userIdFilter.value = userIdQuery[0]
+  }
   loadReservationList()
 })
 </script>
 
 <template>
   <div class="reservation-page">
-    <div class="reservation-page__hero">
-      <div class="reservation-page__title-block">
-        <div class="reservation-page__title">预定管理</div>
-        <div class="reservation-page__subtitle">展示所有用户预约记录，支持管理员快速巡检</div>
-      </div>
-      <el-button :icon="Refresh" :loading="loading" @click="loadReservationList">刷新</el-button>
-    </div>
+    <PageRouteTitle fallback-title="预定管理" />
+    <PageFilterBar :query-loading="loading" @query="handleQuery" @reset="handleReset">
+      <el-input
+        v-model="userIdFilter"
+        clearable
+        placeholder="用户ID"
+        class="reservation-page__filter-item"
+      />
+      <el-date-picker
+        v-model="dateRangeFilter"
+        type="daterange"
+        value-format="YYYY-MM-DD"
+        range-separator="至"
+        start-placeholder="开始日期"
+        end-placeholder="结束日期"
+        clearable
+        class="reservation-page__filter-item reservation-page__filter-item--range"
+      />
+      <el-select
+        v-model="statusFilter"
+        clearable
+        placeholder="预约状态"
+        class="reservation-page__filter-item"
+      >
+        <el-option
+          v-for="item in RESERVATION_STATUS_OPTIONS"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+    </PageFilterBar>
 
     <el-card shadow="never" class="reservation-page__table-card">
       <div class="reservation-page__table-wrap">
@@ -127,39 +190,18 @@ onMounted(() => {
   overflow: hidden;
 }
 
-.reservation-page__hero {
-  margin-bottom: 14px;
-  padding: 14px 16px;
-  border: 1px solid #e6f4ff;
-  border-radius: 12px;
-  background: linear-gradient(120deg, #f7fbff 0%, #f3fff8 100%);
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.reservation-page__title-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.reservation-page__title {
-  color: #1d2129;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.reservation-page__subtitle {
-  color: #4e5969;
-  font-size: 13px;
-}
-
 .reservation-page__table-card {
   flex: 1;
   min-height: 0;
   border-radius: 12px;
+}
+
+.reservation-page__filter-item {
+  width: 200px;
+}
+
+.reservation-page__filter-item--range {
+  width: 260px;
 }
 
 :deep(.reservation-page__table-card .el-card__body) {
@@ -186,12 +228,5 @@ onMounted(() => {
 
 :deep(.reservation-page__table-wrap .el-scrollbar__bar.is-vertical) {
   display: none;
-}
-
-@media (max-width: 900px) {
-  .reservation-page__hero {
-    flex-direction: column;
-    align-items: stretch;
-  }
 }
 </style>
