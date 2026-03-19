@@ -18,6 +18,7 @@ import {
   getReservationListByVenueAndDateAdminApi,
 } from "@/api/reservation"
 import { getVenueByIdApi } from "@/api/venue"
+import { formatCurrencyFromFen } from "@/utils/format"
 import HomeVenueDetailBlockDialog from "./detail/HomeVenueDetailBlockDialog.vue"
 import HomeVenueDetailBlockRules from "./detail/HomeVenueDetailBlockRules.vue"
 import HomeVenueDetailBoard from "./detail/HomeVenueDetailBoard.vue"
@@ -83,7 +84,10 @@ const weekdayOptions = [
 
 const venueId = computed(() => Number(route.params.id))
 const venueImageSrc = computed(() => venueDetail.value?.image?.trim() || DEFAULT_VENUE_IMAGE)
-const priceLabel = computed(() => `¥${(Number(venueDetail.value?.pricePerHour || 0) / 100).toFixed(2)}/小时`)
+const priceLabel = computed(() => {
+  const price = formatCurrencyFromFen(venueDetail.value?.pricePerHour, { fallback: "¥0.00" })
+  return `${price}/小时`
+})
 const venueTypeLabel = computed(() => venueDetail.value?.typeName || `类型ID: ${venueDetail.value?.typeId ?? "--"}`)
 const openHours = computed(() => {
   const openTime = venueDetail.value?.openTime?.trim()

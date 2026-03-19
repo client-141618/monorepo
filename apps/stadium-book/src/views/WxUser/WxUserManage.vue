@@ -6,6 +6,7 @@ import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { getWxUserListApi, updateWxUserStatusApi } from "@/api/wx-user"
 import { WX_USER_STATUS_OPTIONS } from "@/constants/wx-user"
+import { formatDateTimeText } from "@/utils/format"
 
 const tableLoading = ref(false)
 const actionLoadingId = ref<number | null>(null)
@@ -50,11 +51,6 @@ const getStatusLabel = (status: number) => {
 
 const getStatusType = (status: number) => {
   return statusTypeMap.value[status as WxUserStatus] ?? "info"
-}
-
-const formatDateTime = (value?: string) => {
-  if (!value) return "--"
-  return value.replace("T", " ").replace("Z", "").replace(/\.\d+$/, "")
 }
 
 const maskSessionKey = (value: string | null) => {
@@ -156,12 +152,12 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="创建时间" min-width="170">
           <template #default="{ row }">
-            {{ formatDateTime(row.createTime) }}
+            {{ formatDateTimeText(row.createTime) }}
           </template>
         </el-table-column>
         <el-table-column label="更新时间" min-width="170">
           <template #default="{ row }">
-            {{ formatDateTime(row.updateTime) }}
+            {{ formatDateTimeText(row.updateTime) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="240" fixed="right">

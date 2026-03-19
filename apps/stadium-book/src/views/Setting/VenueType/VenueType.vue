@@ -9,6 +9,7 @@ import {
   getVenueTypeListApi,
   updateVenueTypeApi,
 } from "@/api/venue-type"
+import { formatDateTimeText } from "@/utils/format"
 
 type DialogMode = "create" | "edit"
 
@@ -31,15 +32,6 @@ const rules: FormRules<typeof form> = {
 const dialogTitle = computed(() =>
   dialogMode.value === "create" ? "新增场地类型" : "编辑场地类型",
 )
-
-const formatDateTime = (value?: string) => {
-  if (!value) return "--"
-
-  return value
-    .replace("T", " ")
-    .replace("Z", "")
-    .replace(/\.\d+$/, "")
-}
 
 const getVenueTypeList = async () => {
   try {
@@ -139,7 +131,7 @@ onMounted(() => {
         <el-table-column prop="name" label="类型名称" min-width="220" />
         <el-table-column label="更新时间" min-width="180">
           <template #default="{ row }">
-            {{ formatDateTime(row.updateTime) }}
+            {{ formatDateTimeText(row.updateTime) }}
           </template>
         </el-table-column>
         <el-table-column label="操作" width="180" fixed="right">

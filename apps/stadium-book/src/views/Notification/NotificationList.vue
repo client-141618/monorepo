@@ -15,6 +15,7 @@ import {
   NOTIFICATION_TYPE_OPTIONS,
 } from "@/constants/notification"
 import { VenueRoute } from "@/router/routes/RouteNameEnum"
+import { formatDateTimeText } from "@/utils/format"
 
 const router = useRouter()
 const loading = ref(false)
@@ -81,11 +82,6 @@ const handleDelete = async (id: number) => {
   await deleteNotificationApi(id)
   ElMessage.success("删除成功")
   await loadList()
-}
-
-const formatTime = (time?: string | null) => {
-  if (!time) return "--"
-  return time.replace("T", " ")
 }
 
 const normalizeTargetUserIds = (item: NotificationOverview): number[] => {
@@ -243,7 +239,9 @@ onMounted(() => {
             <el-tag size="small" :type="item.publishStatus === 1 ? 'success' : 'info'">
               {{ item.publishStatus === 1 ? "已发布" : "草稿" }}
             </el-tag>
-            <span class="notification-card__time">{{ formatTime(item.publishTime || item.createTime) }}</span>
+            <span class="notification-card__time">
+              {{ formatDateTimeText(item.publishTime || item.createTime) }}
+            </span>
           </div>
         </div>
         <div class="notification-card__body">

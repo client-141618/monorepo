@@ -49,6 +49,7 @@ export interface AdminReservationRecord {
   id: number
   userId: number | string
   venueId: number
+  venueName?: string
   courtId: number
   reservationDate: string
   startTime: string

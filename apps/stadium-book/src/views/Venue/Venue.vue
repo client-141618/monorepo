@@ -14,6 +14,7 @@ import {
   getVenueListApi,
   updateVenueStatusApi,
 } from "@/api/venue"
+import { formatYuanFromFen } from "@/utils/format"
 import AddVenue from "./AddVenue.vue"
 
 const venueList = ref<Venue[]>([])
@@ -61,10 +62,8 @@ const formatVenueType = (row: Venue) => {
   return row.typeId ? `类型ID: ${row.typeId}` : "--"
 }
 
-const formatPriceYuanPerHour = (value: unknown) => {
-  const cents = Number(value)
-  if (!Number.isFinite(cents)) return ""
-  return (cents / 100).toFixed(2)
+const formatPriceYuanPerHour = (value?: number | string | null) => {
+  return formatYuanFromFen(value, { fallback: "" })
 }
 
 const formatLocationVerifyStatus = (row: Venue) => {

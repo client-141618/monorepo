@@ -38,6 +38,13 @@ export function getReservationListByVenueAndDateAdminApi(venueId: number, date: 
   })
 }
 
+export function getReservationListAllAdminApi() {
+  return request<AdminReservationRecord[]>({
+    url: `${PREFIX}/admin/all`,
+    method: "GET",
+  })
+}
+
 export function cancelReservationAdminApi(
   reservationId: number,
   data?: AdminCancelReservationPayload,
