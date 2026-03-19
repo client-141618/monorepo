@@ -14,12 +14,12 @@ const form = defineModel<VenueFormModel>("form", { required: true })
   <section class="venue-form__section">
     <div class="venue-form__section-title">基础信息</div>
     <el-row :gutter="18">
-      <el-col :xs="24" :sm="24" :md="12">
+      <el-col :xs="24" :sm="24" :md="24" :lg="12">
         <el-form-item label="场馆名称" prop="name">
           <el-input v-model="form.name" placeholder="请输入场馆名称" />
         </el-form-item>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="12">
+      <el-col :xs="24" :sm="24" :md="24" :lg="12">
         <el-form-item label="场馆类型" prop="typeId">
           <el-select
             v-model="form.typeId"
@@ -38,7 +38,7 @@ const form = defineModel<VenueFormModel>("form", { required: true })
     </el-row>
 
     <el-row :gutter="18">
-      <el-col :xs="24" :sm="24" :md="12">
+      <el-col :xs="24" :sm="24" :md="24">
         <el-form-item label="所在位置" prop="location">
           <el-input
             v-model="form.location"
@@ -53,14 +53,28 @@ const form = defineModel<VenueFormModel>("form", { required: true })
           </div>
         </el-form-item>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="12">
+    </el-row>
+
+    <el-row :gutter="18">
+      <el-col :xs="24" :sm="24" :md="24" :lg="12">
         <el-form-item label="是否开放" prop="status" class="venue-form__switch-item">
           <el-switch
             v-model="form.status"
             :active-value="1"
             :inactive-value="0"
-            active-text="开放"
-            inactive-text="关闭"
+          />
+        </el-form-item>
+      </el-col>
+      <el-col :xs="24" :sm="24" :md="24" :lg="12">
+        <el-form-item
+          label="开启校验"
+          prop="enableLocationVerify"
+          class="venue-form__switch-item"
+        >
+          <el-switch
+            v-model="form.enableLocationVerify"
+            :active-value="1"
+            :inactive-value="0"
           />
         </el-form-item>
       </el-col>

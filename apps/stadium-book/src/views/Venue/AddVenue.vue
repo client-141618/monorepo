@@ -5,6 +5,7 @@ import VenueLocationVerifyFields from "@/components/venue/VenueLocationVerifyFie
 import { useTencentMapConfig } from "@/composables/useTencentMapConfig"
 import VenueBasicInfoSection from "./components/VenueBasicInfoSection.vue"
 import VenueBookingRulesSection from "./components/VenueBookingRulesSection.vue"
+import VenueDescriptionSection from "./components/VenueDescriptionSection.vue"
 import VenueMediaSection from "./components/VenueMediaSection.vue"
 import { useVenueFormDialog } from "./composables/useVenueFormDialog"
 
@@ -135,32 +136,41 @@ watch(
         label-position="right"
         class="venue-form"
       >
-        <VenueBasicInfoSection
-          v-model:form="form"
-          :venue-type-options="venueTypeOptions"
-          :venue-type-loading="venueTypeLoading"
-        />
+        <div class="venue-form__layout">
+          <div class="venue-form__column">
+            <VenueBasicInfoSection
+              v-model:form="form"
+              :venue-type-options="venueTypeOptions"
+              :venue-type-loading="venueTypeLoading"
+            />
 
-        <VenueLocationVerifyFields
-          v-model:enable-location-verify="form.enableLocationVerify"
-          v-model:location="form.location"
-          v-model:checkin-lat-gcj02="form.checkinLatGcj02"
-          v-model:checkin-lng-gcj02="form.checkinLngGcj02"
-          v-model:checkin-radius-m="form.checkinRadiusM"
-        />
+            <VenueLocationVerifyFields
+              :enable-location-verify="form.enableLocationVerify"
+              v-model:location="form.location"
+              v-model:checkin-lat-gcj02="form.checkinLatGcj02"
+              v-model:checkin-lng-gcj02="form.checkinLngGcj02"
+              v-model:checkin-radius-m="form.checkinRadiusM"
+            />
 
-        <VenueBookingRulesSection
-          v-model:form="form"
-          :is-slot-minute-ready="isSlotMinuteReady()"
-          :time-select-step="timeSelectStep()"
-          :time-select-end="timeSelectEnd()"
-        />
+            <VenueDescriptionSection
+              v-model:description="form.description"
+            />
+          </div>
 
-        <VenueMediaSection
-          v-model:image="form.image"
-          v-model:description="form.description"
-          :headers="headers"
-        />
+          <div class="venue-form__column">
+            <VenueBookingRulesSection
+              v-model:form="form"
+              :is-slot-minute-ready="isSlotMinuteReady()"
+              :time-select-step="timeSelectStep()"
+              :time-select-end="timeSelectEnd()"
+            />
+
+            <VenueMediaSection
+              v-model:image="form.image"
+              :headers="headers"
+            />
+          </div>
+        </div>
       </el-form>
     </div>
 
@@ -194,17 +204,28 @@ watch(
 }
 
 .venue-dialog__body {
-  max-height: min(76vh, 740px);
+  max-height: min(80vh, 760px);
 }
 
 .venue-form {
+  min-width: 0;
+}
+
+.venue-form__layout {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.venue-form__column {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
 .venue-form__section {
-  padding: 18px 20px 8px;
+  padding: 16px 18px 6px;
   border: 1px solid #e8edf5;
   border-radius: 16px;
   background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
@@ -215,17 +236,10 @@ watch(
 }
 
 .venue-form__section-title {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: 15px;
   font-weight: 600;
   color: #1f2a37;
-}
-
-.venue-form__media-grid {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
 }
 
 .venue-form__media-item {
@@ -242,6 +256,19 @@ watch(
   gap: 10px;
 }
 
+.venue-form__upload-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 24px;
+}
+
+.venue-form__upload-heading-title {
+  color: #4b5563;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .venue-form__upload-tip,
 .venue-form__inline-hint {
   font-size: 12px;
@@ -256,7 +283,7 @@ watch(
 }
 
 .venue-form :deep(.el-form-item) {
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .venue-form :deep(.el-form-item__label) {
@@ -283,7 +310,7 @@ watch(
 }
 
 .venue-form :deep(.el-textarea__inner) {
-  min-height: 172px;
+  min-height: 136px;
   padding-top: 12px;
 }
 
@@ -310,7 +337,7 @@ watch(
 
 .venue-cover-image {
   width: 100%;
-  height: 168px;
+  height: 136px;
   object-fit: cover;
   border-radius: 12px;
 }
@@ -320,12 +347,6 @@ watch(
   justify-content: flex-end;
   gap: 12px;
   padding-top: 12px;
-}
-
-@media (max-width: 960px) {
-  .venue-form__media-grid {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (max-width: 768px) {
@@ -386,7 +407,7 @@ watch(
   overflow: hidden;
   transition: var(--el-transition-duration-fast);
   width: 100%;
-  height: 168px;
+  height: 136px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -409,19 +430,28 @@ watch(
 }
 
 .venue-dialog .el-dialog__header {
-  padding: 24px 28px 10px;
+  padding: 20px 24px 10px;
 }
 
 .venue-dialog .el-dialog__body {
-  padding: 0 28px 8px;
+  padding: 0 24px 8px;
   overflow-y: auto;
 }
 
 .venue-dialog .el-dialog__footer {
-  padding: 0 28px 22px;
+  padding: 0 24px 18px;
 }
 
 @media (max-width: 768px) {
+  .venue-form__layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .venue-form__column {
+    gap: 12px;
+  }
+
   .venue-dialog .el-dialog {
     max-width: calc(100vw - 16px);
   }
@@ -441,7 +471,7 @@ watch(
 
 @media (max-height: 820px) {
   .venue-cover-uploader .el-upload {
-    height: 148px;
+    height: 128px;
   }
 }
 </style>

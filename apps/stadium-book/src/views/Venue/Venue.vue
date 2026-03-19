@@ -418,12 +418,7 @@ onMounted(() => {
             {{ formatPriceYuanPerHour(row.pricePerHour) }}
           </template>
         </el-table-column>
-        <el-table-column prop="total" label="场地单元数" min-width="120" />
-        <el-table-column label="最小预约单元" min-width="140">
-          <template #default="{ row }">
-            {{ row.slotMinutes }} 分钟
-          </template>
-        </el-table-column>
+
         <el-table-column label="位置校验" min-width="120">
           <template #default="{ row }">
             <el-tag :type="row.enableLocationVerify === 1 ? 'success' : 'info'">
@@ -450,6 +445,12 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="openTime" label="开放时间" min-width="160" />
         <el-table-column prop="closeTime" label="关闭时间" min-width="160" />
+        <el-table-column prop="total" label="场地单元数" min-width="120" />
+        <el-table-column label="最小预约单元" min-width="140">
+          <template #default="{ row }">
+            {{ row.slotMinutes }} 分钟
+          </template>
+        </el-table-column>
 
         <el-table-column label="操作" fixed="right" width="240">
           <template #default="{ row }">
