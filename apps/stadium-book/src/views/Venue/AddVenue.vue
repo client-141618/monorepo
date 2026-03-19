@@ -242,31 +242,32 @@ watch(
   color: #1f2a37;
 }
 
+.venue-form__section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.venue-form__section-header .venue-form__section-title {
+  margin-bottom: 0;
+}
+
 .venue-form__media-item {
   margin-bottom: 0;
 }
 
 .venue-form__upload-item :deep(.el-form-item__content) {
   display: block;
+  width: 100%;
+  margin-left: 0 !important;
 }
 
 .venue-form__upload-panel {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.venue-form__upload-heading {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 24px;
-}
-
-.venue-form__upload-heading-title {
-  color: #4b5563;
-  font-weight: 500;
-  white-space: nowrap;
+  width: 100%;
 }
 
 .venue-form__upload-tip,
@@ -412,6 +413,17 @@ watch(
   align-items: center;
   justify-content: center;
   background: linear-gradient(180deg, #f7faff 0%, #eef4fb 100%);
+}
+
+.venue-cover-uploader {
+  display: block;
+  width: 100%;
+}
+
+.venue-cover-uploader .el-upload--text,
+.venue-cover-uploader .el-upload {
+  display: flex;
+  width: 100%;
 }
 
 .venue-cover-uploader .el-upload:hover {

@@ -65,35 +65,67 @@ const beforeCoverUpload: UploadProps["beforeUpload"] = (rawFile) => {
 
 <template>
   <section class="venue-form__section venue-form__section--media">
-    <div class="venue-form__section-title">封面图片</div>
-    <el-form-item prop="image" class="venue-form__media-item venue-form__upload-item">
-      <div class="venue-form__upload-panel">
-        <div class="venue-form__upload-heading">
-          <span class="venue-form__upload-heading-title">封面图片</span>
-          <span class="venue-form__upload-tip">建议上传横版封面，展示更协调</span>
-        </div>
-        <el-upload
-          class="venue-cover-uploader"
-          action="/api/file/upload"
-          :headers="headers"
-          :show-file-list="false"
-          :on-success="handleCoverSuccess"
-          :before-upload="beforeCoverUpload"
+    <div class="venue-form__cover-layout">
+      <div class="venue-form__cover-title">封面图片</div>
+      <div class="venue-form__cover-main">
+        <div class="venue-form__upload-tip">建议上传横版封面，展示更协调</div>
+        <el-form-item
+          prop="image"
+          :label-width="0"
+          class="venue-form__media-item venue-form__upload-item"
         >
-          <img
-            v-if="displayImageUrl"
-            :src="displayImageUrl"
-            alt="封面图片"
-            class="venue-cover-image"
-          />
-          <div v-else class="venue-cover-placeholder">
-            <el-icon class="venue-cover-icon">
-              <Plus />
-            </el-icon>
-            <span>上传封面</span>
+          <div class="venue-form__upload-panel">
+            <el-upload
+              class="venue-cover-uploader"
+              action="/api/file/upload"
+              :headers="headers"
+              :show-file-list="false"
+              :on-success="handleCoverSuccess"
+              :before-upload="beforeCoverUpload"
+            >
+              <img
+                v-if="displayImageUrl"
+                :src="displayImageUrl"
+                alt="封面图片"
+                class="venue-cover-image"
+              />
+              <div v-else class="venue-cover-placeholder">
+                <el-icon class="venue-cover-icon">
+                  <Plus />
+                </el-icon>
+                <span>上传封面</span>
+              </div>
+            </el-upload>
           </div>
-        </el-upload>
+        </el-form-item>
       </div>
-    </el-form-item>
+    </div>
   </section>
 </template>
+
+<style scoped lang="scss">
+.venue-form__cover-layout {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+}
+
+.venue-form__cover-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2a37;
+  line-height: 1.6;
+}
+
+.venue-form__cover-main {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .venue-form__cover-layout {
+    grid-template-columns: 1fr;
+    row-gap: 8px;
+  }
+}
+</style>
