@@ -4,6 +4,7 @@ import { storeToRefs } from "pinia"
 import { ref } from "vue"
 import EditPassword from "@/components/EditPassword/index.vue"
 import EditUserDialog from "@/components/EditUserDialog/index.vue"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import { useUserStore } from "@/store/user"
 
 const userStore = useUserStore()
@@ -22,7 +23,7 @@ const handleEditPassword = () => {
 </script>
 
 <template>
-  <div class="my-page">
+  <PageContentShell class="my-page" :body-scroll="true">
     <div class="my-page__content">
       <el-card shadow="hover" class="my-page__card">
         <div class="my-page__card-body">
@@ -47,20 +48,12 @@ const handleEditPassword = () => {
 
     <EditUserDialog v-model="dialogVisible" />
     <EditPassword v-model="editPasswordVisible" />
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
-.my-page {
-  height: 100%;
-  min-height: 0;
-  padding: 16px;
-  overflow: hidden;
-}
-
 .my-page__content {
-  height: 100%;
-  overflow: auto;
+  min-height: 0;
 }
 
 .my-page__card {

@@ -5,6 +5,7 @@ import { onMounted, ref } from "vue"
 import { useRoute } from "vue-router"
 import { getReservationListAllAdminApi } from "@/api/reservation"
 import { getVenueListApi } from "@/api/venue"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageFilterBar from "@/components/PageFilterBar/index.vue"
 import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
 import {
@@ -90,39 +91,41 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="reservation-page">
-    <PageRouteTitle fallback-title="预定管理" />
-    <PageFilterBar :query-loading="loading" @query="handleQuery" @reset="handleReset">
-      <el-input
-        v-model="userIdFilter"
-        clearable
-        placeholder="用户ID"
-        class="reservation-page__filter-item"
-      />
-      <el-date-picker
-        v-model="dateRangeFilter"
-        type="daterange"
-        value-format="YYYY-MM-DD"
-        range-separator="至"
-        start-placeholder="开始日期"
-        end-placeholder="结束日期"
-        clearable
-        class="reservation-page__filter-item reservation-page__filter-item--range"
-      />
-      <el-select
-        v-model="statusFilter"
-        clearable
-        placeholder="预约状态"
-        class="reservation-page__filter-item"
-      >
-        <el-option
-          v-for="item in RESERVATION_STATUS_OPTIONS"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+  <PageContentShell class="reservation-page">
+    <template #header>
+      <PageRouteTitle fallback-title="预定管理" />
+      <PageFilterBar :query-loading="loading" @query="handleQuery" @reset="handleReset">
+        <el-input
+          v-model="userIdFilter"
+          clearable
+          placeholder="用户ID"
+          class="reservation-page__filter-item"
         />
-      </el-select>
-    </PageFilterBar>
+        <el-date-picker
+          v-model="dateRangeFilter"
+          type="daterange"
+          value-format="YYYY-MM-DD"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          clearable
+          class="reservation-page__filter-item reservation-page__filter-item--range"
+        />
+        <el-select
+          v-model="statusFilter"
+          clearable
+          placeholder="预约状态"
+          class="reservation-page__filter-item"
+        >
+          <el-option
+            v-for="item in RESERVATION_STATUS_OPTIONS"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </PageFilterBar>
+    </template>
 
     <el-card shadow="never" class="reservation-page__table-card">
       <div class="reservation-page__table-wrap">
@@ -177,7 +180,7 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">

@@ -10,6 +10,7 @@ import {
   publishNotificationApi,
   queryNotificationListApi,
 } from "@/api/notification"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import {
   getNotificationTypeLabel,
   NOTIFICATION_TYPE_OPTIONS,
@@ -181,46 +182,48 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="notification-list-page">
-    <div class="notification-list-page__header">
-      <div class="notification-list-page__title">通知消息</div>
-      <div class="notification-list-page__actions">
-        <el-button :loading="loading" @click="loadList">刷新</el-button>
-        <el-button type="primary" @click="goCreate">新建通知</el-button>
+  <PageContentShell class="notification-list-page" :body-scroll="true">
+    <template #header>
+      <div class="notification-list-page__header">
+        <div class="notification-list-page__title">通知消息</div>
+        <div class="notification-list-page__actions">
+          <el-button :loading="loading" @click="loadList">刷新</el-button>
+          <el-button type="primary" @click="goCreate">新建通知</el-button>
+        </div>
       </div>
-    </div>
 
-    <div class="notification-list-page__filters">
-      <el-input
-        v-model="creatorUserIdFilter"
-        clearable
-        placeholder="创建者ID"
-        class="notification-list-page__filter-input"
-      />
-      <el-input
-        v-model="targetUserIdFilter"
-        clearable
-        placeholder="目标用户ID"
-        class="notification-list-page__filter-input"
-      />
-      <el-select
-        v-model="typeFilter"
-        clearable
-        placeholder="通知类型"
-        class="notification-list-page__filter-select"
-      >
-        <el-option
-          v-for="item in NOTIFICATION_TYPE_OPTIONS"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+      <div class="notification-list-page__filters">
+        <el-input
+          v-model="creatorUserIdFilter"
+          clearable
+          placeholder="创建者ID"
+          class="notification-list-page__filter-input"
         />
-      </el-select>
-      <div class="notification-list-page__filter-actions">
-        <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" :loading="querying" @click="handleQuery">查询</el-button>
+        <el-input
+          v-model="targetUserIdFilter"
+          clearable
+          placeholder="目标用户ID"
+          class="notification-list-page__filter-input"
+        />
+        <el-select
+          v-model="typeFilter"
+          clearable
+          placeholder="通知类型"
+          class="notification-list-page__filter-select"
+        >
+          <el-option
+            v-for="item in NOTIFICATION_TYPE_OPTIONS"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <div class="notification-list-page__filter-actions">
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" :loading="querying" @click="handleQuery">查询</el-button>
+        </div>
       </div>
-    </div>
+    </template>
 
     <div
       v-if="hasData"
@@ -282,14 +285,10 @@ onMounted(() => {
       v-loading="true"
     />
     <el-empty v-else :description="emptyDescription" />
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
-.notification-list-page {
-  padding: 16px;
-}
-
 .notification-list-page__header {
   display: flex;
   justify-content: space-between;

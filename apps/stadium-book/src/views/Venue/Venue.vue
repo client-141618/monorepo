@@ -14,6 +14,7 @@ import {
   getVenueListApi,
   updateVenueStatusApi,
 } from "@/api/venue"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import { formatYuanFromFen } from "@/utils/format"
 import AddVenue from "./AddVenue.vue"
 
@@ -326,56 +327,58 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="venue-page">
-    <div class="venue-header">
-      <div class="venue-header__title">场馆管理</div>
-      <div class="venue-header__actions">
-        <template v-if="!isBatchMode">
-          <el-button
-            :icon="Refresh"
-            :loading="tableLoading"
-            :disabled="tableLoading"
-            @click="handleRefresh"
-          >
-            刷新
-          </el-button>
-          <el-button type="primary" @click="handleCreate">新增场馆</el-button>
-          <el-button @click="handleBatchSelect">批量操作</el-button>
-        </template>
-        <template v-else>
-          <el-button
-            type="success"
-            :loading="batchEnableLoading"
-            :disabled="batchDisableLoading || batchDeleteLoading"
-            @click="handleBatchEnable"
-          >
-            批量启用
-          </el-button>
-          <el-button
-            type="warning"
-            :loading="batchDisableLoading"
-            :disabled="batchEnableLoading || batchDeleteLoading"
-            @click="handleBatchDisable"
-          >
-            批量停用
-          </el-button>
-          <el-button
-            type="danger"
-            :loading="batchDeleteLoading"
-            :disabled="batchEnableLoading || batchDisableLoading"
-            @click="handleBatchDelete"
-          >
-            批量删除
-          </el-button>
-          <el-button
-            :disabled="batchEnableLoading || batchDisableLoading || batchDeleteLoading"
-            @click="exitBatchMode"
-          >
-            取消
-          </el-button>
-        </template>
+  <PageContentShell class="venue-page">
+    <template #header>
+      <div class="venue-header">
+        <div class="venue-header__title">场馆管理</div>
+        <div class="venue-header__actions">
+          <template v-if="!isBatchMode">
+            <el-button
+              :icon="Refresh"
+              :loading="tableLoading"
+              :disabled="tableLoading"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
+            <el-button type="primary" @click="handleCreate">新增场馆</el-button>
+            <el-button @click="handleBatchSelect">批量操作</el-button>
+          </template>
+          <template v-else>
+            <el-button
+              type="success"
+              :loading="batchEnableLoading"
+              :disabled="batchDisableLoading || batchDeleteLoading"
+              @click="handleBatchEnable"
+            >
+              批量启用
+            </el-button>
+            <el-button
+              type="warning"
+              :loading="batchDisableLoading"
+              :disabled="batchEnableLoading || batchDeleteLoading"
+              @click="handleBatchDisable"
+            >
+              批量停用
+            </el-button>
+            <el-button
+              type="danger"
+              :loading="batchDeleteLoading"
+              :disabled="batchEnableLoading || batchDisableLoading"
+              @click="handleBatchDelete"
+            >
+              批量删除
+            </el-button>
+            <el-button
+              :disabled="batchEnableLoading || batchDisableLoading || batchDeleteLoading"
+              @click="exitBatchMode"
+            >
+              取消
+            </el-button>
+          </template>
+        </div>
       </div>
-    </div>
+    </template>
 
     <div v-if="hasData" class="venue-table-wrapper">
       <el-table
@@ -534,17 +537,12 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
 .venue-page {
-  height: 100%;
   min-height: 0;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .venue-header {

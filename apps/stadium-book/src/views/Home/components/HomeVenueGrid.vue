@@ -7,6 +7,7 @@ import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import { getVenueListApi, getVenueListByTypeApi } from "@/api/venue"
 import { getVenueTypeListApi } from "@/api/venue-type"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import HomeVenueCard from "./HomeVenueCard.vue"
 
 const router = useRouter()
@@ -73,19 +74,21 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="home-venue-grid">
-    <div class="home-venue-grid__header">
-      <div class="home-venue-grid__title">场馆总览</div>
-      <el-button :icon="Refresh" :loading="tableLoading" @click="getVenueList">刷新</el-button>
-    </div>
-    <div class="home-venue-grid__filter">
-      <span class="home-venue-grid__filter-label">场馆类型</span>
-      <el-radio-group v-model="activeType" :disabled="typeLoading" @change="handleTypeChange">
-        <el-radio-button v-for="item in typeOptions" :key="item.value" :value="item.value">
-          {{ item.label }}
-        </el-radio-button>
-      </el-radio-group>
-    </div>
+  <PageContentShell class="home-venue-grid" :body-scroll="true">
+    <template #header>
+      <div class="home-venue-grid__header">
+        <div class="home-venue-grid__title">场馆总览</div>
+        <el-button :icon="Refresh" :loading="tableLoading" @click="getVenueList">刷新</el-button>
+      </div>
+      <div class="home-venue-grid__filter">
+        <span class="home-venue-grid__filter-label">场馆类型</span>
+        <el-radio-group v-model="activeType" :disabled="typeLoading" @change="handleTypeChange">
+          <el-radio-button v-for="item in typeOptions" :key="item.value" :value="item.value">
+            {{ item.label }}
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+    </template>
 
     <div v-if="!hasLoadedOnce && tableLoading" class="home-venue-grid__loading" v-loading="true" />
     <el-result v-else-if="loadFailed" icon="error" title="场馆加载失败" sub-title="请检查网络或稍后重试">
@@ -97,13 +100,12 @@ onMounted(() => {
     <div v-else class="home-venue-grid__list" v-loading="tableLoading">
       <HomeVenueCard v-for="venue in venueList" :key="venue.id" :venue="venue" @select="handleSelect" />
     </div>
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
 .home-venue-grid {
-  padding: 16px;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 .home-venue-grid__header {
@@ -153,10 +155,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .home-venue-grid {
-    padding: 12px;
-  }
-
   .home-venue-grid__list {
     grid-template-columns: 1fr;
     gap: 12px;
