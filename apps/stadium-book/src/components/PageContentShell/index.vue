@@ -59,16 +59,12 @@ const props = withDefaults(
 
 .page-content-shell__footer :deep(.el-pagination) {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   align-items: center;
-  position: relative;
   width: 100%;
 }
 
 .page-content-shell__footer :deep(.el-pagination__total) {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-right: 0;
+  margin-right: auto;
 }
 </style>

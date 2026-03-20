@@ -201,7 +201,7 @@ onMounted(() => {
         :current-page="pageNum"
         :page-size="pageSize"
         :total="total"
-        layout="total, pager"
+        layout="total, prev, pager, next"
         background
         @current-change="handleCurrentPageChange"
       />
