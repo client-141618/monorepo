@@ -1,13 +1,13 @@
 {
   "navigationStyle": "default",
-  "navigationBarTitleText": "场馆预约",
-  "navigationBarBackgroundColor": "#ffffff",
+  "navigationBarTitleText": "发起组队",
+  "navigationBarBackgroundColor": "#f7f8fa",
   "navigationBarTextStyle": "black",
   "backgroundColor": "#f6f7fb",
   "backgroundTextStyle": "dark",
   "usingComponents": {
-    "van-icon": "@vant/weapp/icon/index",
-    "van-progress": "@vant/weapp/progress/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-loading": "@vant/weapp/loading/index",
     "van-empty": "@vant/weapp/empty/index"
   }
 }

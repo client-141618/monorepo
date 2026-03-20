@@ -1,5 +1,6 @@
 const TAB_PATH: Record<string, string> = {
   home: "/pages/home/index",
+  team: "/pages/team/index",
   message: "/pages/message/index",
   order: "/pages/order/index",
   mine: "/pages/mine/index",

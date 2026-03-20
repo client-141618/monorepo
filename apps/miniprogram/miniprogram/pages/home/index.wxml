@@ -1,24 +1,55 @@
 <view class="page">
   <view class="banner">
-    <image
-      class="banner-image"
-      mode="aspectFill"
-      src="https://dummyimage.com/1200x500/1f2430/ffffff&text=Banner"
-    />
+    <swiper
+      wx:if="{{bannerList.length}}"
+      class="banner-swiper"
+      autoplay="{{true}}"
+      interval="{{5000}}"
+      circular="{{true}}"
+    >
+      <swiper-item wx:for="{{bannerList}}" wx:key="id">
+        <image class="banner-image" mode="aspectFill" src="{{item.imageUrl}}" />
+      </swiper-item>
+    </swiper>
+    <view wx:else class="banner-empty">暂无 Banner</view>
   </view>
 
-  <view class="card">
-    <van-tabs
-      active="{{activeType}}"
-      bind:change="onTypeChange"
-      color="#ffd400"
-      line-width="36"
-    >
-      <van-tab title="全部" name="all"></van-tab>
-      <block wx:for="{{typeOptions}}" wx:key="value">
-        <van-tab title="{{item.label}}" name="{{item.value}}"></van-tab>
-      </block>
-    </van-tabs>
+  <view class="filter-panel">
+    <view class="search-box">
+      <van-icon name="search" size="32rpx" color="#c2c7d1" />
+      <input
+        class="search-input"
+        type="text"
+        value="{{searchKeyword}}"
+        placeholder="搜索场馆或地址"
+        placeholder-class="search-placeholder"
+        confirm-type="search"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+      />
+      <text wx:if="{{searchKeyword}}" class="search-clear" bindtap="onSearchClear">×</text>
+    </view>
+
+    <scroll-view class="type-scroll" scroll-x enable-flex show-scrollbar="{{false}}">
+      <view class="type-list">
+        <block wx:for="{{filterOptions}}" wx:key="value">
+          <view
+            class="type-pill {{activeType === item.value ? 'is-active' : ''}}"
+            data-value="{{item.value}}"
+            bindtap="onTypeTap"
+          >
+            <van-icon
+              class="type-icon"
+              name="{{item.icon}}"
+              size="34rpx"
+              color="{{activeType === item.value ? '#1f2530' : '#6f7785'}}"
+            />
+            <text class="type-label">{{item.label}}</text>
+            <view wx:if="{{activeType === item.value}}" class="type-line"></view>
+          </view>
+        </block>
+      </view>
+    </scroll-view>
   </view>
 
   <scroll-view

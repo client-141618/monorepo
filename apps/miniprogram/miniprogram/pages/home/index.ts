@@ -1,4 +1,5 @@
 import type { Venue } from "../../api/venue/index"
+import { getMiniappBannerListApi } from "../../api/miniapp-banner/index"
 import { getVenueTypeListApi } from "../../api/venue-type/index"
 import { getVenueListApi, getVenueListByTypeApi } from "../../api/venue/index"
 
@@ -7,6 +8,9 @@ interface VenueTypeOption {
   label: string
   value: string
 }
+interface FilterOption extends VenueTypeOption {
+  icon: string
+}
 
 interface DisplayVenue extends Venue {
   remaining: number
@@ -14,14 +18,32 @@ interface DisplayVenue extends Venue {
   priceYuan: string
 }
 
+interface BannerItem {
+  id: number
+  imageUrl: string
+}
+
+const SEARCH_DEBOUNCE_MS = 350
+
 Page({
   data: {
     loading: false,
     refresherTriggered: false,
+    bannerList: [] as BannerItem[],
     activeType: "all" as TabValue,
     typeOptions: [] as VenueTypeOption[],
+    filterOptions: [
+      {
+        label: "全部",
+        value: "all",
+        icon: "apps-o",
+      },
+    ] as FilterOption[],
+    searchKeyword: "",
     displayList: [] as DisplayVenue[],
   },
+  currentVenueList: [] as Venue[],
+  searchDebounceTimer: 0 as number,
 
   onLoad() {
     this.onRefresherRefresh()
@@ -47,13 +69,30 @@ Page({
   async refreshHomeData(fromPullDown = false) {
     this.setData({ loading: true })
     try {
-      await this.fetchTypeOptions()
+      await Promise.all([this.fetchBannerList(), this.fetchTypeOptions()])
       await this.fetchVenueList(this.data.activeType)
     } finally {
       if (fromPullDown) {
         this.setData({ refresherTriggered: false })
       }
       this.setData({ loading: false })
+    }
+  },
+
+  async fetchBannerList() {
+    try {
+      const res = await getMiniappBannerListApi()
+      const rawList = Array.isArray(res.data) ? res.data : []
+      const bannerList = rawList
+        .filter((item) => item && typeof item.id === "number" && Boolean(item.imageUrl))
+        .map((item) => ({
+          id: item.id,
+          imageUrl: item.imageUrl,
+        }))
+      this.setData({ bannerList })
+    } catch (error) {
+      console.error("load miniapp banner list failed:", error)
+      this.setData({ bannerList: [] })
     }
   },
 
@@ -75,6 +114,7 @@ Page({
 
       this.setData({
         typeOptions: nextTypeOptions,
+        filterOptions: this.buildFilterOptions(nextTypeOptions),
         activeType: activeTypeExists ? currentActiveType : "all",
       })
     } catch (error) {
@@ -91,7 +131,8 @@ Page({
       const res =
         type === "all" ? await getVenueListApi() : await getVenueListByTypeApi(String(type))
       const validList = (res.data || []).filter((item) => item.status === 1)
-      this.updateDisplayList(validList)
+      this.currentVenueList = validList
+      this.applyVenueFilters()
     } catch (error) {
       console.error("load venue list failed:", error)
       wx.showToast({
@@ -101,8 +142,13 @@ Page({
     }
   },
 
-  onTypeChange(event: WechatMiniprogram.CustomEvent<{ name: string | number }>) {
-    const activeType = String(event.detail.name)
+  onTypeTap(event: WechatMiniprogram.BaseEvent) {
+    const { value } = event.currentTarget.dataset as { value?: string }
+    const activeType = typeof value === "string" && value ? value : "all"
+    if (activeType === this.data.activeType) {
+      return
+    }
+
     this.setData({ activeType })
     this.refreshVenueListByActiveType()
   },
@@ -114,6 +160,93 @@ Page({
     } finally {
       this.setData({ loading: false })
     }
+  },
+
+  onSearchInput(event: WechatMiniprogram.BaseEvent) {
+    const detail = event.detail as { value?: string }
+    const rawValue = detail.value
+    const searchKeyword = typeof rawValue === "string" ? rawValue : ""
+    this.setData({ searchKeyword })
+    this.scheduleSearch()
+  },
+
+  onSearchConfirm() {
+    this.cancelScheduledSearch()
+    this.applyVenueFilters()
+  },
+
+  onSearchClear() {
+    this.cancelScheduledSearch()
+    if (!this.data.searchKeyword) {
+      return
+    }
+    this.setData({ searchKeyword: "" })
+    this.applyVenueFilters()
+  },
+
+  scheduleSearch() {
+    this.cancelScheduledSearch()
+    this.searchDebounceTimer = setTimeout(() => {
+      this.applyVenueFilters()
+      this.searchDebounceTimer = 0
+    }, SEARCH_DEBOUNCE_MS) as unknown as number
+  },
+
+  cancelScheduledSearch() {
+    if (!this.searchDebounceTimer) {
+      return
+    }
+    clearTimeout(this.searchDebounceTimer)
+    this.searchDebounceTimer = 0
+  },
+
+  buildFilterOptions(typeOptions: VenueTypeOption[]) {
+    return [
+      {
+        label: "全部",
+        value: "all",
+        icon: "apps-o",
+      },
+      ...typeOptions.map((item) => ({
+        ...item,
+        icon: this.pickTypeIcon(item.label),
+      })),
+    ]
+  },
+
+  pickTypeIcon(label: string) {
+    if (label.indexOf("羽毛") > -1) {
+      return "fire-o"
+    }
+    if (label.indexOf("乒乓") > -1 || label.indexOf("桌球") > -1) {
+      return "points"
+    }
+    if (label.indexOf("足球") > -1) {
+      return "flag-o"
+    }
+    if (label.indexOf("篮球") > -1) {
+      return "shop-o"
+    }
+    if (label.indexOf("网球") > -1) {
+      return "photo-o"
+    }
+    if (label.indexOf("跑") > -1 || label.indexOf("田径") > -1) {
+      return "guide-o"
+    }
+    return "label-o"
+  },
+
+  applyVenueFilters() {
+    const keyword = this.data.searchKeyword.trim().toLowerCase()
+    const filteredList = this.currentVenueList.filter((item) => {
+      if (!keyword) {
+        return true
+      }
+      const name = typeof item.name === "string" ? item.name.toLowerCase() : ""
+      const location = typeof item.location === "string" ? item.location.toLowerCase() : ""
+      return name.indexOf(keyword) > -1 || location.indexOf(keyword) > -1
+    })
+    this.updateDisplayList(filteredList)
   },
 
   updateDisplayList(list: Venue[]) {

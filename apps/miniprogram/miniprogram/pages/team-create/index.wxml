@@ -1,0 +1,119 @@
+<view class="page">
+  <scroll-view class="content with-tabbar-safe-bottom" scroll-y>
+    <view class="header-card">
+      <view class="header-title">发起组队</view>
+      <view class="header-subtitle">预约后可快速发起招募，方便队友加入</view>
+    </view>
+
+    <view wx:if="{{loadingReservations}}" class="loading-wrap">
+      <van-loading size="24px" type="spinner" color="#1989fa" />
+    </view>
+
+    <view wx:elif="{{!reservationOptions.length}}" class="empty-wrap">
+      <van-empty description="暂无可用预约，先去预约后再发起组队" />
+    </view>
+
+    <view wx:else class="form-card">
+      <view class="form-item">
+        <view class="form-label">关联预约</view>
+        <picker
+          mode="selector"
+          range="{{reservationOptions}}"
+          range-key="label"
+          value="{{reservationPickerIndex}}"
+          bindchange="onReservationChange"
+        >
+          <view class="picker-value">{{currentReservationLabel}}</view>
+        </picker>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">标题</view>
+        <input
+          class="input"
+          type="text"
+          maxlength="40"
+          value="{{title}}"
+          placeholder="例如：周六羽毛球双打缺2人"
+          bindinput="onTitleInput"
+        />
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">描述</view>
+        <textarea
+          class="textarea"
+          maxlength="120"
+          value="{{description}}"
+          placeholder="例如：友好局，水平中等，欢迎随时加入"
+          bindinput="onDescriptionInput"
+        />
+      </view>
+
+      <view class="form-row">
+        <view class="form-item form-item--half">
+          <view class="form-label">截止日期</view>
+          <picker mode="date" value="{{deadlineDate}}" bindchange="onDeadlineDateChange">
+            <view class="picker-value">{{deadlineDate}}</view>
+          </picker>
+        </view>
+        <view class="form-item form-item--half">
+          <view class="form-label">截止时间</view>
+          <picker mode="time" value="{{deadlineTimeOnly}}" bindchange="onDeadlineTimeChange">
+            <view class="picker-value">{{deadlineTimeOnly}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-row">
+        <view class="form-item form-item--half">
+          <view class="form-label">总人数(含你)</view>
+          <input
+            class="input"
+            type="number"
+            value="{{requiredCountText}}"
+            maxlength="2"
+            bindinput="onRequiredCountInput"
+          />
+        </view>
+        <view class="form-item form-item--half">
+          <view class="form-label">联系方式类型</view>
+          <picker
+            mode="selector"
+            range="{{contactTypeOptions}}"
+            range-key="label"
+            value="{{contactTypeIndex}}"
+            bindchange="onContactTypeChange"
+          >
+            <view class="picker-value">{{currentContactTypeLabel}}</view>
+          </picker>
+        </view>
+      </view>
+
+      <view class="form-item">
+        <view class="form-label">联系方式</view>
+        <input
+          class="input"
+          type="text"
+          maxlength="50"
+          value="{{contactValue}}"
+          placeholder="请输入手机号/微信/QQ"
+          bindinput="onContactValueInput"
+        />
+      </view>
+
+      <view class="submit-wrap">
+        <van-button
+          type="primary"
+          block
+          custom-class="submit-btn"
+          loading="{{submitting}}"
+          disabled="{{submitting}}"
+          bindtap="onSubmit"
+        >
+          确认发起
+        </van-button>
+      </view>
+    </view>
+  </scroll-view>
+</view>
