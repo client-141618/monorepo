@@ -1,4 +1,5 @@
 import type { AddMiniappBannerPayload, MiniappBanner } from "./type"
+import type { PageRequest, PageResult } from "@/api/base/types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/miniapp-banner"
@@ -10,6 +11,14 @@ export function getMiniappBannerListApi() {
   return request<MiniappBanner[]>({
     url: `${PREFIX}/list`,
     method: "GET",
+  })
+}
+
+export function getMiniappBannerPageApi(data: PageRequest<undefined>) {
+  return request<PageResult<MiniappBanner>>({
+    url: `${PREFIX}/page`,
+    method: "POST",
+    data,
   })
 }
 

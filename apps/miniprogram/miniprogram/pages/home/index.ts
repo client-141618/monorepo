@@ -1,7 +1,7 @@
 import type { Venue } from "../../api/venue/index"
 import { getMiniappBannerListApi } from "../../api/miniapp-banner/index"
 import { getVenueTypeListApi } from "../../api/venue-type/index"
-import { getVenueListApi, getVenueListByTypeApi } from "../../api/venue/index"
+import { getVenuePageApi } from "../../api/venue/index"
 
 type TabValue = "all" | string
 interface VenueTypeOption {
@@ -41,6 +41,11 @@ Page({
     ] as FilterOption[],
     searchKeyword: "",
     displayList: [] as DisplayVenue[],
+    pageNum: 1,
+    pageSize: 10,
+    total: 0,
+    noMore: false,
+    loadingMore: false,
   },
   currentVenueList: [] as Venue[],
   searchDebounceTimer: 0 as number,
@@ -66,11 +71,18 @@ Page({
     this.refreshHomeData(true)
   },
 
+  onScrollToLower() {
+    if (this.data.loading || this.data.loadingMore || this.data.noMore) {
+      return
+    }
+    this.fetchVenueList(this.data.activeType, false)
+  },
+
   async refreshHomeData(fromPullDown = false) {
     this.setData({ loading: true })
     try {
       await Promise.all([this.fetchBannerList(), this.fetchTypeOptions()])
-      await this.fetchVenueList(this.data.activeType)
+      await this.fetchVenueList(this.data.activeType, true)
     } finally {
       if (fromPullDown) {
         this.setData({ refresherTriggered: false })
@@ -126,19 +138,60 @@ Page({
     }
   },
 
-  async fetchVenueList(type: TabValue = "all") {
+  async fetchVenueList(type: TabValue = "all", reset = true) {
+    if (!reset && this.data.loadingMore) {
+      return
+    }
+
+    const nextPageNum = reset ? 1 : this.data.pageNum + 1
+    if (!reset) {
+      this.setData({ loadingMore: true })
+    }
+
     try {
-      const res =
-        type === "all" ? await getVenueListApi() : await getVenueListByTypeApi(String(type))
-      const validList = (res.data || []).filter((item) => item.status === 1)
-      this.currentVenueList = validList
+      const numericTypeId = Number(type)
+      const queryDTO =
+        type === "all" || !Number.isFinite(numericTypeId) || numericTypeId <= 0
+          ? undefined
+          : { typeId: numericTypeId }
+
+      const res = await getVenuePageApi({
+        pageNum: nextPageNum,
+        pageSize: this.data.pageSize,
+        queryDTO,
+      })
+      const records = res.data && Array.isArray(res.data.records) ? res.data.records : []
+      const validList = records.filter((item) => Number(item.status) === 1)
+      const mergedList = reset ? validList : this.currentVenueList.concat(validList)
+      const rawTotal = Number(res.data && res.data.total)
+      const safeTotal = Number.isFinite(rawTotal) ? rawTotal : mergedList.length
+      const noMore = mergedList.length >= safeTotal || records.length < this.data.pageSize
+
+      this.currentVenueList = mergedList
       this.applyVenueFilters()
+      this.setData({
+        pageNum: nextPageNum,
+        total: safeTotal,
+        noMore,
+      })
     } catch (error) {
       console.error("load venue list failed:", error)
       wx.showToast({
         title: "场馆加载失败",
         icon: "none",
       })
+      if (reset) {
+        this.currentVenueList = []
+        this.setData({
+          pageNum: 1,
+          total: 0,
+          noMore: false,
+        })
+      }
+    } finally {
+      if (!reset) {
+        this.setData({ loadingMore: false })
+      }
     }
   },
 
@@ -156,7 +209,7 @@ Page({
   async refreshVenueListByActiveType() {
     this.setData({ loading: true })
     try {
-      await this.fetchVenueList(this.data.activeType)
+      await this.fetchVenueList(this.data.activeType, true)
     } finally {
       this.setData({ loading: false })
     }

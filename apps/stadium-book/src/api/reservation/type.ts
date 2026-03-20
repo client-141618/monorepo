@@ -70,6 +70,8 @@ export interface AdminReservationListQuery {
   endDate?: string
 }
 
+export interface AdminReservationPageQuery extends AdminReservationListQuery {}
+
 export interface AdminCancelReservationPayload {
   reason?: string
 }

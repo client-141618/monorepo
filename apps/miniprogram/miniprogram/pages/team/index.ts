@@ -1,7 +1,7 @@
 import type { TeamRecruitmentListItem } from "../../api/team/index"
 import type { Venue } from "../../api/venue/index"
-import { getTeamDetailApi, getTeamListApi, joinTeamApi } from "../../api/team/index"
-import { getVenueListApi } from "../../api/venue/index"
+import { getTeamDetailApi, getTeamPageApi, joinTeamApi } from "../../api/team/index"
+import { getVenuePageApi } from "../../api/venue/index"
 import { DEFAULT_PROFILE_AVATAR, DEFAULT_PROFILE_NAME } from "../../constants/profile"
 
 type TeamStatusOption = {
@@ -87,8 +87,11 @@ Page({
 
   async loadVenueOptions() {
     try {
-      const res = await getVenueListApi()
-      const sourceList = Array.isArray(res.data) ? res.data : []
+      const res = await getVenuePageApi({
+        pageNum: 1,
+        pageSize: 100,
+      })
+      const sourceList = res.data && Array.isArray(res.data.records) ? res.data.records : []
       const enabledList = sourceList.filter((item) => Number(item.status) === 1)
       const venueOptions = this.buildVenueOptions(enabledList)
       const currentVenueValue = this.getCurrentVenueValue()
@@ -233,8 +236,8 @@ Page({
     })
 
     try {
-      const query = this.buildQuery(nextPageNum, this.data.pageSize)
-      const res = await getTeamListApi(query)
+      const requestData = this.buildPageRequest(nextPageNum, this.data.pageSize)
+      const res = await getTeamPageApi(requestData)
       const pageData = res.data || {}
       const records = Array.isArray(pageData.records) ? pageData.records : []
       const decoratedRecords = await this.decorateRecords(records)
@@ -272,29 +275,28 @@ Page({
     }
   },
 
-  buildQuery(pageNum: number, pageSize: number) {
+  buildPageRequest(pageNum: number, pageSize: number) {
     const venueId = this.getCurrentVenueValue()
     const status = this.getCurrentStatusValue()
-    const query: {
+    const queryDTO: {
       activityDate?: string
       venueId?: number
       status?: number
-      pageNum: number
-      pageSize: number
-    } = {
-      pageNum,
-      pageSize,
-    }
+    } = {}
     if (this.data.filterDate) {
-      query.activityDate = this.data.filterDate
+      queryDTO.activityDate = this.data.filterDate
     }
     if (venueId > 0) {
-      query.venueId = venueId
+      queryDTO.venueId = venueId
     }
     if (status > 0) {
-      query.status = status
+      queryDTO.status = status
     }
-    return query
+    return {
+      pageNum,
+      pageSize,
+      queryDTO,
+    }
   },
 
   async decorateRecords(records: TeamRecruitmentListItem[]) {
@@ -332,16 +334,48 @@ Page({
   },
 
   async fetchMembersByTeam(records: TeamRecruitmentListItem[]) {
-    const teamIds = records
-      .map((item) => Number(item.id))
-      .filter((item) => Number.isFinite(item) && item > 0)
-
     const resultMap = new Map<number, TeamCardItem["memberProfiles"]>()
-    if (!teamIds.length) {
-      return resultMap
-    }
+    const tasks = records.map(async (record) => {
+      const teamId = Number(record.id)
+      if (!Number.isFinite(teamId) || teamId <= 0) {
+        return
+      }
 
-    const tasks = teamIds.map(async (teamId) => {
+      const rawMembers = Array.isArray(record.members) ? record.members : []
+      if (rawMembers.length) {
+        const profiles = rawMembers
+          .map((member) => {
+            const wxUserId = Number(member.wxUserId)
+            if (!Number.isFinite(wxUserId) || wxUserId <= 0) {
+              return null
+            }
+            const username =
+              typeof member.username === "string" && member.username.trim()
+                ? member.username.trim()
+                : DEFAULT_PROFILE_NAME
+            const avatar =
+              typeof member.avatar === "string" && member.avatar.trim()
+                ? member.avatar.trim()
+                : DEFAULT_PROFILE_AVATAR
+            return {
+              wxUserId,
+              username,
+              avatar,
+            }
+          })
+          .filter(
+            (
+              member,
+            ): member is {
+              wxUserId: number
+              username: string
+              avatar: string
+            } => Boolean(member),
+          )
+        resultMap.set(teamId, profiles)
+        return
+      }
+
       try {
         const res = await getTeamDetailApi(teamId)
         const members = res.data && Array.isArray(res.data.members) ? res.data.members : []

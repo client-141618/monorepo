@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import type { NotificationOverview } from "@/api/notification/type"
+import type { NotificationOverview, NotificationQueryPayload } from "@/api/notification/type"
 import type { NotificationType } from "@/constants/notification"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import {
   deleteNotificationApi,
-  getNotificationListApi,
+  getNotificationPageApi,
   publishNotificationApi,
-  queryNotificationListApi,
 } from "@/api/notification"
 import PageContentShell from "@/components/PageContentShell/index.vue"
 import {
@@ -24,9 +23,13 @@ const list = ref<NotificationOverview[]>([])
 const hasLoadedOnce = ref(false)
 const querying = ref(false)
 const hasQueried = ref(false)
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const creatorUserIdFilter = ref("")
 const targetUserIdFilter = ref("")
 const typeFilter = ref<NotificationType | "">("")
+const currentQuery = ref<NotificationQueryPayload | undefined>(undefined)
 
 const hasData = computed(() => list.value.length > 0)
 const emptyDescription = computed(() => {
@@ -35,15 +38,26 @@ const emptyDescription = computed(() => {
 })
 
 const loadList = async () => {
+  pageNum.value = 1
+  currentQuery.value = undefined
+  hasQueried.value = false
+  await fetchPage()
+}
+
+const fetchPage = async () => {
   loading.value = true
   try {
-    const res = await getNotificationListApi()
-    const rawList = Array.isArray(res.data) ? res.data : []
+    const res = await getNotificationPageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      queryDTO: currentQuery.value,
+    })
+    const rawList = Array.isArray(res.data?.records) ? res.data.records : []
     list.value = rawList.map((item) => ({
       ...item,
       targetUserIds: normalizeTargetUserIds(item),
     }))
-    hasQueried.value = false
+    total.value = Number(res.data?.total) || 0
   } finally {
     loading.value = false
     hasLoadedOnce.value = true
@@ -154,18 +168,14 @@ const handleQuery = async () => {
 
   querying.value = true
   try {
-    const res = await queryNotificationListApi({
+    currentQuery.value = {
       adminId,
       userId,
       type: typeFilter.value === "" ? null : typeFilter.value,
-    })
-    const rawList = Array.isArray(res.data) ? res.data : []
-    list.value = rawList.map((item) => ({
-      ...item,
-      targetUserIds: normalizeTargetUserIds(item),
-    }))
+    }
+    pageNum.value = 1
+    await fetchPage()
     hasQueried.value = true
-    hasLoadedOnce.value = true
   } finally {
     querying.value = false
   }
@@ -174,6 +184,12 @@ const handleQuery = async () => {
 const handleReset = async () => {
   resetFilters()
   await loadList()
+}
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  fetchPage()
 }
 
 onMounted(() => {
@@ -187,7 +203,7 @@ onMounted(() => {
       <div class="notification-list-page__header">
         <div class="notification-list-page__title">通知消息</div>
         <div class="notification-list-page__actions">
-          <el-button :loading="loading" @click="loadList">刷新</el-button>
+          <el-button :loading="loading" @click="fetchPage">刷新</el-button>
           <el-button type="primary" @click="goCreate">新建通知</el-button>
         </div>
       </div>
@@ -285,6 +301,16 @@ onMounted(() => {
       v-loading="true"
     />
     <el-empty v-else :description="emptyDescription" />
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
   </PageContentShell>
 </template>
 

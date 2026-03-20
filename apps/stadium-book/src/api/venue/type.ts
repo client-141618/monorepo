@@ -28,3 +28,7 @@ export interface Venue extends VenueBase {
 export interface VenueUpsertPayload extends VenueBase {
   id?: number
 }
+
+export interface VenuePageQuery {
+  typeId?: number
+}

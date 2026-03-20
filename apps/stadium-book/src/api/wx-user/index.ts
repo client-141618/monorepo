@@ -1,4 +1,5 @@
-import type { UpdateWxUserStatusPayload, WxUser, WxUserListQuery } from "./type"
+import type { UpdateWxUserStatusPayload, WxUser, WxUserListQuery, WxUserPageQuery } from "./type"
+import type { PageRequest, PageResult } from "@/api/base/types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/wx-user"
@@ -11,6 +12,14 @@ export function getWxUserListApi(params?: WxUserListQuery) {
     url: `${PREFIX}/list`,
     method: "GET",
     params,
+  })
+}
+
+export function getWxUserPageApi(data: PageRequest<WxUserPageQuery>) {
+  return request<PageResult<WxUser>>({
+    url: `${PREFIX}/page`,
+    method: "POST",
+    data,
   })
 }
 

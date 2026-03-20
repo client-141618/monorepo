@@ -1,11 +1,22 @@
 import { request } from "../request"
 
+interface PageRequest<TQuery> {
+  pageNum: number
+  pageSize: number
+  queryDTO?: TQuery
+}
+
+interface PageResult<TRecord> {
+  records?: TRecord[]
+  total?: number
+  size?: number
+  current?: number
+}
+
 export interface TeamListQuery {
   activityDate?: string
   venueId?: number
   status?: number
-  pageNum?: number
-  pageSize?: number
 }
 
 export interface TeamRecruitmentListItem {
@@ -31,6 +42,7 @@ export interface TeamRecruitmentListItem {
   status?: number
   createTime?: string
   joined?: boolean
+  members?: TeamRecruitmentMember[]
 }
 
 export interface TeamRecruitmentPageResponse {
@@ -67,6 +79,14 @@ export function getTeamListApi(params: TeamListQuery) {
     url: "/api/team/list",
     method: "GET",
     data: params,
+  })
+}
+
+export function getTeamPageApi(data: PageRequest<TeamListQuery>) {
+  return request<PageResult<TeamRecruitmentListItem>>({
+    url: "/api/team/page",
+    method: "POST",
+    data,
   })
 }
 

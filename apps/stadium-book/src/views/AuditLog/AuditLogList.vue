@@ -2,7 +2,7 @@
 import type { OperationAuditLogRecord } from "@/api/operation-audit-log/type"
 import { ElMessage } from "element-plus"
 import { computed, onMounted, ref } from "vue"
-import { getOperationAuditLogListApi } from "@/api/operation-audit-log"
+import { getOperationAuditLogPageApi } from "@/api/operation-audit-log"
 import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageFilterBar from "@/components/PageFilterBar/index.vue"
 import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
@@ -13,6 +13,9 @@ import { parseOptionalNonNegativeInteger } from "@/utils/query"
 
 const tableLoading = ref(false)
 const auditLogList = ref<OperationAuditLogRecord[]>([])
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const eventFilter = ref("")
 const bizIdFilter = ref("")
 const operatorUserIdFilter = ref("")
@@ -30,6 +33,13 @@ const filteredAuditLogList = computed(() => {
       : true
     return matchedEvent && matchedBizId && matchedOperatorUserId
   })
+})
+
+const paginationTotal = computed(() => {
+  if (eventFilter.value || bizIdFilter.value.trim() || operatorUserIdFilter.value.trim()) {
+    return filteredAuditLogList.value.length
+  }
+  return total.value
 })
 
 const getOperationObjectLabel = (row: OperationAuditLogRecord) => {
@@ -73,14 +83,19 @@ const loadAuditLogList = async () => {
 
   try {
     tableLoading.value = true
-    const res = await getOperationAuditLogListApi()
-    auditLogList.value = Array.isArray(res.data) ? res.data : []
+    const res = await getOperationAuditLogPageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    })
+    auditLogList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = Number(res.data?.total) || 0
   } finally {
     tableLoading.value = false
   }
 }
 
 const handleQuery = async () => {
+  pageNum.value = 1
   await loadAuditLogList()
 }
 
@@ -88,7 +103,14 @@ const handleReset = async () => {
   eventFilter.value = ""
   bizIdFilter.value = ""
   operatorUserIdFilter.value = ""
+  pageNum.value = 1
   await loadAuditLogList()
+}
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  loadAuditLogList()
 }
 
 onMounted(() => {
@@ -173,6 +195,16 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="paginationTotal"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
   </PageContentShell>
 </template>
 

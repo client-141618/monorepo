@@ -25,6 +25,9 @@ const props = withDefaults(
     <div class="page-content-shell__body" :class="{ 'page-content-shell__body--scroll': props.bodyScroll }">
       <slot />
     </div>
+    <div v-if="$slots.footer" class="page-content-shell__footer">
+      <slot name="footer" />
+    </div>
   </div>
 </template>
 
@@ -47,5 +50,25 @@ const props = withDefaults(
 
 .page-content-shell__body--scroll {
   overflow: auto;
+}
+
+.page-content-shell__footer {
+  margin-top: 12px;
+  flex: none;
+}
+
+.page-content-shell__footer :deep(.el-pagination) {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative;
+  width: 100%;
+}
+
+.page-content-shell__footer :deep(.el-pagination__total) {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-right: 0;
 }
 </style>

@@ -49,7 +49,7 @@ const getVenueList = async () => {
       activeType.value === "all"
         ? await getVenueListApi()
         : await getVenueListByTypeApi(activeType.value)
-    venueList.value = res.data
+    venueList.value = Array.isArray(res.data) ? res.data : []
   } catch (error) {
     loadFailed.value = true
     const msg = error instanceof Error ? error.message : "加载失败"

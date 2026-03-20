@@ -56,9 +56,11 @@
     class="content with-tabbar-safe-bottom"
     scroll-y
     enable-flex
+    lower-threshold="200"
     refresher-enabled
     refresher-triggered="{{refresherTriggered}}"
     bindrefresherrefresh="onRefresherRefresh"
+    bindscrolltolower="onScrollToLower"
   >
     <view class="venue-list">
       <block wx:if="{{displayList.length}}">
@@ -91,6 +93,8 @@
         </block>
       </block>
       <van-empty wx:else description="暂无可预约场地" />
+      <view wx:if="{{loadingMore}}" class="load-more">加载中...</view>
+      <view wx:elif="{{noMore && displayList.length}}" class="load-more load-more--end">已经到底了</view>
     </view>
   </scroll-view>
 </view>

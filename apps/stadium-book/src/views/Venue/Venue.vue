@@ -11,7 +11,7 @@ import {
   batchDisableVenueApi,
   batchEnableVenueApi,
   deleteVenueApi,
-  getVenueListApi,
+  getVenuePageApi,
   updateVenueStatusApi,
 } from "@/api/venue"
 import PageContentShell from "@/components/PageContentShell/index.vue"
@@ -21,6 +21,9 @@ import AddVenue from "./AddVenue.vue"
 const venueList = ref<Venue[]>([])
 const tableLoading = ref(false)
 const hasLoadedOnce = ref(false)
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const createDialogVisible = ref(false)
 const venueDialogMode = ref<"create" | "edit">("create")
 const editingVenue = ref<Venue | null>(null)
@@ -87,6 +90,7 @@ const handleCreate = () => {
 }
 
 const handleRefresh = async () => {
+  pageNum.value = 1
   await getVenueList()
 }
 
@@ -313,12 +317,23 @@ const handleBeforeStatusChange = async (row: Venue) => {
 const getVenueList = async () => {
   try {
     tableLoading.value = true
-    const res = await getVenueListApi()
-    venueList.value = res.data
+    const res = await getVenuePageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    })
+    const pageData = res.data
+    venueList.value = Array.isArray(pageData?.records) ? pageData.records : []
+    total.value = Number(pageData?.total) || 0
   } finally {
     tableLoading.value = false
     hasLoadedOnce.value = true
   }
+}
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  getVenueList()
 }
 
 onMounted(() => {
@@ -537,6 +552,16 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
   </PageContentShell>
 </template>
 

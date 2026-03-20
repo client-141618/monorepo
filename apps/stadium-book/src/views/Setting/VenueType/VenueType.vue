@@ -6,7 +6,7 @@ import { computed, onMounted, reactive, ref } from "vue"
 import {
   addVenueTypeApi,
   deleteVenueTypeApi,
-  getVenueTypeListApi,
+  getVenueTypePageApi,
   updateVenueTypeApi,
 } from "@/api/venue-type"
 import PageContentShell from "@/components/PageContentShell/index.vue"
@@ -20,6 +20,9 @@ const submitLoading = ref(false)
 const dialogMode = ref<DialogMode>("create")
 const currentEditId = ref<number | null>(null)
 const venueTypeList = ref<VenueType[]>([])
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const formRef = ref<FormInstance>()
 
 const form = reactive({
@@ -37,8 +40,12 @@ const dialogTitle = computed(() =>
 const getVenueTypeList = async () => {
   try {
     tableLoading.value = true
-    const res = await getVenueTypeListApi()
-    venueTypeList.value = res.data
+    const res = await getVenueTypePageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    })
+    venueTypeList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = Number(res.data?.total) || 0
   } finally {
     tableLoading.value = false
   }
@@ -114,6 +121,12 @@ const handleDelete = async (row: VenueType) => {
 onMounted(() => {
   getVenueTypeList()
 })
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  getVenueTypeList()
+}
 </script>
 
 <template>
@@ -153,6 +166,16 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
 
     <el-dialog
       v-model="dialogVisible"

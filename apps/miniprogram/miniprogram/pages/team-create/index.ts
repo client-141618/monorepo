@@ -1,5 +1,5 @@
 import type { UserReservationRecord } from "../../api/reservation/index"
-import { getReservationListByUserApi } from "../../api/reservation/index"
+import { getReservationPageByUserApi } from "../../api/reservation/index"
 import { createTeamApi } from "../../api/team/index"
 
 type ReservationOption = {
@@ -78,8 +78,11 @@ Page({
   async loadReservations() {
     this.setData({ loadingReservations: true })
     try {
-      const res = await getReservationListByUserApi()
-      const sourceList = Array.isArray(res.data) ? res.data : []
+      const res = await getReservationPageByUserApi({
+        pageNum: 1,
+        pageSize: 100,
+      })
+      const sourceList = res.data && Array.isArray(res.data.records) ? res.data.records : []
       const options = this.buildReservationOptions(sourceList)
 
       if (!options.length) {

@@ -4,6 +4,7 @@ import type {
   NotificationQueryPayload,
   NotificationUpsertPayload,
 } from "./type"
+import type { PageRequest, PageResult } from "@/api/base/types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/notification"
@@ -12,6 +13,14 @@ export function getNotificationListApi() {
   return request<NotificationOverview[]>({
     url: `${PREFIX}/list`,
     method: "GET",
+  })
+}
+
+export function getNotificationPageApi(data: PageRequest<NotificationQueryPayload>) {
+  return request<PageResult<NotificationOverview>>({
+    url: `${PREFIX}/page`,
+    method: "POST",
+    data,
   })
 }
 

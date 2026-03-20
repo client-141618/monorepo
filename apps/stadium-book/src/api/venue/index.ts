@@ -1,4 +1,5 @@
-import type { Venue, VenueUpsertPayload } from "./type"
+import type { Venue, VenuePageQuery, VenueUpsertPayload } from "./type"
+import type { PageRequest, PageResult } from "@/api/base/types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/venue"
@@ -10,6 +11,14 @@ export function getVenueListApi() {
   return request<Venue[]>({
     url: `${PREFIX}/list`,
     method: "GET",
+  })
+}
+
+export function getVenuePageApi(data: PageRequest<VenuePageQuery>) {
+  return request<PageResult<Venue>>({
+    url: `${PREFIX}/page`,
+    method: "POST",
+    data,
   })
 }
 

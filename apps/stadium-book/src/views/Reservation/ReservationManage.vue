@@ -3,7 +3,7 @@ import type { AdminReservationRecord } from "@/api/reservation/type"
 import { ElMessage } from "element-plus"
 import { onMounted, ref } from "vue"
 import { useRoute } from "vue-router"
-import { getReservationListAllAdminApi } from "@/api/reservation"
+import { getReservationPageAllAdminApi } from "@/api/reservation"
 import { getVenueListApi } from "@/api/venue"
 import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageFilterBar from "@/components/PageFilterBar/index.vue"
@@ -20,6 +20,9 @@ import { formatVenueCourtInfo } from "@/utils/venue"
 const route = useRoute()
 const loading = ref(false)
 const reservationList = ref<AdminReservationRecord[]>([])
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const venueNameMap = ref<Record<number, string>>({})
 const userIdFilter = ref("")
 const dateRangeFilter = ref<[string, string] | null>(null)
@@ -53,22 +56,28 @@ const loadReservationList = async () => {
   loading.value = true
   try {
     const [reservationRes] = await Promise.all([
-      getReservationListAllAdminApi({
-        userId: parsedUserId.value ?? undefined,
-        startDate: dateRangeFilter.value?.[0] || undefined,
-        endDate: dateRangeFilter.value?.[1] || undefined,
-        status: statusFilter.value === "" ? undefined : statusFilter.value,
+      getReservationPageAllAdminApi({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        queryDTO: {
+          userId: parsedUserId.value ?? undefined,
+          startDate: dateRangeFilter.value?.[0] || undefined,
+          endDate: dateRangeFilter.value?.[1] || undefined,
+          status: statusFilter.value === "" ? undefined : statusFilter.value,
+        },
       }),
       loadVenueNameMap(),
     ])
     const res = reservationRes
-    reservationList.value = Array.isArray(res.data) ? res.data : []
+    reservationList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = Number(res.data?.total) || 0
   } finally {
     loading.value = false
   }
 }
 
 const handleQuery = async () => {
+  pageNum.value = 1
   await loadReservationList()
 }
 
@@ -76,7 +85,14 @@ const handleReset = async () => {
   userIdFilter.value = ""
   dateRangeFilter.value = null
   statusFilter.value = ""
+  pageNum.value = 1
   await loadReservationList()
+}
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  loadReservationList()
 }
 
 onMounted(() => {
@@ -180,6 +196,16 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
   </PageContentShell>
 </template>
 

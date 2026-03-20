@@ -1,5 +1,14 @@
 <view class="page">
-  <scroll-view class="content with-tabbar-safe-bottom" scroll-y>
+  <scroll-view
+    class="content with-tabbar-safe-bottom"
+    scroll-y
+    enable-flex
+    lower-threshold="200"
+    refresher-enabled
+    refresher-triggered="{{refresherTriggered}}"
+    bindrefresherrefresh="onRefresherRefresh"
+    bindscrolltolower="onScrollToLower"
+  >
     <view wx:if="{{loading}}" class="loading-wrap">
       <van-loading size="24px" type="spinner" color="#1989fa" />
     </view>
@@ -17,6 +26,8 @@
           </view>
         </view>
       </block>
+      <view wx:if="{{loadingMore}}" class="load-more">加载中...</view>
+      <view wx:elif="{{noMore}}" class="load-more load-more--end">已经到底了</view>
     </view>
 
     <view wx:else class="empty-wrap">

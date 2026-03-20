@@ -7,7 +7,7 @@ import { computed, onMounted, ref } from "vue"
 import {
   addMiniappBannerApi,
   deleteMiniappBannerApi,
-  getMiniappBannerListApi,
+  getMiniappBannerPageApi,
 } from "@/api/miniapp-banner"
 import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
@@ -16,6 +16,9 @@ import { formatDateTimeText } from "@/utils/format"
 const tableLoading = ref(false)
 const uploadLoading = ref(false)
 const bannerList = ref<MiniappBanner[]>([])
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 
 const uploadHeaders = computed(() => {
   const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
@@ -27,8 +30,12 @@ const uploadHeaders = computed(() => {
 const getBannerList = async () => {
   try {
     tableLoading.value = true
-    const res = await getMiniappBannerListApi()
-    bannerList.value = Array.isArray(res.data) ? res.data : []
+    const res = await getMiniappBannerPageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    })
+    bannerList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = Number(res.data?.total) || 0
   } finally {
     tableLoading.value = false
   }
@@ -97,6 +104,12 @@ const handleDelete = async (row: MiniappBanner) => {
 onMounted(() => {
   getBannerList()
 })
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  getBannerList()
+}
 </script>
 
 <template>
@@ -158,6 +171,16 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
   </PageContentShell>
 </template>
 

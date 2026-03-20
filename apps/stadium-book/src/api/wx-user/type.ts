@@ -21,3 +21,5 @@ export interface WxUserListQuery {
   userId?: number
   status?: WxUser["status"]
 }
+
+export interface WxUserPageQuery extends WxUserListQuery {}

@@ -4,7 +4,7 @@ import type { WxUserStatus } from "@/constants/wx-user"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
-import { getWxUserListApi, updateWxUserStatusApi } from "@/api/wx-user"
+import { getWxUserPageApi, updateWxUserStatusApi } from "@/api/wx-user"
 import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageFilterBar from "@/components/PageFilterBar/index.vue"
 import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
@@ -17,6 +17,9 @@ const router = useRouter()
 const tableLoading = ref(false)
 const actionLoadingId = ref<number | null>(null)
 const wxUserList = ref<WxUser[]>([])
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const userIdFilter = ref("")
 const statusFilter = ref<WxUserStatus | "">("")
 
@@ -91,24 +94,37 @@ const getWxUserList = async () => {
 
   try {
     tableLoading.value = true
-    const res = await getWxUserListApi({
-      userId: parsedUserId.value ?? undefined,
-      status: statusFilter.value === "" ? undefined : statusFilter.value,
+    const res = await getWxUserPageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      queryDTO: {
+        userId: parsedUserId.value ?? undefined,
+        status: statusFilter.value === "" ? undefined : statusFilter.value,
+      },
     })
-    wxUserList.value = Array.isArray(res.data) ? res.data : []
+    wxUserList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = Number(res.data?.total) || 0
   } finally {
     tableLoading.value = false
   }
 }
 
 const handleQuery = async () => {
+  pageNum.value = 1
   await getWxUserList()
 }
 
 const handleReset = async () => {
   userIdFilter.value = ""
   statusFilter.value = ""
+  pageNum.value = 1
   await getWxUserList()
+}
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  getWxUserList()
 }
 
 const handleChangeStatus = async (row: WxUser, status: WxUserStatus) => {
@@ -240,6 +256,16 @@ onMounted(() => {
         </el-table>
       </div>
     </el-card>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, pager"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
   </PageContentShell>
 </template>
 
