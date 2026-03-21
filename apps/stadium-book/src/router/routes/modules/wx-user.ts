@@ -22,6 +22,7 @@ const wxUser: RouteRecordRaw[] = [
     ],
     meta: {
       order: 2,
+      lockOuterScroll: true,
     },
   },
 ]

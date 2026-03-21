@@ -11,6 +11,7 @@ import {
   getNotificationByIdApi,
   updateNotificationApi,
 } from "@/api/notification"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import {
   getNotificationTypeLabel,
   NOTIFICATION_PUBLISH_STATUS_OPTIONS,
@@ -181,25 +182,27 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="notification-form-view" v-loading="loading">
-    <div v-if="isDetail" class="notification-form-view__header notification-form-view__header--detail">
-      <div class="notification-form-view__back-row">
-        <el-button @click="backToList">返回列表</el-button>
+  <PageContentShell class="notification-form-view" :body-scroll="true" v-loading="loading">
+    <template #header>
+      <div v-if="isDetail" class="notification-form-view__header notification-form-view__header--detail">
+        <div class="notification-form-view__back-row">
+          <el-button @click="backToList">返回列表</el-button>
+        </div>
+        <div class="notification-form-view__title notification-form-view__title--center">
+          {{ pageTitle }}
+        </div>
       </div>
-      <div class="notification-form-view__title notification-form-view__title--center">
-        {{ pageTitle }}
-      </div>
-    </div>
 
-    <div v-else class="notification-form-view__header">
-      <el-button @click="backToList">返回列表</el-button>
-      <div class="notification-form-view__title">{{ pageTitle }}</div>
-      <div class="notification-form-view__spacer">
-        <el-button type="primary" :loading="submitting" @click="submit">
-          {{ isEdit ? "保存" : "创建" }}
-        </el-button>
+      <div v-else class="notification-form-view__header">
+        <el-button @click="backToList">返回列表</el-button>
+        <div class="notification-form-view__title">{{ pageTitle }}</div>
+        <div class="notification-form-view__spacer">
+          <el-button type="primary" :loading="submitting" @click="submit">
+            {{ isEdit ? "保存" : "创建" }}
+          </el-button>
+        </div>
       </div>
-    </div>
+    </template>
 
     <el-form
       v-if="!isReadonly"
@@ -289,14 +292,10 @@ onBeforeUnmount(() => {
       </div>
       <article class="notification-detail__content" v-html="safeDetailHtml" />
     </div>
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
-.notification-form-view {
-  padding: 16px;
-}
-
 .notification-form-view__header {
   display: grid;
   grid-template-columns: auto 1fr auto;

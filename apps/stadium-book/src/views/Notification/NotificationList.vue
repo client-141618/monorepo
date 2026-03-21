@@ -1,20 +1,21 @@
 <script setup lang="ts">
-import type { NotificationOverview } from "@/api/notification/type"
+import type { NotificationOverview, NotificationQueryPayload } from "@/api/notification/type"
 import type { NotificationType } from "@/constants/notification"
 import { ElMessage, ElMessageBox } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
 import {
   deleteNotificationApi,
-  getNotificationListApi,
+  getNotificationPageApi,
   publishNotificationApi,
-  queryNotificationListApi,
 } from "@/api/notification"
+import PageContentShell from "@/components/PageContentShell/index.vue"
 import {
   getNotificationTypeLabel,
   NOTIFICATION_TYPE_OPTIONS,
 } from "@/constants/notification"
 import { VenueRoute } from "@/router/routes/RouteNameEnum"
+import { formatDateTimeText } from "@/utils/format"
 
 const router = useRouter()
 const loading = ref(false)
@@ -22,9 +23,13 @@ const list = ref<NotificationOverview[]>([])
 const hasLoadedOnce = ref(false)
 const querying = ref(false)
 const hasQueried = ref(false)
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const creatorUserIdFilter = ref("")
 const targetUserIdFilter = ref("")
 const typeFilter = ref<NotificationType | "">("")
+const currentQuery = ref<NotificationQueryPayload | undefined>(undefined)
 
 const hasData = computed(() => list.value.length > 0)
 const emptyDescription = computed(() => {
@@ -33,15 +38,26 @@ const emptyDescription = computed(() => {
 })
 
 const loadList = async () => {
+  pageNum.value = 1
+  currentQuery.value = undefined
+  hasQueried.value = false
+  await fetchPage()
+}
+
+const fetchPage = async () => {
   loading.value = true
   try {
-    const res = await getNotificationListApi()
-    const rawList = Array.isArray(res.data) ? res.data : []
+    const res = await getNotificationPageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+      queryDTO: currentQuery.value,
+    })
+    const rawList = Array.isArray(res.data?.records) ? res.data.records : []
     list.value = rawList.map((item) => ({
       ...item,
       targetUserIds: normalizeTargetUserIds(item),
     }))
-    hasQueried.value = false
+    total.value = Number(res.data?.total) || 0
   } finally {
     loading.value = false
     hasLoadedOnce.value = true
@@ -81,11 +97,6 @@ const handleDelete = async (id: number) => {
   await deleteNotificationApi(id)
   ElMessage.success("删除成功")
   await loadList()
-}
-
-const formatTime = (time?: string | null) => {
-  if (!time) return "--"
-  return time.replace("T", " ")
 }
 
 const normalizeTargetUserIds = (item: NotificationOverview): number[] => {
@@ -157,18 +168,14 @@ const handleQuery = async () => {
 
   querying.value = true
   try {
-    const res = await queryNotificationListApi({
+    currentQuery.value = {
       adminId,
       userId,
       type: typeFilter.value === "" ? null : typeFilter.value,
-    })
-    const rawList = Array.isArray(res.data) ? res.data : []
-    list.value = rawList.map((item) => ({
-      ...item,
-      targetUserIds: normalizeTargetUserIds(item),
-    }))
+    }
+    pageNum.value = 1
+    await fetchPage()
     hasQueried.value = true
-    hasLoadedOnce.value = true
   } finally {
     querying.value = false
   }
@@ -179,52 +186,60 @@ const handleReset = async () => {
   await loadList()
 }
 
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  fetchPage()
+}
+
 onMounted(() => {
   loadList()
 })
 </script>
 
 <template>
-  <div class="notification-list-page">
-    <div class="notification-list-page__header">
-      <div class="notification-list-page__title">通知消息</div>
-      <div class="notification-list-page__actions">
-        <el-button :loading="loading" @click="loadList">刷新</el-button>
-        <el-button type="primary" @click="goCreate">新建通知</el-button>
+  <PageContentShell class="notification-list-page" :body-scroll="true">
+    <template #header>
+      <div class="notification-list-page__header">
+        <div class="notification-list-page__title">通知消息</div>
+        <div class="notification-list-page__actions">
+          <el-button :loading="loading" @click="fetchPage">刷新</el-button>
+          <el-button type="primary" @click="goCreate">新建通知</el-button>
+        </div>
       </div>
-    </div>
 
-    <div class="notification-list-page__filters">
-      <el-input
-        v-model="creatorUserIdFilter"
-        clearable
-        placeholder="创建者ID"
-        class="notification-list-page__filter-input"
-      />
-      <el-input
-        v-model="targetUserIdFilter"
-        clearable
-        placeholder="目标用户ID"
-        class="notification-list-page__filter-input"
-      />
-      <el-select
-        v-model="typeFilter"
-        clearable
-        placeholder="通知类型"
-        class="notification-list-page__filter-select"
-      >
-        <el-option
-          v-for="item in NOTIFICATION_TYPE_OPTIONS"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
+      <div class="notification-list-page__filters">
+        <el-input
+          v-model="creatorUserIdFilter"
+          clearable
+          placeholder="创建者ID"
+          class="notification-list-page__filter-input"
         />
-      </el-select>
-      <div class="notification-list-page__filter-actions">
-        <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" :loading="querying" @click="handleQuery">查询</el-button>
+        <el-input
+          v-model="targetUserIdFilter"
+          clearable
+          placeholder="目标用户ID"
+          class="notification-list-page__filter-input"
+        />
+        <el-select
+          v-model="typeFilter"
+          clearable
+          placeholder="通知类型"
+          class="notification-list-page__filter-select"
+        >
+          <el-option
+            v-for="item in NOTIFICATION_TYPE_OPTIONS"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <div class="notification-list-page__filter-actions">
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" :loading="querying" @click="handleQuery">查询</el-button>
+        </div>
       </div>
-    </div>
+    </template>
 
     <div
       v-if="hasData"
@@ -243,7 +258,9 @@ onMounted(() => {
             <el-tag size="small" :type="item.publishStatus === 1 ? 'success' : 'info'">
               {{ item.publishStatus === 1 ? "已发布" : "草稿" }}
             </el-tag>
-            <span class="notification-card__time">{{ formatTime(item.publishTime || item.createTime) }}</span>
+            <span class="notification-card__time">
+              {{ formatDateTimeText(item.publishTime || item.createTime) }}
+            </span>
           </div>
         </div>
         <div class="notification-card__body">
@@ -284,14 +301,20 @@ onMounted(() => {
       v-loading="true"
     />
     <el-empty v-else :description="emptyDescription" />
-  </div>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
-.notification-list-page {
-  padding: 16px;
-}
-
 .notification-list-page__header {
   display: flex;
   justify-content: space-between;

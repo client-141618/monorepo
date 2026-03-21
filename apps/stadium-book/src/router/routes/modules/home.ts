@@ -39,6 +39,7 @@ const home: RouteRecordRaw[] = [
     ],
     meta: {
       order: 0,
+      lockOuterScroll: true,
     },
   },
 ]

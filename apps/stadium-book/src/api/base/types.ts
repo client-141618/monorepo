@@ -3,3 +3,22 @@ export interface RegisterParams {
   phone: string
   password: string
 }
+
+export interface ForgotPasswordParams {
+  phone: string
+  smsCode: string
+  newPassword: string
+}
+
+export interface PageRequest<TQuery = undefined> {
+  pageNum: number
+  pageSize: number
+  queryDTO?: TQuery
+}
+
+export interface PageResult<TRecord> {
+  records?: TRecord[]
+  total?: number
+  size?: number
+  current?: number
+}

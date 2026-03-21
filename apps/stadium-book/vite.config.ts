@@ -26,6 +26,7 @@ export default defineConfig({
     UnoCSS(),
   ],
   server: {
+    host: '0.0.0.0',
     port: 3344,
     open: true,
     proxy: {
@@ -35,6 +36,7 @@ export default defineConfig({
         // rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
+    allowedHosts: ['front.client141618.xyz'],
   },
   resolve: {
     alias: {

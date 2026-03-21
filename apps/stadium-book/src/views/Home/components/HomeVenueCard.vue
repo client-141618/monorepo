@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Venue } from "@/api/venue/type"
 import { computed } from "vue"
+import { formatCurrencyFromFen } from "@/utils/format"
 
 const props = defineProps<{
   venue: Venue
@@ -22,9 +23,9 @@ const venueTypeLabel = computed(() => {
 })
 
 const priceLabel = computed(() => {
-  const cents = Number(props.venue.pricePerHour)
-  if (!Number.isFinite(cents)) return "--"
-  return `¥${(cents / 100).toFixed(2)}/小时`
+  const price = formatCurrencyFromFen(props.venue.pricePerHour)
+  if (price === "--") return "--"
+  return `${price}/小时`
 })
 
 const openHours = computed(() => {

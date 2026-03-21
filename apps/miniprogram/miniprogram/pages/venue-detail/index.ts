@@ -1,4 +1,5 @@
 import type {
+  CreateReservationResult,
   ReservationAvailabilityData,
   ReservationAvailabilitySlot,
 } from "../../api/reservation/index"
@@ -328,18 +329,22 @@ Page({
       mask: true,
     })
     try {
-      await createReservationApi({
+      const createRes = await createReservationApi({
         venueId: this.data.venueId,
         courtId,
         bookingDate: this.data.selectedDate,
         slotKeys,
         clientRequestId: this.createClientRequestId(),
       })
+      const createdReservationId = this.resolveCreatedReservationId(createRes.data)
       wx.showToast({ title: "预约成功", icon: "success" })
       await this.loadPageData({
         preferredDate: preservedSelectedDate,
         selectedCells: preservedSelectedCells,
       })
+      if (createdReservationId > 0) {
+        await this.promptCreateTeamAfterReservation(createdReservationId)
+      }
     } catch (error) {
       console.error("create reservation failed:", error)
       const message = (error as Error).message || "预约失败"
@@ -641,6 +646,43 @@ Page({
 
   createClientRequestId() {
     return `req-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  },
+
+  resolveCreatedReservationId(result: CreateReservationResult | undefined) {
+    if (!result || !Array.isArray(result.reservationIds) || !result.reservationIds.length) {
+      return 0
+    }
+    const firstId = Number(result.reservationIds[0])
+    if (!Number.isFinite(firstId) || firstId <= 0) {
+      return 0
+    }
+    return firstId
+  },
+
+  promptCreateTeamAfterReservation(reservationId: number) {
+    const venueName = this.data.venue && this.data.venue.name ? this.data.venue.name : "场馆"
+    const suggestedTitle = `${venueName} 缺人组队`
+    return new Promise<void>((resolve) => {
+      wx.showModal({
+        title: "预约成功",
+        content: "是否立即发起组队，邀请其他用户加入？",
+        confirmText: "去发起",
+        cancelText: "稍后再说",
+        success: (res) => {
+          if (res.confirm) {
+            wx.navigateTo({
+              url:
+                `/pages/team-create/index?reservationId=${reservationId}` +
+                `&suggestTitle=${encodeURIComponent(suggestedTitle)}`,
+            })
+          }
+          resolve()
+        },
+        fail: () => {
+          resolve()
+        },
+      })
+    })
   },
 
   confirmPromise(lines: string[]) {

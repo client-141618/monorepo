@@ -1,0 +1,172 @@
+<view class="page">
+  <view class="filter-panel">
+    <view class="filter-header">
+      <view class="title-wrap">
+        <view class="title">组队大厅</view>
+        <view class="subtitle">快速加入同城队伍</view>
+      </view>
+      <van-button
+        type="primary"
+        size="small"
+        custom-class="create-btn"
+        bindtap="onTapCreateTeam"
+      >
+        发起组队
+      </van-button>
+    </view>
+
+    <view class="filter-grid">
+      <view class="filter-item">
+        <view class="filter-label">活动日期</view>
+        <picker mode="date" value="{{filterDate}}" bindchange="onDateChange">
+          <view class="filter-value {{filterDate ? '' : 'is-placeholder'}}">
+            {{filterDate || "不限日期"}}
+          </view>
+        </picker>
+        <text wx:if="{{filterDate}}" class="clear-date" bindtap="onClearDate">清除</text>
+      </view>
+
+      <view class="filter-item">
+        <view class="filter-label">场馆</view>
+        <picker
+          mode="selector"
+          range="{{venueOptions}}"
+          range-key="label"
+          value="{{venuePickerIndex}}"
+          bindchange="onVenueChange"
+        >
+          <view class="filter-value">{{currentVenueLabel}}</view>
+        </picker>
+      </view>
+
+      <view class="filter-item">
+        <view class="filter-label">状态</view>
+        <picker
+          mode="selector"
+          range="{{statusOptions}}"
+          range-key="label"
+          value="{{statusPickerIndex}}"
+          bindchange="onStatusChange"
+        >
+          <view class="filter-value">{{currentStatusLabel}}</view>
+        </picker>
+      </view>
+    </view>
+  </view>
+
+  <scroll-view
+    class="content with-tabbar-safe-bottom"
+    scroll-y
+    enable-flex
+    lower-threshold="200"
+    refresher-enabled
+    refresher-triggered="{{refresherTriggered}}"
+    bindrefresherrefresh="onRefresherRefresh"
+    bindscrolltolower="onScrollToLower"
+  >
+    <view wx:if="{{loading && !teamList.length}}" class="loading-wrap">
+      <van-loading size="24px" type="spinner" color="#1989fa" />
+    </view>
+
+    <view wx:elif="{{teamList.length}}" class="team-list">
+      <block wx:for="{{teamList}}" wx:key="id">
+        <view class="team-card">
+          <view class="team-card__head">
+            <view class="team-card__title">{{item.title || "组队活动"}}</view>
+            <van-tag type="{{item.statusType}}" plain>{{item.statusText}}</van-tag>
+          </view>
+
+          <view class="team-card__line">
+            <text class="line-key">场馆/场地</text>
+            <text class="line-value">{{item.venueName || "待定"}} {{item.courtText}}</text>
+          </view>
+          <view class="team-card__line">
+            <text class="line-key">活动日期</text>
+            <text class="line-value">{{item.activityDate || "--"}}</text>
+          </view>
+          <view class="team-card__line">
+            <text class="line-key">截止时间</text>
+            <text class="line-value">{{item.deadlineText}}</text>
+          </view>
+          <view class="team-card__line">
+            <text class="line-key">人数进度</text>
+            <text class="line-value line-value--strong">{{item.progressText}}</text>
+          </view>
+          <view class="team-card__line">
+            <text class="line-key">联系方式</text>
+            <text class="line-value">{{item.contactMasked || "加入后可见"}}</text>
+          </view>
+
+          <view class="member-strip">
+            <scroll-view
+              class="member-scroll"
+              scroll-x
+              enable-flex
+              show-scrollbar="{{false}}"
+            >
+              <view class="member-scroll__inner">
+                <block wx:if="{{item.memberProfiles.length}}">
+                  <block wx:for="{{item.memberProfiles}}" wx:for-item="member" wx:key="wxUserId">
+                    <view class="member-card">
+                      <image class="member-avatar" mode="aspectFill" src="{{member.avatar}}" />
+                      <view class="member-name">{{member.username}}</view>
+                    </view>
+                  </block>
+                </block>
+                <view wx:else class="member-strip__empty">暂无成员</view>
+              </view>
+            </scroll-view>
+          </view>
+
+          <view class="team-card__actions">
+            <van-button
+              wx:if="{{item.canClose}}"
+              type="warning"
+              size="small"
+              custom-class="close-btn"
+              loading="{{actionLoadingId === item.id}}"
+              disabled="{{actionLoadingId > 0}}"
+              data-team-id="{{item.id}}"
+              bindtap="onTapCloseTeam"
+            >
+              关闭组队
+            </van-button>
+            <van-button
+              wx:elif="{{item.canQuit}}"
+              type="danger"
+              size="small"
+              custom-class="quit-btn"
+              loading="{{actionLoadingId === item.id}}"
+              disabled="{{actionLoadingId > 0}}"
+              data-team-id="{{item.id}}"
+              bindtap="onTapQuitTeam"
+            >
+              退出
+            </van-button>
+            <van-button
+              wx:elif="{{item.canJoin}}"
+              type="primary"
+              size="small"
+              custom-class="join-btn"
+              loading="{{actionLoadingId === item.id}}"
+              disabled="{{actionLoadingId > 0}}"
+              data-team-id="{{item.id}}"
+              bindtap="onTapJoinTeam"
+            >
+              加入
+            </van-button>
+            <view wx:else class="action-placeholder">{{item.actionLabel}}</view>
+          </view>
+        </view>
+      </block>
+
+      <view wx:if="{{loadingMore}}" class="load-more">加载中...</view>
+      <view wx:elif="{{noMore}}" class="load-more load-more--end">已经到底了</view>
+    </view>
+
+    <view wx:else class="empty-wrap">
+      <view wx:if="{{errorText}}" class="error-tip">{{errorText}}</view>
+      <van-empty description="暂无组队信息" />
+    </view>
+  </scroll-view>
+</view>

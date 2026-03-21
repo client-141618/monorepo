@@ -35,7 +35,7 @@ const form = defineModel<VenueFormModel>("form", { required: true })
             :controls="false"
             class="full-width-input-number"
           />
-          <div class="venue-form__inline-hint">单位：分钟，起止时间需按该单元对齐。</div>
+          <div class="venue-form__inline-hint">单位：分钟</div>
         </el-form-item>
       </el-col>
     </el-row>

@@ -7,6 +7,7 @@ export enum SettingRoute {
   Setting = "Setting",
   My = "My",
   VenueType = "VenueType",
+  MiniappBanner = "MiniappBanner",
 }
 
 export enum VenueRoute {
@@ -17,6 +18,18 @@ export enum VenueRoute {
   NotificationDetail = "NotificationDetail",
 }
 
+export enum ReservationRoute {
+  ReservationManage = "ReservationManage",
+}
+
+export enum TeamRoute {
+  TeamManage = "TeamManage",
+}
+
 export enum WxUserRoute {
   WxUserList = "WxUserList",
+}
+
+export enum AuditLogRoute {
+  AuditLogList = "AuditLogList",
 }

@@ -1,5 +1,7 @@
 import type {
   AdminCancelReservationPayload,
+  AdminReservationListQuery,
+  AdminReservationPageQuery,
   AdminReservationRecord,
   CreateReservationBlockPayload,
   CreateReservationPayload,
@@ -8,6 +10,7 @@ import type {
   ReservationBlockRecord,
   VenueCheckInQrData,
 } from "./type"
+import type { PageRequest, PageResult } from "@/api/base/types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/reservation"
@@ -35,6 +38,22 @@ export function getReservationListByVenueAndDateAdminApi(venueId: number, date: 
   return request<AdminReservationRecord[]>({
     url: `${PREFIX}/admin/venue/${venueId}/date/${date}`,
     method: "GET",
+  })
+}
+
+export function getReservationListAllAdminApi(params?: AdminReservationListQuery) {
+  return request<AdminReservationRecord[]>({
+    url: `${PREFIX}/admin/all`,
+    method: "GET",
+    params,
+  })
+}
+
+export function getReservationPageAllAdminApi(data: PageRequest<AdminReservationPageQuery>) {
+  return request<PageResult<AdminReservationRecord>>({
+    url: `${PREFIX}/admin/page`,
+    method: "POST",
+    data,
   })
 }
 

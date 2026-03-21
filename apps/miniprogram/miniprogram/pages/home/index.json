@@ -6,8 +6,7 @@
   "backgroundColor": "#f6f7fb",
   "backgroundTextStyle": "dark",
   "usingComponents": {
-    "van-tabs": "@vant/weapp/tabs/index",
-    "van-tab": "@vant/weapp/tab/index",
+    "van-icon": "@vant/weapp/icon/index",
     "van-progress": "@vant/weapp/progress/index",
     "van-empty": "@vant/weapp/empty/index"
   }

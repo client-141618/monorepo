@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import type { TencentMapReverseGeocodeResult } from "@/api/tencent-map/type"
+import { Location } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { BaseMap, MultiCircle, MultiMarker } from "tlbs-map-vue"
-import { computed, shallowRef, watch } from "vue"
+import { computed, ref, shallowRef, watch } from "vue"
 import { reverseGeocodeTencentMapApi } from "@/api/tencent-map"
 import { useTencentMapConfig } from "@/composables/useTencentMapConfig"
 
@@ -38,7 +39,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  "update:enableLocationVerify": [value: 0 | 1]
   "update:location": [value: string]
   "update:checkinLatGcj02": [value: number | undefined]
   "update:checkinLngGcj02": [value: number | undefined]
@@ -51,11 +51,8 @@ const latestReverseGeocode = shallowRef<TencentMapReverseGeocodeResult | null>(n
 const mapReady = shallowRef(false)
 const browserLocateTried = shallowRef(false)
 const browserLocateLoading = shallowRef(false)
-
-const enableLocationVerifyModel = computed({
-  get: () => props.enableLocationVerify,
-  set: (value: 0 | 1) => emit("update:enableLocationVerify", value),
-})
+const showMapPanel = ref(false)
+const mapRenderKey = ref(0)
 
 const radiusModel = computed({
   get: () => props.checkinRadiusM,
@@ -124,6 +121,16 @@ const mapHint = computed(() => {
   if (reverseGeocodeLoading.value) return "正在解析选点地址..."
   return props.location?.trim() || "请选取地址"
 })
+
+const mapPanelToggleText = computed(() => (showMapPanel.value ? "收起地图" : "查看地图"))
+
+const toggleMapPanel = () => {
+  const nextValue = !showMapPanel.value
+  showMapPanel.value = nextValue
+  if (nextValue) {
+    mapRenderKey.value += 1
+  }
+}
 
 const buildAddressText = (result: TencentMapReverseGeocodeResult) => {
   if (result.address?.trim()) return result.address.trim()
@@ -240,8 +247,15 @@ watch(
     if (enabled !== 1) {
       browserLocateTried.value = false
       browserLocateLoading.value = false
+      showMapPanel.value = false
       return
     }
+
+    showMapPanel.value = !hasSelectedPoint.value
+    if (showMapPanel.value) {
+      mapRenderKey.value += 1
+    }
+
     const loaded = await ensureMapReady()
     if (!loaded) return
     tryUseBrowserCurrentPosition()
@@ -261,91 +275,98 @@ watch(
 
 <template>
   <section class="location-verify-section">
-    <div class="location-verify-section__title">位置校验</div>
+    <div class="location-verify-section__title">位置校验 & 地图</div>
 
-    <el-row :gutter="18">
-      <el-col :xs="24" :sm="24" :md="12">
-        <el-form-item
-          label="开启校验"
-          prop="enableLocationVerify"
-          class="location-verify-section__switch-item"
-        >
-          <el-switch
-            v-model="enableLocationVerifyModel"
-            :active-value="1"
-            :inactive-value="0"
-            active-text="开启"
-            inactive-text="关闭"
-          />
-        </el-form-item>
-      </el-col>
-
-      <el-col v-if="enableLocationVerify === 1" :xs="24" :sm="24" :md="12">
-        <el-form-item label="校验范围" prop="checkinRadiusM">
-          <el-input-number
-            v-model="radiusModel"
-            :min="1"
-            :step="10"
-            :controls="false"
-            class="location-verify-section__full-width"
-          />
-          <div class="location-verify-section__hint">单位：米，建议设置为 30 - 300 米。</div>
-        </el-form-item>
-      </el-col>
-    </el-row>
-
-    <el-form-item v-if="enableLocationVerify === 1" label="地图选点" prop="checkinLatGcj02">
-      <div class="location-verify-map">
-        <div class="location-verify-map__meta">
-          <div class="location-verify-map__meta-item">
-            <span class="location-verify-map__meta-label">选择的位置</span>
-            <span class="location-verify-map__meta-value">{{ mapHint }}</span>
-          </div>
-        </div>
-
-        <div v-loading="loading || reverseGeocodeLoading || browserLocateLoading" class="location-verify-map__canvas-wrap">
-          <div v-if="errorMessage" class="location-verify-map__fallback">
-            <el-alert
-              :title="errorMessage"
-              type="error"
-              show-icon
-              :closable="false"
+    <template v-if="enableLocationVerify === 1">
+      <el-row :gutter="18">
+        <el-col :xs="24" :sm="24" :md="12">
+          <el-form-item label="校验范围" prop="checkinRadiusM">
+            <el-input-number
+              v-model="radiusModel"
+              :min="1"
+              :step="10"
+              :controls="false"
+              class="location-verify-section__full-width"
             />
+            <div class="location-verify-section__hint">单位：米</div>
+          </el-form-item>
+        </el-col>
+      </el-row>
+
+      <el-form-item label="地图选点" prop="checkinLatGcj02">
+        <div class="location-verify-map">
+          <div class="location-verify-map__top">
+            <el-input
+              :model-value="mapHint"
+              readonly
+              class="location-verify-map__point-input"
+              placeholder="请选择地图位置"
+            >
+              <template #prefix>
+                <el-icon><Location /></el-icon>
+              </template>
+            </el-input>
+            <el-button type="primary" plain class="location-verify-map__toggle-btn" @click="toggleMapPanel">
+              {{ mapPanelToggleText }}
+            </el-button>
           </div>
 
-          <BaseMap
-            v-else-if="mapReady && mapConfig?.key"
-            class="location-verify-map__canvas"
-            :api-key="mapConfig.key"
-            :center="selectedCenter"
-            :zoom="mapZoom"
-            :control="{ scale: true, zoom: true, rotation: false }"
-            @click="handleMapClick"
+          <div
+            v-if="showMapPanel"
+            v-loading="loading || reverseGeocodeLoading || browserLocateLoading"
+            class="location-verify-map__canvas-wrap"
           >
-            <MultiMarker
-              v-if="markerGeometries.length"
-              :styles="markerStyles"
-              :geometries="markerGeometries"
-            />
-            <MultiCircle
-              v-if="circleGeometries.length"
-              :styles="circleStyles"
-              :geometries="circleGeometries"
-            />
-          </BaseMap>
+            <div v-if="errorMessage" class="location-verify-map__fallback">
+              <el-alert
+                :title="errorMessage"
+                type="error"
+                show-icon
+                :closable="false"
+              />
+            </div>
 
-          <div v-else class="location-verify-map__fallback">
-            <el-alert
-              title="地图配置未就绪，请稍后重试"
-              type="warning"
-              show-icon
-              :closable="false"
-            />
+            <BaseMap
+              v-else-if="mapReady && mapConfig?.key"
+              :key="mapRenderKey"
+              class="location-verify-map__canvas"
+              :api-key="mapConfig.key"
+              :center="selectedCenter"
+              :zoom="mapZoom"
+              :control="{ scale: true, zoom: true, rotation: false }"
+              @click="handleMapClick"
+            >
+              <MultiMarker
+                v-if="markerGeometries.length"
+                :styles="markerStyles"
+                :geometries="markerGeometries"
+              />
+              <MultiCircle
+                v-if="circleGeometries.length"
+                :styles="circleStyles"
+                :geometries="circleGeometries"
+              />
+            </BaseMap>
+
+            <div v-else class="location-verify-map__fallback">
+              <el-alert
+                title="地图配置未就绪，请稍后重试"
+                type="warning"
+                show-icon
+                :closable="false"
+              />
+            </div>
           </div>
         </div>
+      </el-form-item>
+    </template>
 
-      </div>
-    </el-form-item>
+    <el-alert
+      v-else
+      title="未开启位置校验，可在基础信息中打开后使用地图选点。"
+      type="info"
+      :closable="false"
+      show-icon
+    />
   </section>
 </template>
 
@@ -364,12 +385,6 @@ watch(
   color: #1f2a37;
 }
 
-.location-verify-section__switch-item :deep(.el-form-item__content) {
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-}
-
 .location-verify-section__full-width {
   width: 100%;
 }
@@ -384,39 +399,26 @@ watch(
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.location-verify-map__meta {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 12px;
+.location-verify-map__top {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
-.location-verify-map__meta-item {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #f4f8f7;
-  border: 1px solid #dfeae7;
+.location-verify-map__point-input {
+  flex: 1;
+  min-width: 0;
 }
 
-.location-verify-map__meta-label {
-  display: block;
-  margin-bottom: 6px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.location-verify-map__meta-value {
-  display: block;
-  font-size: 13px;
-  line-height: 1.5;
-  color: #1f2937;
-  word-break: break-all;
+.location-verify-map__toggle-btn {
+  flex-shrink: 0;
 }
 
 .location-verify-map__canvas-wrap {
-  min-height: 320px;
+  min-height: 250px;
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid #d8e5e2;
@@ -425,11 +427,11 @@ watch(
 
 .location-verify-map__canvas {
   width: 100%;
-  height: 320px;
+  height: 250px;
 }
 
 .location-verify-map__fallback {
-  min-height: 320px;
+  min-height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -442,15 +444,20 @@ watch(
     border-radius: 14px;
   }
 
-  .location-verify-map__meta {
-    grid-template-columns: 1fr;
+  .location-verify-map__top {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .location-verify-map__toggle-btn {
+    align-self: flex-end;
   }
 
   .location-verify-map__canvas,
   .location-verify-map__canvas-wrap,
   .location-verify-map__fallback {
-    min-height: 280px;
-    height: 280px;
+    min-height: 220px;
+    height: 220px;
   }
 }
 </style>

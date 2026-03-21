@@ -6,13 +6,11 @@ import { computed, ref, watch } from "vue"
 
 const props = defineProps<{
   image: string
-  description: string
   headers: Record<string, string>
 }>()
 
 const emit = defineEmits<{
   "update:image": [value: string]
-  "update:description": [value: string]
 }>()
 
 const localPreviewUrl = ref("")
@@ -20,11 +18,6 @@ const localPreviewUrl = ref("")
 const imageModel = computed({
   get: () => props.image,
   set: (value: string) => emit("update:image", value),
-})
-
-const descriptionModel = computed({
-  get: () => props.description,
-  set: (value: string) => emit("update:description", value),
 })
 
 const displayImageUrl = computed(() => localPreviewUrl.value || imageModel.value || "")
@@ -72,46 +65,67 @@ const beforeCoverUpload: UploadProps["beforeUpload"] = (rawFile) => {
 
 <template>
   <section class="venue-form__section venue-form__section--media">
-    <div class="venue-form__section-title">展示信息</div>
-    <div class="venue-form__media-grid">
-      <el-form-item label="封面图片" prop="image" class="venue-form__media-item venue-form__upload-item">
-        <div class="venue-form__upload-panel">
-          <div class="venue-form__upload-tip">建议上传横版封面，展示更协调</div>
-          <el-upload
-            class="venue-cover-uploader"
-            action="/api/file/upload"
-            :headers="headers"
-            :show-file-list="false"
-            :on-success="handleCoverSuccess"
-            :before-upload="beforeCoverUpload"
-          >
-            <img
-              v-if="displayImageUrl"
-              :src="displayImageUrl"
-              alt="封面图片"
-              class="venue-cover-image"
-            />
-            <div v-else class="venue-cover-placeholder">
-              <el-icon class="venue-cover-icon">
-                <Plus />
-              </el-icon>
-              <span>上传封面</span>
-            </div>
-          </el-upload>
-        </div>
-      </el-form-item>
-
-      <el-form-item label="场馆介绍" prop="description" class="venue-form__media-item">
-        <el-input
-          v-model="descriptionModel"
-          type="textarea"
-          :rows="7"
-          placeholder="请输入场馆介绍"
-          maxlength="300"
-          show-word-limit
-          resize="none"
-        />
-      </el-form-item>
+    <div class="venue-form__cover-layout">
+      <div class="venue-form__cover-title">封面图片</div>
+      <div class="venue-form__cover-main">
+        <div class="venue-form__upload-tip">建议上传横版封面，展示更协调</div>
+        <el-form-item
+          prop="image"
+          :label-width="0"
+          class="venue-form__media-item venue-form__upload-item"
+        >
+          <div class="venue-form__upload-panel">
+            <el-upload
+              class="venue-cover-uploader"
+              action="/api/file/upload"
+              :headers="headers"
+              :show-file-list="false"
+              :on-success="handleCoverSuccess"
+              :before-upload="beforeCoverUpload"
+            >
+              <img
+                v-if="displayImageUrl"
+                :src="displayImageUrl"
+                alt="封面图片"
+                class="venue-cover-image"
+              />
+              <div v-else class="venue-cover-placeholder">
+                <el-icon class="venue-cover-icon">
+                  <Plus />
+                </el-icon>
+                <span>上传封面</span>
+              </div>
+            </el-upload>
+          </div>
+        </el-form-item>
+      </div>
     </div>
   </section>
 </template>
+
+<style scoped lang="scss">
+.venue-form__cover-layout {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+}
+
+.venue-form__cover-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2a37;
+  line-height: 1.6;
+}
+
+.venue-form__cover-main {
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .venue-form__cover-layout {
+    grid-template-columns: 1fr;
+    row-gap: 8px;
+  }
+}
+</style>

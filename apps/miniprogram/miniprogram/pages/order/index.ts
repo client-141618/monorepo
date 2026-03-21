@@ -3,7 +3,7 @@ import type { ReservationStatusClassName } from "../../constants/reservation"
 import {
   cancelReservationApi,
   checkInReservationApi,
-  getReservationListByUserApi,
+  getReservationPageByUserApi,
   getReservationUserCountApi,
 } from "../../api/reservation/index"
 import {
@@ -42,6 +42,7 @@ type FuzzyLocationPayload = {
 Page({
   data: {
     loading: false,
+    loadingMore: false,
     refresherTriggered: false,
     overviewCards: [
       {
@@ -61,6 +62,10 @@ Page({
     checkInLoadingId: 0,
     cancelLoadingId: 0,
     errorText: "",
+    pageNum: 1,
+    pageSize: 10,
+    total: 0,
+    noMore: false,
   },
 
   onShow() {
@@ -73,46 +78,89 @@ Page({
         tabBar.setData({ selected: "order" })
       }
     }
-    this.loadReservationList()
+    this.loadReservationList(true)
   },
 
   async onRefresherRefresh() {
     this.setData({ refresherTriggered: true })
-    await this.loadReservationList()
+    await this.loadReservationList(true)
     this.setData({ refresherTriggered: false })
   },
 
-  async loadReservationList() {
+  onScrollToLower() {
+    if (this.data.loading || this.data.loadingMore || this.data.noMore) {
+      return
+    }
+    this.loadReservationList(false)
+  },
+
+  async loadReservationList(reset: boolean) {
+    if (!reset && this.data.loadingMore) {
+      return
+    }
+
+    const nextPageNum = reset ? 1 : this.data.pageNum + 1
     this.setData({
-      loading: true,
+      loading: reset,
+      loadingMore: !reset,
       errorText: "",
     })
 
     try {
-      const [countRes, listRes] = await Promise.all([
-        getReservationUserCountApi(),
-        getReservationListByUserApi(),
-      ])
-      const list = Array.isArray(listRes.data) ? listRes.data : []
-      const reservationList = list.map((item, index) =>
+      const requestTasks: Array<Promise<unknown>> = [
+        getReservationPageByUserApi({
+          pageNum: nextPageNum,
+          pageSize: this.data.pageSize,
+        }),
+      ]
+      if (reset) {
+        requestTasks.push(getReservationUserCountApi())
+      }
+
+      const [listResRaw, countResRaw] = await Promise.all(requestTasks)
+      const listRes = listResRaw as { data?: { records?: UserReservationRecord[]; total?: number } }
+      const records = listRes.data && Array.isArray(listRes.data.records) ? listRes.data.records : []
+      const reservationPageList = records.map((item, index) =>
         this.toReservationCardItem(item, index),
       )
-      const overviewCards = this.toOverviewCards(countRes.data)
+      const reservationList = reset
+        ? reservationPageList
+        : this.data.reservationList.concat(reservationPageList)
+      const rawTotal = Number(listRes.data && listRes.data.total)
+      const safeTotal = Number.isFinite(rawTotal) ? rawTotal : reservationList.length
+      const noMore = reservationList.length >= safeTotal || records.length < this.data.pageSize
+
+      let overviewCards = this.data.overviewCards
+      if (reset && countResRaw) {
+        const countRes = countResRaw as { data?: { pendingVerificationCount?: number; totalCount?: number } }
+        overviewCards = this.toOverviewCards(countRes.data || {})
+      }
 
       this.setData({
         overviewCards,
         reservationList,
+        pageNum: nextPageNum,
+        total: safeTotal,
+        noMore,
         errorText: "",
       })
     } catch (error) {
       console.error("load reservation list failed:", error)
-      this.setData({
-        overviewCards: this.toOverviewCards({}),
-        reservationList: [],
-        errorText: "预定记录加载失败，请下拉重试",
-      })
+      if (reset) {
+        this.setData({
+          overviewCards: this.toOverviewCards({}),
+          reservationList: [],
+          pageNum: 1,
+          total: 0,
+          noMore: false,
+          errorText: "预定记录加载失败，请下拉重试",
+        })
+      }
     } finally {
-      this.setData({ loading: false })
+      this.setData({
+        loading: false,
+        loadingMore: false,
+      })
     }
   },
 
@@ -220,7 +268,7 @@ Page({
         icon: "success",
       })
 
-      await this.loadReservationList()
+      await this.loadReservationList(true)
     } catch (error) {
       const message = (error as Error).message || "核销失败，请稍后重试"
       wx.showToast({
@@ -249,7 +297,7 @@ Page({
         icon: "success",
       })
 
-      await this.loadReservationList()
+      await this.loadReservationList(true)
     } catch (error) {
       const message = (error as Error).message || "取消失败，请稍后重试"
       wx.showToast({

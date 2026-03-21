@@ -1,5 +1,18 @@
 import { request } from "../request"
 
+interface PageRequest<TQuery> {
+  pageNum: number
+  pageSize: number
+  queryDTO?: TQuery
+}
+
+interface PageResult<TRecord> {
+  records?: TRecord[]
+  total?: number
+  size?: number
+  current?: number
+}
+
 export type MiniNotificationType = 1 | 2 | 3 | 4
 
 export interface MiniNotificationItem {
@@ -18,10 +31,24 @@ export interface MiniNotificationDetail extends MiniNotificationItem {
   content: string
 }
 
+export interface NotificationPageQuery {
+  adminId?: number
+  userId?: number
+  type?: MiniNotificationType
+}
+
 export function getNotificationListApi() {
   return request<MiniNotificationItem[]>({
     url: "/api/notification/list",
     method: "GET",
+  })
+}
+
+export function getNotificationPageApi(data: PageRequest<NotificationPageQuery>) {
+  return request<PageResult<MiniNotificationItem>>({
+    url: "/api/notification/page",
+    method: "POST",
+    data,
   })
 }
 

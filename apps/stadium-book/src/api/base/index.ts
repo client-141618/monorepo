@@ -1,4 +1,4 @@
-import type { RegisterParams } from "./types"
+import type { ForgotPasswordParams, RegisterParams } from "./types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api"
@@ -33,6 +33,14 @@ export function sendSmsCode(phone: string) {
 export function register(data: RegisterParams) {
   return request({
     url: `${PREFIX}/user/register`,
+    method: "POST",
+    data,
+  })
+}
+
+export function forgotPassword(data: ForgotPasswordParams) {
+  return request({
+    url: `${PREFIX}/user/forgot_password`,
     method: "POST",
     data,
   })

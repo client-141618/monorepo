@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router"
+import { computed } from "vue"
+import { useRoute, useRouter } from "vue-router"
 import Header from "@/components/Header/Header.vue"
 import SideMenu from "@/components/SideMenu/SideMenu.vue"
 
+const route = useRoute()
 const router = useRouter()
 const userInfo = localStorage.getItem("userInfo")
 if (!userInfo) {
   router.push("/login")
 }
+
+const lockOuterScroll = computed(() =>
+  route.matched.some((item) => Boolean(item.meta?.lockOuterScroll)),
+)
 </script>
 
 <template>
@@ -20,9 +26,20 @@ if (!userInfo) {
         <el-aside width="200px">
           <SideMenu />
         </el-aside>
-        <el-main class="common-layout__main">
-          <div class="common-layout__content">
-            <router-view />
+        <el-main
+          class="common-layout__main"
+          :class="{ 'common-layout__main--no-scroll': lockOuterScroll }"
+        >
+          <div
+            class="common-layout__content"
+            :class="{ 'common-layout__content--fill': lockOuterScroll }"
+          >
+            <div
+              class="common-layout__page-shell"
+              :class="{ 'common-layout__page-shell--inner-scroll': lockOuterScroll }"
+            >
+              <router-view />
+            </div>
           </div>
         </el-main>
       </el-container>
@@ -57,5 +74,26 @@ if (!userInfo) {
   border-radius: 10px;
   background-color: #fff;
   padding: 10px;
+}
+
+.common-layout__main--no-scroll {
+  overflow: hidden;
+}
+
+.common-layout__content--fill {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.common-layout__page-shell {
+  min-height: 100%;
+}
+
+.common-layout__page-shell--inner-scroll {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
 }
 </style>

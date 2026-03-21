@@ -49,6 +49,7 @@ export interface AdminReservationRecord {
   id: number
   userId: number | string
   venueId: number
+  venueName?: string
   courtId: number
   reservationDate: string
   startTime: string
@@ -61,6 +62,15 @@ export interface AdminReservationRecord {
   createTime?: string
   updateTime?: string
 }
+
+export interface AdminReservationListQuery {
+  userId?: number
+  status?: number
+  startDate?: string
+  endDate?: string
+}
+
+export interface AdminReservationPageQuery extends AdminReservationListQuery {}
 
 export interface AdminCancelReservationPayload {
   reason?: string

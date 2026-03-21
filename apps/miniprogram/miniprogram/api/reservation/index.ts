@@ -1,5 +1,18 @@
 import { request } from "../request"
 
+interface PageRequest<TQuery> {
+  pageNum: number
+  pageSize: number
+  queryDTO?: TQuery
+}
+
+interface PageResult<TRecord> {
+  records?: TRecord[]
+  total?: number
+  size?: number
+  current?: number
+}
+
 export interface ReservationAvailabilitySlot {
   startTime: string
   endTime: string
@@ -92,6 +105,14 @@ export function getReservationListByUserApi() {
   return request<UserReservationRecord[]>({
     url: "/api/reservation/user",
     method: "GET",
+  })
+}
+
+export function getReservationPageByUserApi(data: PageRequest<undefined>) {
+  return request<PageResult<UserReservationRecord>>({
+    url: "/api/reservation/user/page",
+    method: "POST",
+    data,
   })
 }
 

@@ -6,9 +6,11 @@ import { computed, onMounted, reactive, ref } from "vue"
 import {
   addVenueTypeApi,
   deleteVenueTypeApi,
-  getVenueTypeListApi,
+  getVenueTypePageApi,
   updateVenueTypeApi,
 } from "@/api/venue-type"
+import PageContentShell from "@/components/PageContentShell/index.vue"
+import { formatDateTimeText } from "@/utils/format"
 
 type DialogMode = "create" | "edit"
 
@@ -18,6 +20,9 @@ const submitLoading = ref(false)
 const dialogMode = ref<DialogMode>("create")
 const currentEditId = ref<number | null>(null)
 const venueTypeList = ref<VenueType[]>([])
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const formRef = ref<FormInstance>()
 
 const form = reactive({
@@ -32,20 +37,15 @@ const dialogTitle = computed(() =>
   dialogMode.value === "create" ? "新增场地类型" : "编辑场地类型",
 )
 
-const formatDateTime = (value?: string) => {
-  if (!value) return "--"
-
-  return value
-    .replace("T", " ")
-    .replace("Z", "")
-    .replace(/\.\d+$/, "")
-}
-
 const getVenueTypeList = async () => {
   try {
     tableLoading.value = true
-    const res = await getVenueTypeListApi()
-    venueTypeList.value = res.data
+    const res = await getVenueTypePageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    })
+    venueTypeList.value = Array.isArray(res.data?.records) ? res.data.records : []
+    total.value = Number(res.data?.total) || 0
   } finally {
     tableLoading.value = false
   }
@@ -121,35 +121,61 @@ const handleDelete = async (row: VenueType) => {
 onMounted(() => {
   getVenueTypeList()
 })
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  getVenueTypeList()
+}
 </script>
 
 <template>
-  <div class="venue-type-page">
-    <div class="venue-type-page__header">
-      <div class="venue-type-page__title">场地类型设置</div>
-      <div class="venue-type-page__actions">
-        <el-button @click="getVenueTypeList">刷新</el-button>
-        <el-button type="primary" @click="openCreateDialog">新增类型</el-button>
+  <PageContentShell class="venue-type-page">
+    <template #header>
+      <div class="venue-type-page__header">
+        <div class="venue-type-page__title">场地类型设置</div>
+        <div class="venue-type-page__actions">
+          <el-button @click="getVenueTypeList">刷新</el-button>
+          <el-button type="primary" @click="openCreateDialog">新增类型</el-button>
+        </div>
       </div>
-    </div>
+    </template>
 
     <el-card shadow="never">
-      <el-table v-loading="tableLoading" :data="venueTypeList" stripe>
-        <el-table-column prop="id" label="ID" width="120" />
-        <el-table-column prop="name" label="类型名称" min-width="220" />
-        <el-table-column label="更新时间" min-width="180">
-          <template #default="{ row }">
-            {{ formatDateTime(row.updateTime) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="{ row }">
-            <el-button type="primary" link @click="openEditDialog(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div class="venue-type-page__table-wrap">
+        <el-table
+          v-loading="tableLoading"
+          :data="venueTypeList"
+          stripe
+          height="100%"
+          empty-text="暂无场地类型数据"
+        >
+          <el-table-column prop="id" label="ID" width="120" />
+          <el-table-column prop="name" label="类型名称" min-width="220" />
+          <el-table-column label="更新时间" min-width="180">
+            <template #default="{ row }">
+              {{ formatDateTimeText(row.updateTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="180" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="openEditDialog(row)">编辑</el-button>
+              <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-card>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
 
     <el-dialog
       v-model="dialogVisible"
@@ -168,14 +194,10 @@ onMounted(() => {
         <el-button type="primary" :loading="submitLoading" @click="handleSubmit">确定</el-button>
       </template>
     </el-dialog>
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
-.venue-type-page {
-  padding: 16px;
-}
-
 .venue-type-page__header {
   display: flex;
   align-items: center;
@@ -192,5 +214,24 @@ onMounted(() => {
 .venue-type-page__actions {
   display: flex;
   gap: 8px;
+}
+
+:deep(.venue-type-page .el-card) {
+  flex: 1;
+  min-height: 0;
+  border-radius: 12px;
+}
+
+:deep(.venue-type-page .el-card__body) {
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+}
+
+.venue-type-page__table-wrap {
+  height: 100%;
+  min-height: 0;
+  padding: 16px;
+  box-sizing: border-box;
 }
 </style>

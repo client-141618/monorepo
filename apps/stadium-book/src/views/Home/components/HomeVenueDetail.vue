@@ -18,6 +18,8 @@ import {
   getReservationListByVenueAndDateAdminApi,
 } from "@/api/reservation"
 import { getVenueByIdApi } from "@/api/venue"
+import PageContentShell from "@/components/PageContentShell/index.vue"
+import { formatCurrencyFromFen } from "@/utils/format"
 import HomeVenueDetailBlockDialog from "./detail/HomeVenueDetailBlockDialog.vue"
 import HomeVenueDetailBlockRules from "./detail/HomeVenueDetailBlockRules.vue"
 import HomeVenueDetailBoard from "./detail/HomeVenueDetailBoard.vue"
@@ -83,7 +85,10 @@ const weekdayOptions = [
 
 const venueId = computed(() => Number(route.params.id))
 const venueImageSrc = computed(() => venueDetail.value?.image?.trim() || DEFAULT_VENUE_IMAGE)
-const priceLabel = computed(() => `¥${(Number(venueDetail.value?.pricePerHour || 0) / 100).toFixed(2)}/小时`)
+const priceLabel = computed(() => {
+  const price = formatCurrencyFromFen(venueDetail.value?.pricePerHour, { fallback: "¥0.00" })
+  return `${price}/小时`
+})
 const venueTypeLabel = computed(() => venueDetail.value?.typeName || `类型ID: ${venueDetail.value?.typeId ?? "--"}`)
 const openHours = computed(() => {
   const openTime = venueDetail.value?.openTime?.trim()
@@ -497,8 +502,10 @@ function formatDate(date: Date) {
 </script>
 
 <template>
-  <div class="home-venue-detail">
-    <el-button :icon="ArrowLeft" class="home-venue-detail__back" @click="handleBack">返回首页</el-button>
+  <PageContentShell class="home-venue-detail" :body-scroll="true">
+    <template #header>
+      <el-button :icon="ArrowLeft" class="home-venue-detail__back" @click="handleBack">返回首页</el-button>
+    </template>
 
     <div v-if="detailLoading && !hasLoadedOnce" class="home-venue-detail__loading" v-loading="true" />
     <el-empty v-else-if="!venueDetail" description="未找到该场馆信息">
@@ -590,16 +597,16 @@ function formatDate(date: Date) {
       :weekday-options="weekdayOptions"
       @submit="submitCreateBlock"
     />
-  </div>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
 .home-venue-detail {
-  padding: 16px;
+  overflow: hidden;
 }
 
 .home-venue-detail__back {
-  margin-bottom: 12px;
+  width: fit-content;
 }
 
 .home-venue-detail__loading {
@@ -619,11 +626,5 @@ function formatDate(date: Date) {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-@media (max-width: 900px) {
-  .home-venue-detail {
-    padding: 12px;
-  }
 }
 </style>

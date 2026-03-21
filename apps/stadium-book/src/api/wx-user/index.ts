@@ -1,4 +1,5 @@
-import type { UpdateWxUserStatusPayload, WxUser } from "./type"
+import type { UpdateWxUserStatusPayload, WxUser, WxUserListQuery, WxUserPageQuery } from "./type"
+import type { PageRequest, PageResult } from "@/api/base/types"
 import { request } from "@/utils/request"
 
 const PREFIX = "/api/wx-user"
@@ -6,10 +7,19 @@ const PREFIX = "/api/wx-user"
 /**
  * 获取微信登录用户列表
  */
-export function getWxUserListApi() {
+export function getWxUserListApi(params?: WxUserListQuery) {
   return request<WxUser[]>({
     url: `${PREFIX}/list`,
     method: "GET",
+    params,
+  })
+}
+
+export function getWxUserPageApi(data: PageRequest<WxUserPageQuery>) {
+  return request<PageResult<WxUser>>({
+    url: `${PREFIX}/page`,
+    method: "POST",
+    data,
   })
 }
 

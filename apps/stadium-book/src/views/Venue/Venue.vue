@@ -11,14 +11,19 @@ import {
   batchDisableVenueApi,
   batchEnableVenueApi,
   deleteVenueApi,
-  getVenueListApi,
+  getVenuePageApi,
   updateVenueStatusApi,
 } from "@/api/venue"
+import PageContentShell from "@/components/PageContentShell/index.vue"
+import { formatYuanFromFen } from "@/utils/format"
 import AddVenue from "./AddVenue.vue"
 
 const venueList = ref<Venue[]>([])
 const tableLoading = ref(false)
 const hasLoadedOnce = ref(false)
+const pageNum = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
 const createDialogVisible = ref(false)
 const venueDialogMode = ref<"create" | "edit">("create")
 const editingVenue = ref<Venue | null>(null)
@@ -61,10 +66,8 @@ const formatVenueType = (row: Venue) => {
   return row.typeId ? `类型ID: ${row.typeId}` : "--"
 }
 
-const formatPriceYuanPerHour = (value: unknown) => {
-  const cents = Number(value)
-  if (!Number.isFinite(cents)) return ""
-  return (cents / 100).toFixed(2)
+const formatPriceYuanPerHour = (value?: number | string | null) => {
+  return formatYuanFromFen(value, { fallback: "" })
 }
 
 const formatLocationVerifyStatus = (row: Venue) => {
@@ -87,6 +90,7 @@ const handleCreate = () => {
 }
 
 const handleRefresh = async () => {
+  pageNum.value = 1
   await getVenueList()
 }
 
@@ -313,12 +317,23 @@ const handleBeforeStatusChange = async (row: Venue) => {
 const getVenueList = async () => {
   try {
     tableLoading.value = true
-    const res = await getVenueListApi()
-    venueList.value = res.data
+    const res = await getVenuePageApi({
+      pageNum: pageNum.value,
+      pageSize: pageSize.value,
+    })
+    const pageData = res.data
+    venueList.value = Array.isArray(pageData?.records) ? pageData.records : []
+    total.value = Number(pageData?.total) || 0
   } finally {
     tableLoading.value = false
     hasLoadedOnce.value = true
   }
+}
+
+const handleCurrentPageChange = (value: number) => {
+  if (value === pageNum.value) return
+  pageNum.value = value
+  getVenueList()
 }
 
 onMounted(() => {
@@ -327,56 +342,58 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="venue-page">
-    <div class="venue-header">
-      <div class="venue-header__title">场馆管理</div>
-      <div class="venue-header__actions">
-        <template v-if="!isBatchMode">
-          <el-button
-            :icon="Refresh"
-            :loading="tableLoading"
-            :disabled="tableLoading"
-            @click="handleRefresh"
-          >
-            刷新
-          </el-button>
-          <el-button type="primary" @click="handleCreate">新增场馆</el-button>
-          <el-button @click="handleBatchSelect">批量操作</el-button>
-        </template>
-        <template v-else>
-          <el-button
-            type="success"
-            :loading="batchEnableLoading"
-            :disabled="batchDisableLoading || batchDeleteLoading"
-            @click="handleBatchEnable"
-          >
-            批量启用
-          </el-button>
-          <el-button
-            type="warning"
-            :loading="batchDisableLoading"
-            :disabled="batchEnableLoading || batchDeleteLoading"
-            @click="handleBatchDisable"
-          >
-            批量停用
-          </el-button>
-          <el-button
-            type="danger"
-            :loading="batchDeleteLoading"
-            :disabled="batchEnableLoading || batchDisableLoading"
-            @click="handleBatchDelete"
-          >
-            批量删除
-          </el-button>
-          <el-button
-            :disabled="batchEnableLoading || batchDisableLoading || batchDeleteLoading"
-            @click="exitBatchMode"
-          >
-            取消
-          </el-button>
-        </template>
+  <PageContentShell class="venue-page">
+    <template #header>
+      <div class="venue-header">
+        <div class="venue-header__title">场馆管理</div>
+        <div class="venue-header__actions">
+          <template v-if="!isBatchMode">
+            <el-button
+              :icon="Refresh"
+              :loading="tableLoading"
+              :disabled="tableLoading"
+              @click="handleRefresh"
+            >
+              刷新
+            </el-button>
+            <el-button type="primary" @click="handleCreate">新增场馆</el-button>
+            <el-button @click="handleBatchSelect">批量操作</el-button>
+          </template>
+          <template v-else>
+            <el-button
+              type="success"
+              :loading="batchEnableLoading"
+              :disabled="batchDisableLoading || batchDeleteLoading"
+              @click="handleBatchEnable"
+            >
+              批量启用
+            </el-button>
+            <el-button
+              type="warning"
+              :loading="batchDisableLoading"
+              :disabled="batchEnableLoading || batchDeleteLoading"
+              @click="handleBatchDisable"
+            >
+              批量停用
+            </el-button>
+            <el-button
+              type="danger"
+              :loading="batchDeleteLoading"
+              :disabled="batchEnableLoading || batchDisableLoading"
+              @click="handleBatchDelete"
+            >
+              批量删除
+            </el-button>
+            <el-button
+              :disabled="batchEnableLoading || batchDisableLoading || batchDeleteLoading"
+              @click="exitBatchMode"
+            >
+              取消
+            </el-button>
+          </template>
+        </div>
       </div>
-    </div>
+    </template>
 
     <div v-if="hasData" class="venue-table-wrapper">
       <el-table
@@ -384,11 +401,13 @@ onMounted(() => {
         v-loading="tableLoading"
         :data="venueList"
         style="width: 100%"
+        height="100%"
         stripe
         @selection-change="handleSelectionChange"
       >
         <el-table-column v-if="isBatchMode" type="selection" width="55" />
-        <el-table-column label="图片" width="120">
+        <el-table-column prop="id" label="ID" width="50" />
+        <el-table-column label="图片" width="120" align="center">
           <template #default="{ row }">
             <el-image
               :src="getVenueImageSrc(row.image)"
@@ -418,12 +437,7 @@ onMounted(() => {
             {{ formatPriceYuanPerHour(row.pricePerHour) }}
           </template>
         </el-table-column>
-        <el-table-column prop="total" label="场地单元数" min-width="120" />
-        <el-table-column label="最小预约单元" min-width="140">
-          <template #default="{ row }">
-            {{ row.slotMinutes }} 分钟
-          </template>
-        </el-table-column>
+
         <el-table-column label="位置校验" min-width="120">
           <template #default="{ row }">
             <el-tag :type="row.enableLocationVerify === 1 ? 'success' : 'info'">
@@ -450,6 +464,12 @@ onMounted(() => {
         </el-table-column>
         <el-table-column prop="openTime" label="开放时间" min-width="160" />
         <el-table-column prop="closeTime" label="关闭时间" min-width="160" />
+        <el-table-column prop="total" label="场地单元数" min-width="120" />
+        <el-table-column label="最小预约单元" min-width="140">
+          <template #default="{ row }">
+            {{ row.slotMinutes }} 分钟
+          </template>
+        </el-table-column>
 
         <el-table-column label="操作" fixed="right" width="240">
           <template #default="{ row }">
@@ -460,8 +480,14 @@ onMounted(() => {
         </el-table-column>
       </el-table>
     </div>
-    <div v-else-if="tableLoading || !hasLoadedOnce" class="venue-table-wrapper venue-table-wrapper--loading" v-loading="true" />
-    <el-empty v-else description="暂无场馆信息" />
+    <div
+      v-else-if="tableLoading || !hasLoadedOnce"
+      class="venue-table-wrapper venue-table-wrapper--loading"
+      v-loading="true"
+    />
+    <div v-else class="venue-table-wrapper venue-table-wrapper--empty">
+      <el-empty description="暂无场馆信息" />
+    </div>
 
     <AddVenue
       v-model:visible="createDialogVisible"
@@ -526,12 +552,22 @@ onMounted(() => {
         </div>
       </template>
     </el-dialog>
-  </div>
+    <template #footer>
+      <el-pagination
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next"
+        background
+        @current-change="handleCurrentPageChange"
+      />
+    </template>
+  </PageContentShell>
 </template>
 
 <style scoped lang="scss">
 .venue-page {
-  padding: 16px;
+  min-height: 0;
 }
 
 .venue-header {
@@ -552,14 +588,25 @@ onMounted(() => {
 }
 
 .venue-table-wrapper {
+  flex: 1;
+  min-height: 0;
   background-color: #fff;
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .venue-table-wrapper--loading {
-  min-height: 240px;
+  display: flex;
+  min-height: 0;
+}
+
+.venue-table-wrapper--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
 }
 
 .venue-table__image {

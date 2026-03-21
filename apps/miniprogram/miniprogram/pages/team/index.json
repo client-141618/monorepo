@@ -1,0 +1,14 @@
+{
+  "navigationStyle": "default",
+  "navigationBarTitleText": "组队大厅",
+  "navigationBarBackgroundColor": "#f7f8fa",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f7fb",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "van-loading": "@vant/weapp/loading/index",
+    "van-empty": "@vant/weapp/empty/index",
+    "van-button": "@vant/weapp/button/index",
+    "van-tag": "@vant/weapp/tag/index"
+  }
+}

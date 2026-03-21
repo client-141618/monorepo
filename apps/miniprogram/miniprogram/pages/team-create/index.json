@@ -1,0 +1,13 @@
+{
+  "navigationStyle": "default",
+  "navigationBarTitleText": "发起组队",
+  "navigationBarBackgroundColor": "#f7f8fa",
+  "navigationBarTextStyle": "black",
+  "backgroundColor": "#f6f7fb",
+  "backgroundTextStyle": "dark",
+  "usingComponents": {
+    "van-button": "@vant/weapp/button/index",
+    "van-loading": "@vant/weapp/loading/index",
+    "van-empty": "@vant/weapp/empty/index"
+  }
+}
