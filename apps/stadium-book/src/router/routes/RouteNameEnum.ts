@@ -22,6 +22,10 @@ export enum ReservationRoute {
   ReservationManage = "ReservationManage",
 }
 
+export enum TeamRoute {
+  TeamManage = "TeamManage",
+}
+
 export enum WxUserRoute {
   WxUserList = "WxUserList",
 }

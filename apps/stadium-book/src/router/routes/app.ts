@@ -4,6 +4,7 @@ import home from "./modules/home"
 import notification from "./modules/notification"
 import reservation from "./modules/reservation"
 import setting from "./modules/setting"
+import team from "./modules/team"
 import venue from "./modules/venue"
 import wxUser from "./modules/wx-user"
 
@@ -21,6 +22,7 @@ export const appRouter: RouteRecordRaw[] = [
   ...home,
   ...venue,
   ...reservation,
+  ...team,
   ...notification,
   ...auditLog,
   ...wxUser,
