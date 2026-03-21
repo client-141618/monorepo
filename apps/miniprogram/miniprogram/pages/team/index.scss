@@ -225,6 +225,28 @@
   font-weight: 600 !important;
 }
 
+.quit-btn {
+  min-width: 150rpx !important;
+  height: 62rpx !important;
+  border-radius: 14rpx !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+  box-shadow: 0 8rpx 20rpx rgb(249 115 22 / 20%);
+  font-size: 26rpx !important;
+  font-weight: 600 !important;
+}
+
+.close-btn {
+  min-width: 170rpx !important;
+  height: 62rpx !important;
+  border-radius: 14rpx !important;
+  border: 0 !important;
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%) !important;
+  box-shadow: 0 8rpx 20rpx rgb(71 85 105 / 20%);
+  font-size: 26rpx !important;
+  font-weight: 600 !important;
+}
+
 .action-placeholder {
   color: #94a3b8;
   font-size: 24rpx;

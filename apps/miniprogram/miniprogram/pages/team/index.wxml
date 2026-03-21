@@ -120,18 +120,42 @@
 
           <view class="team-card__actions">
             <van-button
-              wx:if="{{item.canJoin}}"
+              wx:if="{{item.canClose}}"
+              type="warning"
+              size="small"
+              custom-class="close-btn"
+              loading="{{actionLoadingId === item.id}}"
+              disabled="{{actionLoadingId > 0}}"
+              data-team-id="{{item.id}}"
+              bindtap="onTapCloseTeam"
+            >
+              关闭组队
+            </van-button>
+            <van-button
+              wx:elif="{{item.canQuit}}"
+              type="danger"
+              size="small"
+              custom-class="quit-btn"
+              loading="{{actionLoadingId === item.id}}"
+              disabled="{{actionLoadingId > 0}}"
+              data-team-id="{{item.id}}"
+              bindtap="onTapQuitTeam"
+            >
+              退出
+            </van-button>
+            <van-button
+              wx:elif="{{item.canJoin}}"
               type="primary"
               size="small"
               custom-class="join-btn"
-              loading="{{joinLoadingId === item.id}}"
-              disabled="{{joinLoadingId > 0}}"
+              loading="{{actionLoadingId === item.id}}"
+              disabled="{{actionLoadingId > 0}}"
               data-team-id="{{item.id}}"
               bindtap="onTapJoinTeam"
             >
               加入
             </van-button>
-            <view wx:else class="action-placeholder">{{item.actionHint}}</view>
+            <view wx:else class="action-placeholder">{{item.actionLabel}}</view>
           </view>
         </view>
       </block>

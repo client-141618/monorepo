@@ -1,8 +1,18 @@
 import type { TeamRecruitmentListItem } from "../../api/team/index"
 import type { Venue } from "../../api/venue/index"
-import { getTeamDetailApi, getTeamPageApi, joinTeamApi } from "../../api/team/index"
+import {
+  closeTeamApi,
+  getTeamDetailApi,
+  getTeamPageApi,
+  joinTeamApi,
+  quitTeamApi,
+} from "../../api/team/index"
 import { getVenuePageApi } from "../../api/venue/index"
-import { DEFAULT_PROFILE_AVATAR, DEFAULT_PROFILE_NAME } from "../../constants/profile"
+import {
+  CACHE_TOKEN_STORAGE_KEY,
+  DEFAULT_PROFILE_AVATAR,
+  DEFAULT_PROFILE_NAME,
+} from "../../constants/profile"
 
 type TeamStatusOption = {
   label: string
@@ -21,7 +31,10 @@ type TeamCardItem = TeamRecruitmentListItem & {
   statusText: string
   statusType: "primary" | "success" | "warning" | "danger"
   canJoin: boolean
-  actionHint: string
+  canQuit: boolean
+  canClose: boolean
+  actionLabel: string
+  actionKind: "join" | "quit" | "close" | "none"
   memberProfiles: Array<{
     wxUserId: number
     username: string
@@ -61,7 +74,7 @@ Page({
     currentVenueLabel: "全部场馆",
     currentStatusLabel: "全部状态",
     teamList: [] as TeamCardItem[],
-    joinLoadingId: 0,
+    actionLoadingId: 0,
   },
 
   onShow() {
@@ -165,7 +178,7 @@ Page({
     return Number(option.value) || 0
   },
 
-  onDateChange(event: WechatMiniprogram.BaseEvent) {
+  onDateChange(event: WechatMiniprogram.CustomEvent) {
     const detail = event.detail as { value?: string }
     const filterDate = typeof detail.value === "string" ? detail.value : ""
     this.setData({ filterDate })
@@ -180,7 +193,7 @@ Page({
     this.fetchTeamList(true)
   },
 
-  onVenueChange(event: WechatMiniprogram.BaseEvent) {
+  onVenueChange(event: WechatMiniprogram.CustomEvent) {
     const detail = event.detail as { value?: number | string }
     const index = Number(detail.value)
     if (!Number.isFinite(index)) {
@@ -195,7 +208,7 @@ Page({
     this.fetchTeamList(true)
   },
 
-  onStatusChange(event: WechatMiniprogram.BaseEvent) {
+  onStatusChange(event: WechatMiniprogram.CustomEvent) {
     const detail = event.detail as { value?: number | string }
     const index = Number(detail.value)
     if (!Number.isFinite(index)) {
@@ -301,6 +314,8 @@ Page({
 
   async decorateRecords(records: TeamRecruitmentListItem[]) {
     const memberProfileMap = await this.fetchMembersByTeam(records)
+    const currentWxUserId = this.getCurrentWxUserId()
+
     return records.map((item) => {
       const teamId = Number(item.id) || 0
       const requiredCount = Number(item.requiredCount) || 0
@@ -316,8 +331,52 @@ Page({
         })
       }
       const joined = Boolean(item.joined)
+      const rawMembers = Array.isArray(item.members) ? item.members : []
+      const isOwnerFromMemberRole = rawMembers.some((member) => {
+        const memberWxUserId = Number(member.wxUserId)
+        const role = Number(member.role)
+        return (
+          currentWxUserId > 0 &&
+          Number.isFinite(memberWxUserId) &&
+          memberWxUserId > 0 &&
+          memberWxUserId === currentWxUserId &&
+          role === 1
+        )
+      })
+      const isOwnerFromSingleMemberFallback =
+        joined &&
+        rawMembers.length === 1 &&
+        Number(rawMembers[0].role) === 1
+      const isOwnerFromInitiatorId =
+        currentWxUserId > 0 &&
+        Number.isFinite(initiatorId) &&
+        initiatorId > 0 &&
+        initiatorId === currentWxUserId
+      const isOwner =
+        isOwnerFromMemberRole ||
+        isOwnerFromSingleMemberFallback ||
+        isOwnerFromInitiatorId
       const canJoin = status === TEAM_STATUS_RECRUITING && !joined
+      const canClose = status === TEAM_STATUS_RECRUITING && isOwner
+      const canQuit = status === TEAM_STATUS_RECRUITING && joined && !isOwner
       const statusMeta = this.getStatusMeta(status)
+
+      let actionKind: TeamCardItem["actionKind"] = "none"
+      let actionLabel = ""
+      if (canClose) {
+        actionKind = "close"
+        actionLabel = "关闭组队"
+      } else if (canQuit) {
+        actionKind = "quit"
+        actionLabel = "退出"
+      } else if (canJoin) {
+        actionKind = "join"
+        actionLabel = "加入"
+      } else if (joined) {
+        actionLabel = "已加入"
+      } else {
+        actionLabel = "当前不可加入"
+      }
 
       return {
         ...item,
@@ -327,10 +386,32 @@ Page({
         statusText: statusMeta.text,
         statusType: statusMeta.type,
         canJoin,
-        actionHint: canJoin ? "" : joined ? "已加入" : "当前不可加入",
+        canQuit,
+        canClose,
+        actionLabel,
+        actionKind,
         memberProfiles,
       }
     })
+  },
+
+  getCurrentWxUserId() {
+    const cacheToken = wx.getStorageSync(CACHE_TOKEN_STORAGE_KEY) as unknown
+    if (!cacheToken || typeof cacheToken !== "object") {
+      return 0
+    }
+
+    const tokenRecord = cacheToken as Record<string, unknown>
+    const candidateIds = [tokenRecord.wxUserId, tokenRecord.wx_user_id]
+
+    for (let i = 0; i < candidateIds.length; i += 1) {
+      const parsed = Number(candidateIds[i])
+      if (Number.isFinite(parsed) && parsed > 0) {
+        return parsed
+      }
+    }
+
+    return 0
   },
 
   async fetchMembersByTeam(records: TeamRecruitmentListItem[]) {
@@ -458,11 +539,11 @@ Page({
     if (!teamId) {
       return
     }
-    if (this.data.joinLoadingId > 0) {
+    if (this.data.actionLoadingId > 0) {
       return
     }
 
-    this.setData({ joinLoadingId: teamId })
+    this.setData({ actionLoadingId: teamId })
     try {
       await joinTeamApi(teamId)
       wx.showToast({
@@ -477,8 +558,83 @@ Page({
         icon: "none",
       })
     } finally {
-      this.setData({ joinLoadingId: 0 })
+      this.setData({ actionLoadingId: 0 })
     }
+  },
+
+  async onTapQuitTeam(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId || 0)
+    if (!teamId || this.data.actionLoadingId > 0) {
+      return
+    }
+
+    const confirmed = await this.confirmTeamAction("确认退出该组队？")
+    if (!confirmed) {
+      return
+    }
+
+    this.setData({ actionLoadingId: teamId })
+    try {
+      await quitTeamApi(teamId)
+      wx.showToast({
+        title: "退出成功",
+        icon: "success",
+      })
+      await this.fetchTeamList(true)
+    } catch (error) {
+      const message = (error as Error).message || "退出失败，请重试"
+      wx.showToast({
+        title: message,
+        icon: "none",
+      })
+    } finally {
+      this.setData({ actionLoadingId: 0 })
+    }
+  },
+
+  async onTapCloseTeam(event: WechatMiniprogram.BaseEvent) {
+    const teamId = Number(event.currentTarget.dataset.teamId || 0)
+    if (!teamId || this.data.actionLoadingId > 0) {
+      return
+    }
+
+    const confirmed = await this.confirmTeamAction("确认关闭该组队？关闭后无法继续招募。")
+    if (!confirmed) {
+      return
+    }
+
+    this.setData({ actionLoadingId: teamId })
+    try {
+      await closeTeamApi(teamId)
+      wx.showToast({
+        title: "关闭成功",
+        icon: "success",
+      })
+      await this.fetchTeamList(true)
+    } catch (error) {
+      const message = (error as Error).message || "关闭失败，请重试"
+      wx.showToast({
+        title: message,
+        icon: "none",
+      })
+    } finally {
+      this.setData({ actionLoadingId: 0 })
+    }
+  },
+
+  confirmTeamAction(content: string) {
+    return new Promise<boolean>((resolve) => {
+      wx.showModal({
+        title: "提示",
+        content,
+        success: (res) => {
+          resolve(Boolean(res.confirm))
+        },
+        fail: () => {
+          resolve(false)
+        },
+      })
+    })
   },
 
   onTapCreateTeam() {

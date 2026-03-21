@@ -104,6 +104,20 @@ export function joinTeamApi(teamId: number) {
   })
 }
 
+export function quitTeamApi(teamId: number) {
+  return request<null>({
+    url: `/api/team/quit/${teamId}`,
+    method: "PUT",
+  })
+}
+
+export function closeTeamApi(teamId: number) {
+  return request<null>({
+    url: `/api/team/close/${teamId}`,
+    method: "PUT",
+  })
+}
+
 export function createTeamApi(data: TeamRecruitmentCreatePayload) {
   return request<number>({
     url: "/api/team/create",
