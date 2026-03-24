@@ -1,11 +1,17 @@
+export const WX_USER_BOOKING_RESTRICTED_CODE = 4602
 export const WX_USER_DISABLED_CODE = 4603
 export const WX_USER_DELETED_CODE = 4604
 
-export const WX_USER_BLOCKED_CODES = [WX_USER_DISABLED_CODE, WX_USER_DELETED_CODE] as const
+export const WX_USER_BLOCKED_CODES = [
+  WX_USER_BOOKING_RESTRICTED_CODE,
+  WX_USER_DISABLED_CODE,
+  WX_USER_DELETED_CODE,
+] as const
 
 export type WxUserBlockedCode = (typeof WX_USER_BLOCKED_CODES)[number]
 
 export const WX_USER_BLOCKED_MESSAGE_MAP: Record<WxUserBlockedCode, string> = {
+  [WX_USER_BOOKING_RESTRICTED_CODE]: "当前微信用户已被限制预约",
   [WX_USER_DISABLED_CODE]: "账号已停用",
   [WX_USER_DELETED_CODE]: "账号已删除",
 }

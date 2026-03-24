@@ -9,6 +9,7 @@ import {
   getReservationAvailabilityNextSevenDaysApi,
 } from "../../api/reservation/index"
 import { getVenueByIdApi } from "../../api/venue/index"
+import { BLOCKED_USER_REDIRECT_HOME } from "../../constants/auth"
 
 type DateOption = {
   value: string
@@ -336,6 +337,9 @@ Page({
         slotKeys,
         clientRequestId: this.createClientRequestId(),
       })
+      if (createRes.code !== 200) {
+        throw new Error(createRes.msg || "预约失败")
+      }
       const createdReservationId = this.resolveCreatedReservationId(createRes.data)
       wx.showToast({ title: "预约成功", icon: "success" })
       await this.loadPageData({
@@ -347,6 +351,9 @@ Page({
       }
     } catch (error) {
       console.error("create reservation failed:", error)
+      if ((error as Error).message === BLOCKED_USER_REDIRECT_HOME) {
+        return
+      }
       const message = (error as Error).message || "预约失败"
       wx.showToast({ title: message, icon: "none" })
     } finally {
