@@ -68,7 +68,6 @@ project.private.config.json
 .cursor/mcp.json
 .cursor/.env
 
-.env
 secrets/
 
 # pen

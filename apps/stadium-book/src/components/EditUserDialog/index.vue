@@ -6,6 +6,7 @@ import { ElMessage } from "element-plus"
 import { storeToRefs } from "pinia"
 import { computed, ref, watch } from "vue"
 import { useUserStore } from "@/store/user"
+import { buildApiUrl } from "@/utils/api-url"
 
 const dialogVisible = defineModel<boolean>("modelValue")
 const userStore = useUserStore()
@@ -13,6 +14,7 @@ const { userInfo } = storeToRefs(userStore)
 const editForm = ref<Partial<UserInfo>>({})
 const editFormRef = ref<FormInstance>()
 const imageUrl = ref<string>(userInfo.value?.avatar || "")
+const uploadAction = buildApiUrl("/api/file/upload")
 
 const headers = computed(() => {
   const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
@@ -151,7 +153,7 @@ const handleSave = async () => {
       <el-form-item label="头像：">
         <el-upload
           class="avatar-uploader"
-          action="/api/file/upload"
+          :action="uploadAction"
           :headers="headers"
           :show-file-list="false"
           :on-success="handleAvatarSuccess"
