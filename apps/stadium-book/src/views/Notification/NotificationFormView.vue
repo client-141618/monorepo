@@ -182,7 +182,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <PageContentShell class="notification-form-view" :body-scroll="true" v-loading="loading">
+  <PageContentShell
+    class="notification-form-view"
+    :body-scroll="true"
+    :skeleton-loading="loading"
+    skeleton-variant="detail"
+  >
     <template #header>
       <div v-if="isDetail" class="notification-form-view__header notification-form-view__header--detail">
         <div class="notification-form-view__back-row">

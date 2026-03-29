@@ -130,7 +130,7 @@ const handleCurrentPageChange = (value: number) => {
 </script>
 
 <template>
-  <PageContentShell class="venue-type-page">
+  <PageContentShell class="venue-type-page" :skeleton-loading="tableLoading" skeleton-variant="table">
     <template #header>
       <div class="venue-type-page__header">
         <div class="venue-type-page__title">场地类型设置</div>

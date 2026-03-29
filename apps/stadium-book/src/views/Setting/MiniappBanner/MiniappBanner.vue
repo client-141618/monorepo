@@ -115,7 +115,7 @@ const handleCurrentPageChange = (value: number) => {
 </script>
 
 <template>
-  <PageContentShell class="miniapp-banner-page">
+  <PageContentShell class="miniapp-banner-page" :skeleton-loading="tableLoading" skeleton-variant="table">
     <template #header>
       <div class="miniapp-banner-page__header">
         <PageRouteTitle fallback-title="小程序banner设置" />

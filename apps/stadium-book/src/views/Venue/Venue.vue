@@ -20,7 +20,6 @@ import AddVenue from "./AddVenue.vue"
 
 const venueList = ref<Venue[]>([])
 const tableLoading = ref(false)
-const hasLoadedOnce = ref(false)
 const pageNum = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -326,7 +325,6 @@ const getVenueList = async () => {
     total.value = Number(pageData?.total) || 0
   } finally {
     tableLoading.value = false
-    hasLoadedOnce.value = true
   }
 }
 
@@ -342,7 +340,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="venue-page">
+  <PageContentShell class="venue-page" :skeleton-loading="tableLoading" skeleton-variant="table">
     <template #header>
       <div class="venue-header">
         <div class="venue-header__title">场馆管理</div>
@@ -480,11 +478,7 @@ onMounted(() => {
         </el-table-column>
       </el-table>
     </div>
-    <div
-      v-else-if="tableLoading || !hasLoadedOnce"
-      class="venue-table-wrapper venue-table-wrapper--loading"
-      v-loading="true"
-    />
+    <div v-else-if="tableLoading" class="venue-table-wrapper venue-table-wrapper--loading" v-loading="true" />
     <div v-else class="venue-table-wrapper venue-table-wrapper--empty">
       <el-empty description="暂无场馆信息" />
     </div>

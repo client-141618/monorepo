@@ -107,7 +107,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="reservation-page">
+  <PageContentShell class="reservation-page" :skeleton-loading="loading" skeleton-variant="table">
     <template #header>
       <PageRouteTitle fallback-title="预定管理" />
       <PageFilterBar :query-loading="loading" @query="handleQuery" @reset="handleReset">

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { VenueType } from "@/api/venue-type/type"
 import type { Venue } from "@/api/venue/type"
-import { Refresh } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { computed, onMounted, ref } from "vue"
 import { useRouter } from "vue-router"
@@ -14,7 +13,6 @@ const router = useRouter()
 const venueList = ref<Venue[]>([])
 const tableLoading = ref(false)
 const typeLoading = ref(false)
-const hasLoadedOnce = ref(false)
 const loadFailed = ref(false)
 const activeType = ref<"all" | number>("all")
 const venueTypeOptions = ref<VenueType[]>([])
@@ -56,7 +54,6 @@ const getVenueList = async () => {
     ElMessage.error(msg || "加载失败")
   } finally {
     tableLoading.value = false
-    hasLoadedOnce.value = true
   }
 }
 
@@ -74,24 +71,28 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="home-venue-grid" :body-scroll="true">
+  <PageContentShell
+    class="home-venue-grid"
+    :body-scroll="true"
+    :skeleton-loading="tableLoading"
+    skeleton-variant="card"
+    :skeleton-cards="6"
+  >
     <template #header>
       <div class="home-venue-grid__header">
         <div class="home-venue-grid__title">场馆总览</div>
-        <el-button :icon="Refresh" :loading="tableLoading" @click="getVenueList">刷新</el-button>
-      </div>
-      <div class="home-venue-grid__filter">
-        <span class="home-venue-grid__filter-label">场馆类型</span>
-        <el-radio-group v-model="activeType" :disabled="typeLoading" @change="handleTypeChange">
-          <el-radio-button v-for="item in typeOptions" :key="item.value" :value="item.value">
-            {{ item.label }}
-          </el-radio-button>
-        </el-radio-group>
+        <div class="home-venue-grid__filter">
+          <span class="home-venue-grid__filter-label">场馆类型</span>
+          <el-radio-group v-model="activeType" :disabled="typeLoading" @change="handleTypeChange">
+            <el-radio-button v-for="item in typeOptions" :key="item.value" :value="item.value">
+              {{ item.label }}
+            </el-radio-button>
+          </el-radio-group>
+        </div>
       </div>
     </template>
 
-    <div v-if="!hasLoadedOnce && tableLoading" class="home-venue-grid__loading" v-loading="true" />
-    <el-result v-else-if="loadFailed" icon="error" title="场馆加载失败" sub-title="请检查网络或稍后重试">
+    <el-result v-if="loadFailed" icon="error" title="场馆加载失败" sub-title="请检查网络或稍后重试">
       <template #extra>
         <el-button type="primary" @click="getVenueList">重新加载</el-button>
       </template>
@@ -113,7 +114,7 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   margin-bottom: 14px;
 }
 
@@ -123,16 +124,11 @@ onMounted(() => {
   color: #111827;
 }
 
-.home-venue-grid__loading {
-  min-height: 280px;
-}
-
 .home-venue-grid__filter {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 14px;
 }
 
 .home-venue-grid__filter-label {
