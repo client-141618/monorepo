@@ -10,6 +10,7 @@ import {
 } from "../../api/reservation/index"
 import { getVenueByIdApi } from "../../api/venue/index"
 import { BLOCKED_USER_REDIRECT_HOME } from "../../constants/auth"
+import { getSubscribeTemplateIds } from "../../utils/subscribe-message"
 
 type DateOption = {
   value: string
@@ -323,6 +324,8 @@ Page({
     } catch (_error) {
       return
     }
+
+    await this.requestReservationSubscribeMessage()
 
     this.setData({ submitLoading: true, canSubmit: false })
     wx.showLoading({
@@ -686,6 +689,34 @@ Page({
           resolve()
         },
         fail: () => {
+          resolve()
+        },
+      })
+    })
+  },
+
+  requestReservationSubscribeMessage() {
+    return new Promise<void>((resolve) => {
+      const templateIds = getSubscribeTemplateIds([
+        "reservationSuccess",
+        "reservationCanceled",
+      ])
+      if (!templateIds.length) {
+        resolve()
+        return
+      }
+      if (typeof wx.requestSubscribeMessage !== "function") {
+        resolve()
+        return
+      }
+
+      wx.requestSubscribeMessage({
+        tmplIds: templateIds,
+        success: (_res) => { },
+        fail: (error) => {
+          console.warn("requestSubscribeMessage failed:", error)
+        },
+        complete: () => {
           resolve()
         },
       })

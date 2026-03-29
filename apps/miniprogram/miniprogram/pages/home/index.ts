@@ -51,7 +51,7 @@ Page({
   searchDebounceTimer: 0 as number,
 
   onLoad() {
-    this.onRefresherRefresh()
+    this.refreshHomeData()
   },
 
   onShow() {
