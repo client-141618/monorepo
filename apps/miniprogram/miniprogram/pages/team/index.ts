@@ -13,6 +13,7 @@ import {
   DEFAULT_PROFILE_AVATAR,
   DEFAULT_PROFILE_NAME,
 } from "../../constants/profile"
+import { getSubscribeTemplateIds } from "../../utils/subscribe-message"
 
 type TeamStatusOption = {
   label: string
@@ -543,6 +544,8 @@ Page({
       return
     }
 
+    await this.requestMemberSubscribeMessage()
+
     this.setData({ actionLoadingId: teamId })
     try {
       await joinTeamApi(teamId)
@@ -560,6 +563,31 @@ Page({
     } finally {
       this.setData({ actionLoadingId: 0 })
     }
+  },
+
+  requestMemberSubscribeMessage() {
+    return new Promise<void>((resolve) => {
+      const templateIds = getSubscribeTemplateIds(["teamSuccess", "teamCanceled"])
+      if (!templateIds.length) {
+        resolve()
+        return
+      }
+      if (typeof wx.requestSubscribeMessage !== "function") {
+        resolve()
+        return
+      }
+
+      wx.requestSubscribeMessage({
+        tmplIds: templateIds,
+        success: (_res) => { },
+        fail: (error) => {
+          console.warn("request member subscribe message failed:", error)
+        },
+        complete: () => {
+          resolve()
+        },
+      })
+    })
   },
 
   async onTapQuitTeam(event: WechatMiniprogram.BaseEvent) {

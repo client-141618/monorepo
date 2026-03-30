@@ -8,6 +8,7 @@ import axios, { AxiosHeaders } from "axios"
 import { ElMessage } from "element-plus"
 import { refreshToken as refreshTokenApi } from "@/api/base"
 import router from "@/router"
+import { getApiBaseUrl } from "@/utils/api-url"
 
 interface ApiResponse<T = unknown> {
   code?: number
@@ -59,7 +60,7 @@ const setStoredUser = (userInfo: UserInfo) => {
 }
 
 const service: AxiosInstance = axios.create({
-  baseURL: "/",
+  baseURL: getApiBaseUrl(),
   timeout: 30000,
   headers: {
     "Content-Type": "application/json",

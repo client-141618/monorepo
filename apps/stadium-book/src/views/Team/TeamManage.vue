@@ -14,7 +14,6 @@ import {
 import { formatDateTimeText } from "@/utils/format"
 
 const tableLoading = ref(false)
-const skeletonLoading = ref(true)
 const actionLoadingId = ref<number | null>(null)
 const teamList = ref<TeamRecord[]>([])
 const pageNum = ref(1)
@@ -68,9 +67,6 @@ const getTeamList = async () => {
     total.value = Number(res.data?.total) || 0
   } finally {
     tableLoading.value = false
-    if (skeletonLoading.value) {
-      skeletonLoading.value = false
-    }
   }
 }
 
@@ -125,7 +121,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="team-page">
+  <PageContentShell
+    class="team-page"
+    :skeleton-loading="tableLoading"
+    skeleton-variant="table"
+    :skeleton-rows="7"
+  >
     <template #header>
       <PageRouteTitle fallback-title="组队管理" />
       <PageFilterBar :query-loading="tableLoading" @query="handleQuery" @reset="handleReset">
@@ -154,72 +155,60 @@ onMounted(() => {
     </template>
 
     <el-card class="team-page__table-card" shadow="never">
-      <el-skeleton :loading="skeletonLoading" animated>
-        <template #template>
-          <div class="team-page__skeleton">
-            <el-skeleton-item variant="h3" style="width: 45%" />
-            <el-skeleton-item variant="text" style="width: 100%" />
-            <el-skeleton-item variant="text" style="width: 100%" />
-            <el-skeleton-item variant="text" style="width: 100%" />
-            <el-skeleton-item variant="text" style="width: 100%" />
-            <el-skeleton-item variant="text" style="width: 100%" />
-          </div>
-        </template>
-        <div class="team-page__table-wrap">
-          <el-table v-loading="tableLoading" :data="teamList" stripe height="100%">
-            <el-table-column prop="id" label="组队ID" width="96" />
-            <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
-            <el-table-column label="场馆/场地" min-width="180" show-overflow-tooltip>
-              <template #default="{ row }">
-                {{ getVenueCourtDisplay(row) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="activityDate" label="活动日期" width="120" />
-            <el-table-column label="截止时间" min-width="170">
-              <template #default="{ row }">
-                {{ formatDateTimeText(row.deadlineTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="人数进度" width="100">
-              <template #default="{ row }">
-                {{ getProgressDisplay(row) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="initiatorName" label="发起人" width="110" />
-            <el-table-column label="队伍成员ID" min-width="160" show-overflow-tooltip>
-              <template #default="{ row }">
-                {{ getMemberUserIdsDisplay(row) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="contactMasked" label="联系方式" min-width="110" />
-            <el-table-column label="状态" width="96">
-              <template #default="{ row }">
-                <el-tag :type="getTeamStatusTagType(row.status)">
-                  {{ getTeamStatusLabel(row.status) }}
-                </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column label="创建时间" min-width="170">
-              <template #default="{ row }">
-                {{ formatDateTimeText(row.createTime) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="110" fixed="right">
-              <template #default="{ row }">
-                <el-button
-                  type="danger"
-                  link
-                  :disabled="actionLoadingId !== null || row.status === 5"
-                  :loading="actionLoadingId === row.id"
-                  @click="handleCancelTeam(row)"
-                >
-                  取消
-                </el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </el-skeleton>
+      <div class="team-page__table-wrap">
+        <el-table v-loading="tableLoading" :data="teamList" stripe height="100%">
+          <el-table-column prop="id" label="组队ID" width="96" />
+          <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+          <el-table-column label="场馆/场地" min-width="180" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ getVenueCourtDisplay(row) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="activityDate" label="活动日期" width="120" />
+          <el-table-column label="截止时间" min-width="170">
+            <template #default="{ row }">
+              {{ formatDateTimeText(row.deadlineTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="人数进度" width="100">
+            <template #default="{ row }">
+              {{ getProgressDisplay(row) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="initiatorName" label="发起人" width="110" />
+          <el-table-column label="队伍成员ID" min-width="160" show-overflow-tooltip>
+            <template #default="{ row }">
+              {{ getMemberUserIdsDisplay(row) }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="contactMasked" label="联系方式" min-width="110" />
+          <el-table-column label="状态" width="96">
+            <template #default="{ row }">
+              <el-tag :type="getTeamStatusTagType(row.status)">
+                {{ getTeamStatusLabel(row.status) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间" min-width="170">
+            <template #default="{ row }">
+              {{ formatDateTimeText(row.createTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="110" fixed="right">
+            <template #default="{ row }">
+              <el-button
+                type="danger"
+                link
+                :disabled="actionLoadingId !== null || row.status === 5"
+                :loading="actionLoadingId === row.id"
+                @click="handleCancelTeam(row)"
+              >
+                取消
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </el-card>
 
     <template #footer>
@@ -262,11 +251,5 @@ onMounted(() => {
   min-height: 0;
   padding: 16px;
   box-sizing: border-box;
-}
-
-.team-page__skeleton {
-  padding: 16px;
-  display: grid;
-  row-gap: 14px;
 }
 </style>

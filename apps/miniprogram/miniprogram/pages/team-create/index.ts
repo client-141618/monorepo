@@ -1,6 +1,7 @@
 import type { UserReservationRecord } from "../../api/reservation/index"
 import { getReservationPageByUserApi } from "../../api/reservation/index"
 import { createTeamApi } from "../../api/team/index"
+import { getSubscribeTemplateIds } from "../../utils/subscribe-message"
 
 type ReservationOption = {
   label: string
@@ -310,6 +311,8 @@ Page({
     const contactType = contactTypeOption ? contactTypeOption.value : 2
     const contactValue = this.data.contactValue.trim()
 
+    await this.requestInitiatorSubscribeMessage()
+
     this.setData({ submitting: true })
     try {
       await createTeamApi({
@@ -339,6 +342,33 @@ Page({
     } finally {
       this.setData({ submitting: false })
     }
+  },
+
+  requestInitiatorSubscribeMessage() {
+    return new Promise<void>((resolve) => {
+      const templateIds = getSubscribeTemplateIds(["teamSuccess", "teamCanceled"])
+      if (!templateIds.length) {
+        resolve()
+        return
+      }
+      if (typeof wx.requestSubscribeMessage !== "function") {
+        resolve()
+        return
+      }
+
+      wx.requestSubscribeMessage({
+        tmplIds: templateIds,
+        success: (res) => {
+          console.info("request initiator subscribe message success:", res)
+        },
+        fail: (error) => {
+          console.warn("request initiator subscribe message failed:", error)
+        },
+        complete: () => {
+          resolve()
+        },
+      })
+    })
   },
 
   formatDate(date: Date) {

@@ -3,6 +3,7 @@ import type { UploadProps } from "element-plus"
 import { Plus } from "@element-plus/icons-vue"
 import { ElMessage } from "element-plus"
 import { computed, ref, watch } from "vue"
+import { buildApiUrl } from "@/utils/api-url"
 
 const props = defineProps<{
   image: string
@@ -21,6 +22,7 @@ const imageModel = computed({
 })
 
 const displayImageUrl = computed(() => localPreviewUrl.value || imageModel.value || "")
+const uploadAction = buildApiUrl("/api/file/upload")
 
 watch(
   () => props.image,
@@ -77,7 +79,7 @@ const beforeCoverUpload: UploadProps["beforeUpload"] = (rawFile) => {
           <div class="venue-form__upload-panel">
             <el-upload
               class="venue-cover-uploader"
-              action="/api/file/upload"
+              :action="uploadAction"
               :headers="headers"
               :show-file-list="false"
               :on-success="handleCoverSuccess"

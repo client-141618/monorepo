@@ -20,7 +20,6 @@ import { formatDateTimeText } from "@/utils/format"
 const router = useRouter()
 const loading = ref(false)
 const list = ref<NotificationOverview[]>([])
-const hasLoadedOnce = ref(false)
 const querying = ref(false)
 const hasQueried = ref(false)
 const pageNum = ref(1)
@@ -60,7 +59,6 @@ const fetchPage = async () => {
     total.value = Number(res.data?.total) || 0
   } finally {
     loading.value = false
-    hasLoadedOnce.value = true
   }
 }
 
@@ -198,7 +196,13 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="notification-list-page" :body-scroll="true">
+  <PageContentShell
+    class="notification-list-page"
+    :body-scroll="true"
+    :skeleton-loading="loading"
+    skeleton-variant="card"
+    :skeleton-cards="6"
+  >
     <template #header>
       <div class="notification-list-page__header">
         <div class="notification-list-page__title">通知消息</div>
@@ -295,11 +299,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div
-      v-else-if="loading || !hasLoadedOnce"
-      class="notification-list-page__loading"
-      v-loading="true"
-    />
+    <div v-else-if="loading" class="notification-list-page__loading" v-loading="true" />
     <el-empty v-else :description="emptyDescription" />
     <template #footer>
       <el-pagination

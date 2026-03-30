@@ -66,6 +66,7 @@ declare module 'vue' {
     PageContentShell: typeof import('./src/components/PageContentShell/index.vue')['default']
     PageFilterBar: typeof import('./src/components/PageFilterBar/index.vue')['default']
     PageRouteTitle: typeof import('./src/components/PageRouteTitle/index.vue')['default']
+    PageShellSkeleton: typeof import('./src/components/PageShellSkeleton/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SideMenu: typeof import('./src/components/SideMenu/SideMenu.vue')['default']

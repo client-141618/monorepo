@@ -11,6 +11,7 @@ import {
 } from "@/api/miniapp-banner"
 import PageContentShell from "@/components/PageContentShell/index.vue"
 import PageRouteTitle from "@/components/PageRouteTitle/index.vue"
+import { buildApiUrl } from "@/utils/api-url"
 import { formatDateTimeText } from "@/utils/format"
 
 const tableLoading = ref(false)
@@ -19,6 +20,7 @@ const bannerList = ref<MiniappBanner[]>([])
 const pageNum = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const uploadAction = buildApiUrl("/api/file/upload")
 
 const uploadHeaders = computed(() => {
   const storedUser = JSON.parse(localStorage.getItem("userInfo") || "{}")
@@ -113,14 +115,14 @@ const handleCurrentPageChange = (value: number) => {
 </script>
 
 <template>
-  <PageContentShell class="miniapp-banner-page">
+  <PageContentShell class="miniapp-banner-page" :skeleton-loading="tableLoading" skeleton-variant="table">
     <template #header>
       <div class="miniapp-banner-page__header">
         <PageRouteTitle fallback-title="小程序banner设置" />
         <div class="miniapp-banner-page__actions">
           <el-button :disabled="tableLoading" @click="getBannerList">刷新</el-button>
           <el-upload
-            action="/api/file/upload"
+            :action="uploadAction"
             :headers="uploadHeaders"
             :show-file-list="false"
             :before-upload="beforeBannerUpload"

@@ -5,6 +5,12 @@ interface IAppOption {
     userInfo?: WechatMiniprogram.UserInfo,
     accessToken?: string,
     refreshToken?: string,
+    subscribeMessageTemplateIds?: {
+      teamSuccess?: string
+      teamCanceled?: string
+      reservationSuccess?: string
+      reservationCanceled?: string
+    },
   }
   userInfoReadyCallback?: WechatMiniprogram.GetUserInfoSuccessCallback,
 }

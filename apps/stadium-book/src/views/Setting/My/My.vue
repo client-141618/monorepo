@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Message, Phone, User } from "@element-plus/icons-vue"
 import { storeToRefs } from "pinia"
-import { ref } from "vue"
+import { computed, ref } from "vue"
 import EditPassword from "@/components/EditPassword/index.vue"
 import EditUserDialog from "@/components/EditUserDialog/index.vue"
 import PageContentShell from "@/components/PageContentShell/index.vue"
@@ -12,6 +12,7 @@ const { userInfo } = storeToRefs(userStore)
 
 const dialogVisible = ref(false)
 const editPasswordVisible = ref(false)
+const profileLoading = computed(() => !userInfo.value?.userId)
 
 const handleEdit = () => {
   dialogVisible.value = true
@@ -23,7 +24,12 @@ const handleEditPassword = () => {
 </script>
 
 <template>
-  <PageContentShell class="my-page" :body-scroll="true">
+  <PageContentShell
+    class="my-page"
+    :body-scroll="true"
+    :skeleton-loading="profileLoading"
+    skeleton-variant="detail"
+  >
     <div class="my-page__content">
       <el-card shadow="hover" class="my-page__card">
         <div class="my-page__card-body">

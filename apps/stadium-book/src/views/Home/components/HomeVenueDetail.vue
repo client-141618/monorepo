@@ -47,7 +47,6 @@ const router = useRouter()
 const detailLoading = ref(false)
 const availabilityLoading = ref(false)
 const blockLoading = ref(false)
-const hasLoadedOnce = ref(false)
 const availabilityLoadFailed = ref(false)
 const blockLoadFailed = ref(false)
 const venueDetail = ref<Venue | null>(null)
@@ -189,7 +188,6 @@ const boardMessage = computed(() => {
 const loadVenue = async () => {
   if (!Number.isFinite(venueId.value) || venueId.value <= 0) {
     venueDetail.value = null
-    hasLoadedOnce.value = true
     return false
   }
   try {
@@ -202,7 +200,6 @@ const loadVenue = async () => {
     return false
   } finally {
     detailLoading.value = false
-    hasLoadedOnce.value = true
   }
 }
 
@@ -502,13 +499,17 @@ function formatDate(date: Date) {
 </script>
 
 <template>
-  <PageContentShell class="home-venue-detail" :body-scroll="true">
+  <PageContentShell
+    class="home-venue-detail"
+    :body-scroll="true"
+    :skeleton-loading="detailLoading"
+    skeleton-variant="detail"
+  >
     <template #header>
       <el-button :icon="ArrowLeft" class="home-venue-detail__back" @click="handleBack">返回首页</el-button>
     </template>
 
-    <div v-if="detailLoading && !hasLoadedOnce" class="home-venue-detail__loading" v-loading="true" />
-    <el-empty v-else-if="!venueDetail" description="未找到该场馆信息">
+    <el-empty v-if="!venueDetail" description="未找到该场馆信息">
       <el-button type="primary" @click="handleBack">返回场馆列表</el-button>
     </el-empty>
     <el-card v-else class="home-venue-detail__card" v-loading="detailLoading">
@@ -607,10 +608,6 @@ function formatDate(date: Date) {
 
 .home-venue-detail__back {
   width: fit-content;
-}
-
-.home-venue-detail__loading {
-  min-height: 280px;
 }
 
 .home-venue-detail__card {

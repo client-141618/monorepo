@@ -3,12 +3,14 @@ import { ArrowDown, FullScreen, ScaleToOriginal } from "@element-plus/icons-vue"
 import { storeToRefs } from "pinia"
 import { onMounted, onUnmounted, shallowRef } from "vue"
 import { useRouter } from "vue-router"
+import EditPassword from "@/components/EditPassword/index.vue"
 import { useUserStore } from "@/store/user"
 
 const userStore = useUserStore()
 const router = useRouter()
 const { userInfo } = storeToRefs(userStore)
 const isFullscreen = shallowRef(false)
+const editPasswordVisible = shallowRef(false)
 
 const errorHandle = () => {
   return true
@@ -21,6 +23,10 @@ const handleLogout = () => {
 
 const handleEditProfile = () => {
   router.push("/setting/my")
+}
+
+const handleEditPassword = () => {
+  editPasswordVisible.value = true
 }
 
 const syncFullscreenState = () => {
@@ -86,9 +92,8 @@ onUnmounted(() => {
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item>我的预定</el-dropdown-item>
             <el-dropdown-item @click="handleEditProfile">编辑资料</el-dropdown-item>
-            <el-dropdown-item>修改密码</el-dropdown-item>
+            <el-dropdown-item @click="handleEditPassword">修改密码</el-dropdown-item>
             <el-dropdown-item divided style="color: red" @click="handleLogout">退出登录</el-dropdown-item>
           </el-dropdown-menu>
         </template>
@@ -99,6 +104,8 @@ onUnmounted(() => {
         />
       </el-avatar>
     </div>
+
+    <EditPassword v-model="editPasswordVisible" />
   </div>
 </template>
 

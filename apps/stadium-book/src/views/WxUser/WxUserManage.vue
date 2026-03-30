@@ -164,7 +164,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="wx-user-page">
+  <PageContentShell class="wx-user-page" :skeleton-loading="tableLoading" skeleton-variant="table">
     <template #header>
       <PageRouteTitle fallback-title="用户管理" />
       <PageFilterBar :query-loading="tableLoading" @query="handleQuery" @reset="handleReset">

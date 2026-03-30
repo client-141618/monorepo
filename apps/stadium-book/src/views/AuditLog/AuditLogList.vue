@@ -119,7 +119,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <PageContentShell class="audit-log-page">
+  <PageContentShell class="audit-log-page" :skeleton-loading="tableLoading" skeleton-variant="table">
     <template #header>
       <PageRouteTitle fallback-title="审计日志" />
       <PageFilterBar :query-loading="tableLoading" @query="handleQuery" @reset="handleReset">

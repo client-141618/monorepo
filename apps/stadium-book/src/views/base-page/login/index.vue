@@ -205,12 +205,14 @@ const sendCode = async (target: "register" | "forgot") => {
     ? registerForm.value.phone
     : forgotPasswordForm.value.phone
 
+  const scene = target === "register" ? "REGISTER" : "FORGOT_PASSWORD"
+
   if (!phone || !/^1[3-9]\d{9}$/.test(phone)) {
     ElMessage.error("请输入正确的手机号")
     return
   }
 
-  const res = await sendSmsCode(phone)
+  const res = await sendSmsCode(phone, scene)
   if (res.code === 200) {
     ElMessage.success("发送验证码成功")
     startCooldown()
